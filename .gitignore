@@ -176,3 +176,6 @@ bin/
 *.iml
 
 temp/
+
+# Gradle build outputs
+**/build/
