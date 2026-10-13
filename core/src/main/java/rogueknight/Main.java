@@ -1,4 +1,4 @@
-package com.rogueknight.game;
+package rogueknight;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.graphics.Texture;
