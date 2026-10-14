@@ -406,10 +406,7 @@ Tài liệu thiết kế, hướng dẫn triển khai và nguồn tham khảo.
 | Tài liệu | Nội dung |
 |---|---|
 | `RogueKnight_TD_v0.1_Full.pdf` | Yêu cầu, kiến trúc, state, contract, gameplay và kiểm thử |
-| `RogueKnight_HuongDan_TrienKhai_TD_v0.1.pdf` | Triển khai theo task, kiểm thử và xử lý lỗi |
-| `[Handoff] RogueKnight_Project_Skeleton_Handoff.pdf` | Skeleton, build, test và module boundary |
-
-Phiên bản công nghệ theo mục Technology Stack; thông tin phiên bản trong tài liệu cũ có thể khác.
+| - | - |
 
 </details>
 
@@ -417,10 +414,8 @@ Phiên bản công nghệ theo mục Technology Stack; thông tin phiên bản t
 <summary>Related Documents</summary>
 
 - [GitHub Project](https://github.com/users/do-manh-hiep/projects/5)
-- [.editorconfig](.editorconfig): định dạng code.
-- [VS Code settings](.vscode/settings.json): cấu hình editor.
-
-Thông tin ghi công và nội dung giấy phép của tài nguyên được tổ chức trong `CREDITS.md` và `licenses/` khi bổ sung asset.
+- [CREDITS.md](CREDITS.md): Thông tin ghi công.
+- [licenses/](licenses/): Giấy phép.
 
 </details>
 
