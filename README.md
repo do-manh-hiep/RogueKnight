@@ -69,14 +69,16 @@ RogueKnight/
 <details open>
 <summary>Where to Add Code</summary>
 
-Chọn module theo responsibilities, rồi tạo subsystem ngay dưới package gốc:
+Chọn module theo responsibilities, rồi tạo subsystem dưới package gốc.
 
 ```text
-Code: <module>/src/main/java/rogueknight/<subsystem>/
-Test: <module>/src/test/java/rogueknight/<subsystem>/
+Code: <module>/src/main/java/<package_gốc>/<subsystem>/
+Test: <module>/src/test/java/<package_gốc>/<subsystem>/
 ```
 
-Code và test cùng subsystem dùng package `rogueknight.<subsystem>`. Chỉ tạo package khi có code; tách package con khi cần.
+`<package_gốc>` là đường dẫn tương ứng với namespace Java. RogueKnight dùng package gốc `rogueknight`; nếu package gốc có nhiều phần, chẳng hạn `org.example.game`, đường dẫn tương ứng là `org/example/game/`.
+
+Code và test cùng subsystem dùng package `<package_gốc>.<subsystem>`. Tạo thêm `<subsystem>` dưới cùng package gốc khi cần chia responsibilities.
 
 | Content | Location |
 |---|---|
