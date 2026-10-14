@@ -128,9 +128,11 @@ Yêu cầu môi trường và các lệnh chạy game, kiểm thử, đóng gói
 
 Cài Eclipse Temurin JDK 21 và Git. Không cần cài Gradle riêng.
 
+Dưới đây chứa lệnh chạy trong terminal PowerShell. Chạy lệnh Gradle tại thư mục gốc repository; chọn lệnh phù hợp với việc cần làm.
+
 ```powershell
-java -version               # Kiểm tra Java
-javac -version              # Kiểm tra Java compiler
+java -version               # Lệnh Kiểm tra Java
+javac -version              # Lệnh Kiểm tra Java compiler
 ```
 
 | Editor | Thiết lập |
@@ -140,7 +142,7 @@ javac -version              # Kiểm tra Java compiler
 | Eclipse | Chạy lệnh dưới đây, import bằng Existing Gradle Project và chọn JDK 21 |
 
 ```powershell
-.\gradlew.bat eclipseProject    # Tạo metadata và bộ lọc Eclipse
+.\gradlew.bat eclipseProject    # Lệnh Tạo metadata và bộ lọc Eclipse
 ```
 
 `.editorconfig` quản lý định dạng; editor cần hỗ trợ EditorConfig.
@@ -155,10 +157,10 @@ VS Code ẩn file sinh tự động qua `.vscode/settings.json`. Gradle cấu h�
 Chạy tại thư mục gốc repository:
 
 ```powershell
-.\gradlew.bat --version      # Kiểm tra Gradle và JVM
-.\gradlew.bat :lwjgl3:run    # Chạy desktop
-.\gradlew.bat :logic:test    # Chạy test logic
-.\gradlew.bat test           # Chạy toàn bộ test
+.\gradlew.bat --version      # Lệnh Kiểm tra Gradle và JVM
+.\gradlew.bat :lwjgl3:run    # Lệnh Chạy desktop
+.\gradlew.bat :logic:test    # Lệnh Chạy test logic
+.\gradlew.bat test           # Lệnh Chạy toàn bộ test
 ```
 
 </details>
@@ -167,20 +169,20 @@ Chạy tại thư mục gốc repository:
 <summary>Build</summary>
 
 ```powershell
-.\gradlew.bat build          # Build và chạy test
-.\gradlew.bat :lwjgl3:jar    # Tạo JAR desktop
+.\gradlew.bat build          # Lệnh Build và chạy test
+.\gradlew.bat :lwjgl3:jar    # Lệnh Tạo JAR desktop
 ```
 
-File đầu ra:
+Đường dẫn file JAR đầu ra (`<version>` là phiên bản dự án):
 
 ```text
 lwjgl3/build/libs/RogueKnight-<version>.jar
 ```
 
 ```powershell
-$versionLine = Get-Content .\gradle.properties | Where-Object { $_ -match '^\s*projectVersion\s*=' }
-$projectVersion = ($versionLine -split '=', 2)[1].Trim()    # Lấy phiên bản dự án
-java -jar ".\lwjgl3\build\libs\RogueKnight-$projectVersion.jar"    # Chạy bằng Java 21
+$versionLine = Get-Content .\gradle.properties | Where-Object { $_ -match '^\s*projectVersion\s*=' }    # Lệnh đọc dòng projectVersion từ gradle.properties
+$projectVersion = ($versionLine -split '=', 2)[1].Trim()    # Lệnh Lấy phiên bản dự án
+java -jar ".\lwjgl3\build\libs\RogueKnight-$projectVersion.jar"    # Lệnh Chạy bằng Java 21
 ```
 
 Tên JAR theo `projectVersion` trong `gradle.properties`.
@@ -257,9 +259,9 @@ Làm từng phần nhỏ, kiểm tra ngay và build toàn dự án trước PR.
 | Sửa đóng gói hoặc nạp tài nguyên | Chạy thêm JAR theo mục 3 |
 
 ```powershell
-.\gradlew.bat :logic:test    # Kiểm tra logic
-.\gradlew.bat :lwjgl3:run    # Kiểm tra desktop
-.\gradlew.bat build          # Kiểm tra toàn dự án
+.\gradlew.bat :logic:test    # Lệnh Kiểm tra logic
+.\gradlew.bat :lwjgl3:run    # Lệnh Kiểm tra desktop
+.\gradlew.bat build          # Lệnh Kiểm tra toàn dự án
 ```
 
 PR ghi thay đổi và kết quả kiểm tra. Lỗi hoặc công việc phát sinh được theo dõi theo mục 4.1.
@@ -308,10 +310,10 @@ Test trong `logic/src/test/java/` chạy không cần cửa sổ game.
 Test gameplay đối chiếu các trường hợp trong Technical Design.
 
 ```powershell
-.\gradlew.bat :logic:test --rerun-tasks    # Chạy lại test logic
+.\gradlew.bat :logic:test --rerun-tasks    # Lệnh Chạy lại test logic
 ```
 
-Báo cáo:
+Đường dẫn báo cáo test:
 
 ```text
 logic/build/reports/tests/test/index.html
@@ -343,7 +345,7 @@ Test logic không thay thế kiểm tra giao diện.
 4. Sửa nguyên nhân, chạy lại trường hợp lỗi và test liên quan.
 
 ```powershell
-.\gradlew.bat build --stacktrace    # Xem stack trace khi build lỗi
+.\gradlew.bat build --stacktrace    # Lệnh Xem stack trace khi build lỗi
 ```
 
 | Loại lỗi | Điểm kiểm tra |
