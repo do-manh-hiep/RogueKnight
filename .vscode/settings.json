@@ -1,0 +1,16 @@
+{
+    "files.exclude": {
+        "**/.gradle": true,
+        "**/build": true,
+        "**/bin": true,
+        "**/*.class": true,
+        "**/.project": true,
+        "**/.classpath": true,
+        "**/.settings": true,
+        "assets/assets.txt": true
+    },
+    "java.jdt.ls.vmargs": "-Xms256m -Xmx2G",
+    "explorer.compactFolders": true,
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.gradle.buildServer.enabled": "off"
+}
