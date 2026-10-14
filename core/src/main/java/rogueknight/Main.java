@@ -17,6 +17,7 @@ public class Main extends ApplicationAdapter {
     private final WaitDemoController controller = new WaitDemoController();
     private String message = "Space: WAIT | Demo only; no enemy queue";
 
+    /** Initializes the demo's rendering resources. */
     @Override
     public void create() {
         batch = new SpriteBatch();
@@ -24,6 +25,7 @@ public class Main extends ApplicationAdapter {
         font = new BitmapFont();
     }
 
+    /** Submits WAIT on a new Space press and renders the current demo state. */
     @Override
     public void render() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
@@ -43,6 +45,7 @@ public class Main extends ApplicationAdapter {
         batch.end();
     }
 
+    /** Releases the demo's rendering resources. */
     @Override
     public void dispose() {
         batch.dispose();

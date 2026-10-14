@@ -53,6 +53,13 @@ public final class WaitDemoController {
         return new Result(true, null, before, snapshot());
     }
 
+    /**
+     * Returns a rejected result with identical before/after snapshots.
+     *
+     * @param error rejection reason
+     * @param before snapshot captured before validation
+     * @return rejected result without changing state
+     */
     private Result rejected(Error error, Snapshot before) {
         return new Result(false, error, before, before);
     }
