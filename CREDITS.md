@@ -32,7 +32,7 @@ SHA-256 khớp các file upstream tại revision được liên kết dưới đ
 Upstream không nêu tên tác giả cá nhân cho từng file.
 
 | File | Creator / attribution | Source URL | License / usage |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `lwjgl3/src/main/resources/libgdx16.png` | libGDX contributors; icon được cung cấp qua gdx-liftoff | [src/main/resources/icons/libgdx16.png](https://github.com/libgdx/gdx-liftoff/blob/db77d7a163f143d93e9d100fdc6946b1ee6fecc3/src/main/resources/icons/libgdx16.png) | Apache-2.0 theo upstream gdx-liftoff; xem [libGDX Brand Guidelines](https://libgdx.com/brand/) |
 | `lwjgl3/src/main/resources/libgdx32.png` | libGDX contributors; icon được cung cấp qua gdx-liftoff | [src/main/resources/icons/libgdx32.png](https://github.com/libgdx/gdx-liftoff/blob/db77d7a163f143d93e9d100fdc6946b1ee6fecc3/src/main/resources/icons/libgdx32.png) | Apache-2.0 theo upstream gdx-liftoff; xem [libGDX Brand Guidelines](https://libgdx.com/brand/) |
 | `lwjgl3/src/main/resources/libgdx64.png` | libGDX contributors; icon được cung cấp qua gdx-liftoff | [src/main/resources/icons/libgdx64.png](https://github.com/libgdx/gdx-liftoff/blob/db77d7a163f143d93e9d100fdc6946b1ee6fecc3/src/main/resources/icons/libgdx64.png) | Apache-2.0 theo upstream gdx-liftoff; xem [libGDX Brand Guidelines](https://libgdx.com/brand/) |
