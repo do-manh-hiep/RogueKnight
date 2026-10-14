@@ -12,6 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class JsonInfrastructureTest {
     private record Sample(String name, int value) {}
 
+    /**
+     * Verifies that Gson reads a UTF-8 JSON fixture from the Java classpath
+     * and preserves its Vietnamese text and numeric value without libGDX.
+     */
     @Test
     void readsUtf8JsonFromClasspathWithoutLibGdx() {
         var stream = Objects.requireNonNull(
