@@ -10,7 +10,7 @@ Người chơi điều khiển Knight, chọn hai trang bị và đối đầu v
 <summary>Technology Stack</summary>
 
 | Thành phần | Công nghệ | Phiên bản |
-|---|---|---|
+| --- | --- | --- |
 | Ngôn ngữ và runtime | Java — Eclipse Temurin JDK | 21 |
 | Game framework | libGDX | 1.13.1 |
 | Desktop backend | LWJGL3 | >=3.4.3 |
@@ -57,7 +57,8 @@ RogueKnight/
 │   ├── src/main/java/rogueknight/desktop/
 │   ├── src/main/resources/
 │   └── build.gradle
-├── assets/                        # Hình ảnh, âm thanh và font
+├── assets/
+├── temp/
 ├── .vscode/settings.json
 ├── .editorconfig
 ├── [Gradle config & wrapper files]
@@ -66,35 +67,11 @@ RogueKnight/
 
 `[Gradle config & wrapper files]` gồm cấu hình Gradle tại root, `gradle/wrapper/`, `gradlew` và `gradlew.bat`; không phải tên thư mục.
 
-<details open>
-<summary>Where to Add Code</summary>
-
-**RogueKnight dùng `<package gốc>` là `rogueknight`**.
-
-Chọn module theo responsibilities, rồi tạo subsystem dưới `<package gốc>`.
-
-```text
-Code: <module>/src/main/java/<package_gốc>/<subsystem>/
-Test: <module>/src/test/java/<package_gốc>/<subsystem>/
-```
-
-`<package_gốc>` là đường dẫn tương ứng với namespace Java; nếu `<package gốc>` có nhiều phần, chẳng hạn `org.example.game`, đường dẫn tương ứng là `org/example/game/`.
-
-Code và test cùng subsystem dùng package `<package_gốc>.<subsystem>`. Tạo thêm `<subsystem>` dưới cùng `<package gốc>` khi cần chia responsibilities.
-
-| Content | Location |
-|---|---|
-| Dữ liệu gameplay | `logic/src/main/resources/` |
-| Dữ liệu test | `logic/src/test/resources/` |
-| Hình ảnh, âm thanh, font | `assets/` |
-
-</details>
-
 ### Architecture
 
 `core` sử dụng gameplay từ `logic`; `lwjgl3` khởi chạy ứng dụng desktop.
 
-**Module Dependency Direction**
+Module Dependency Direction:
 
 ```text
 lwjgl3 → core → logic
@@ -104,10 +81,28 @@ lwjgl3 → core → logic
 <summary>Module Responsibilities</summary>
 
 | Module | Responsibilities | Requires |
-|---|---|---|
+| --- | --- | --- |
 | `logic` | State, bàn cờ, luật chơi, lượt, trang bị, hành vi quân địch và dữ liệu gameplay | Java, Gson; JUnit cho test |
 | `core` | Màn hình, input, render, asset, giao diện và hoạt ảnh | `logic`, libGDX |
 | `lwjgl3` | Khởi chạy, cấu hình cửa sổ và đóng gói desktop | `core`, LWJGL3 |
+
+</details>
+
+<details>
+<summary>Where to Add Code</summary>
+
+Chọn module theo responsibilities, rồi tạo subsystem dưới `<package gốc>` là `rogueknight`.
+
+```text
+Code:          <module>/src/main/java/<package_gốc>/<subsystem>/
+Test:          <module>/src/test/java/<package_gốc>/<subsystem>/
+Gameplay Data: logic/src/main/resources/
+Test Data:     logic/src/test/resources/
+Hình ảnh, âm thanh, font: assets/
+File tạm local: temp/
+```
+
+`temp/` chứa log, báo cáo và script thử nghiệm; không commit.
 
 </details>
 
@@ -125,22 +120,25 @@ lwjgl3 → core → logic
 
 ## 3. Development & Build
 
-Yêu cầu môi trường và các lệnh chạy game, kiểm thử, đóng gói.
+Dưới đây chứa lệnh chạy trong terminal PowerShell. Chạy lệnh Gradle tại thư mục gốc repository; chọn lệnh phù hợp với việc cần làm.
 
 <details open>
-<summary>Requirements & Editor Setup</summary>
+<summary>Requirements</summary>
 
 Cài Eclipse Temurin JDK 21 và Git. Không cần cài Gradle riêng.
-
-Dưới đây chứa lệnh chạy trong terminal PowerShell. Chạy lệnh Gradle tại thư mục gốc repository; chọn lệnh phù hợp với việc cần làm.
 
 ```powershell
 java -version               # Lệnh Kiểm tra Java
 javac -version              # Lệnh Kiểm tra Java compiler
 ```
 
+</details>
+
+<details>
+<summary>Editor Setup</summary>
+
 | Editor | Thiết lập |
-|---|---|
+| --- | --- |
 | VS Code | Mở thư mục gốc, dùng JDK 21 |
 | IntelliJ IDEA | Mở dự án Gradle, chọn JDK 21 cho project và Gradle JVM |
 | Eclipse | Chạy lệnh dưới đây, import bằng Existing Gradle Project và chọn JDK 21 |
@@ -199,26 +197,26 @@ Cách quản lý task, phát triển, review, tích hợp code và sử dụng A
 
 ### 4.1. Task Management
 
-Sử dụng [GitHub Projects](https://github.com/users/do-manh-hiep/projects/5) với bốn cột:
+Theo dõi task trong tài liệu hướng dẫn/triển khai hoặc [GitHub Project](https://github.com/users/do-manh-hiep/projects/5), tùy theo nguồn đang áp dụng. Khi dùng Project, các trạng thái gồm:
 
 ```text
 Backlog → To Do → In Progress → Done
 ```
 
-Mỗi task có một Issue và branch riêng. Issue ghi mục tiêu, người làm, điều kiện hoàn thành và dependency nếu có.
+Mỗi task có branch riêng và ghi mục tiêu, người làm, dependency và DoD. Khi dùng GitHub, mỗi task được theo dõi bằng một Issue.
 
 | Cột | Trạng thái |
-|---|---|
+| --- | --- |
 | `Backlog` | Chưa sẵn sàng triển khai |
-| `To Do` | Phạm vi rõ, đủ đầu vào, không bị chặn |
+| `To Do` | Đã rõ phạm vi triển khai |
 | `In Progress` | Đang làm hoặc chờ review |
-| `Done` | PR đã merge, đạt điều kiện hoàn thành |
+| `Done` | Đạt DoD; PR đã merge nếu có thay đổi repo |
 
 <details>
 <summary>Khi phát sinh công việc hoặc lỗi</summary>
 
 - **Tạo sub-issue:** thuộc task hiện tại nhưng cần theo dõi riêng.
-- **Tách sub-issue thành Issue độc lập:** vượt phạm vi task ban đầu; đưa lên Kanban, tạo branch riêng và giữ liên kết với task cũ.
+- **Nâng sub-issue thành Issue độc lập:** vượt phạm vi task ban đầu; đưa lên Kanban, tạo branch riêng và giữ liên kết với task cũ.
 - **Tạo Issue mới:** công việc độc lập ngay từ đầu.
 
 </details>
@@ -226,7 +224,7 @@ Mỗi task có một Issue và branch riêng. Issue ghi mục tiêu, người l�
 ### 4.2. Git Workflow
 
 | Branch | Mục đích |
-|---|---|
+| --- | --- |
 | `main` | Code ổn định để demo hoặc nộp bài |
 | `feature/<tên-task>` | Phát triển tính năng |
 | `fix/<tên-lỗi>` | Sửa lỗi |
@@ -237,14 +235,14 @@ Mỗi task có một Issue và branch riêng. Issue ghi mục tiêu, người l�
 
 1. Tạo branch từ `main` đã cập nhật.
 2. Triển khai và kiểm tra trên máy cá nhân.
-3. Mở Pull Request (PR) vào `main`, liên kết Issue bằng `Closes #<số_issue>`.
-4. Nhận ít nhất một approval từ thành viên khác.
-5. Squash and Merge để gộp PR thành một commit trên `main`.
-6. Xóa branch và chuyển task sang `Done`.
-
-PR ghi **thay đổi gì** và **đã kiểm tra thế nào**. Thay đổi luật chơi hoặc contract cần review với người phụ trách, cập nhật tài liệu và test liên quan.
-
-Commit mô tả ngắn gọn thay đổi; có thể tham khảo [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+3. Commit & Push, có thể tham khảo [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+4. Mở Pull Request (PR) vào `main`:
+   - ghi **thay đổi gì** và **đã kiểm tra thế nào**
+   - tham chiếu task; dùng `Closes #<số_issue>` khi PR hoàn tất Issue, `Refs #<số_issue>` khi chỉ liên quan
+   - Resolve review comments
+   - Nhận approval từ >=1 thành viên khác
+   - chọn Squash and Merge
+5. Xóa branch và chuyển task sang `Done`.
 
 </details>
 
@@ -253,14 +251,15 @@ Commit mô tả ngắn gọn thay đổi; có thể tham khảo [Conventional Co
 Làm từng phần nhỏ, kiểm tra ngay và build toàn dự án trước PR.
 
 | Context | Action |
-|---|---|
-| Bắt đầu task | Đọc Issue, tạo branch, chọn nơi đặt code theo mục 2 |
+| --- | --- |
+| Bắt đầu task | Đọc nội dung task, tạo branch, chọn nơi đặt code theo mục 2 |
 | Sửa logic | Thêm hoặc cập nhật test, chạy `:logic:test` |
 | Sửa giao diện/input | Chạy `:lwjgl3:run`, kiểm tra thao tác và hiển thị |
-| Sửa build/dependency | Chạy `build`; chạy desktop nếu ảnh hưởng ứng dụng |
-| Gặp lỗi | Ghi log và bước tái hiện, sửa rồi chạy lại kiểm tra |
-| Trước PR | Chạy `build`, đối chiếu điều kiện hoàn thành của Issue |
-| Sửa đóng gói hoặc nạp tài nguyên | Chạy thêm JAR theo mục 3 |
+| Sửa build/dependency | Chạy `build`; chạy desktop nếu ảnh hưởng runtime |
+| Gặp lỗi | Ghi log và bước tái hiện, xác định nguyên nhân, sửa rồi kiểm tra lại |
+| Chuẩn bị mở PR | Chạy `build`, đối chiếu DoD của task và nội dung thay đổi |
+| Sửa đóng gói hoặc nạp tài nguyên | Kiểm tra JAR và tài nguyên liên quan theo mục 3 |
+| Mở PR | Thực hiện theo mục 4.2 |
 
 ```powershell
 .\gradlew.bat :logic:test    # Lệnh Kiểm tra logic
@@ -273,32 +272,83 @@ PR ghi thay đổi và kết quả kiểm tra. Lỗi hoặc công việc phát s
 <details>
 <summary>Working with AI</summary>
 
-AI hỗ trợ tìm hiểu dự án, thực hiện task và xử lý lỗi. Chỉ điền những gì bạn biết.
+AI hỗ trợ đọc dự án, triển khai task và debug. Coding agent có thể đọc/sửa file và chạy lệnh khi có công cụ và quyền truy cập.
+
+### Project Context
+
+| Source | Content |
+| --- | --- |
+| README | Cấu trúc, lệnh, conventions và workflow |
+| GDD | Yêu cầu và luật chơi |
+| TD | Thiết kế, API, state ownership và flow |
+| Task | Mục tiêu, phạm vi, tiến độ, dependency và DoD |
+| Code, test và Git | Hiện trạng triển khai và thay đổi đang có |
+
+Đọc phần liên quan đến task. Xác định nguồn task từ yêu cầu: tài liệu hướng dẫn/triển khai hoặc GitHub Issues được theo dõi trên Project. Nếu chưa rõ nguồn hoặc thiếu thông tin cần thiết, yêu cầu bổ sung context.
+
+Ưu tiên CLI. Có công cụ và quyền thì thực hiện trực tiếp; nếu thiếu, cung cấp lệnh và đọc kết quả người dùng gửi trước khi tiếp tục. Dùng GitHub CLI (`gh`) cho GitHub và ripgrep (`rg`) để tìm code/file. Thiếu công cụ thì hướng dẫn cài đặt hoặc dùng công cụ tương đương; với `gh`, cần đăng nhập và có quyền phù hợp với task.
+
+Đặt log, báo cáo và script tạm trong `temp/`; không commit. Chuyển nội dung cần giữ sang vị trí phù hợp trước khi dọn file tạm.
+
+Với GitHub GraphQL trên PowerShell, gửi query và variables qua file JSON trong `temp/` bằng `gh api graphql --input <file>`.
+
+Sau khi cập nhật Issue/Project, đọc lại dữ liệu để xác minh.
+
+### Agent Workflow
+
+| Step | Action |
+| --- | --- |
+| Đọc task | Xác định phạm vi, dependency và DoD; đọc tài liệu liên quan |
+| Kiểm tra hiện trạng | Kiểm tra môi trường, branch, thay đổi chưa commit và code/test |
+| Chuẩn bị branch | Dùng branch task hoặc tạo từ `main` đã cập nhật; giữ thay đổi đang có |
+| Develop & Debug | Làm từng phần nhỏ; ghi log và bước tái hiện khi lỗi, sửa rồi kiểm tra lại |
+| Validate | Kiểm tra theo mục 4.3 |
+| Commit & Push | Review diff, stage đúng file, commit và push |
+| Mở PR | Theo mục 4.2 |
+| Resolve review comments | Đối chiếu từng nhận xét với code; sửa hoặc giải thích, kiểm tra lại và cập nhật PR |
+| Merge & Update Progress | Khi được giao và đủ điều kiện mục 4.2, Squash and Merge; xác minh rồi cập nhật tiến độ |
+
+Thực hiện đến bước được giao. Cập nhật nguồn tiến độ đang áp dụng khi bắt đầu, bị chặn, chờ review và hoàn thành.
+
+Công việc vượt phạm vi xử lý theo mục 4.1. Nếu đầu vào thiếu hoặc mâu thuẫn, tiếp tục phần đã rõ và nêu phần cần xác nhận.
+
+Không tự đổi luật, API dùng chung hoặc quyền sửa state để làm test pass. Thay đổi cần thiết phải thống nhất với người phụ trách.
+
+Không đoán nội dung hoặc báo hoàn thành thao tác chưa thực hiện. Khi bị chặn, ghi rõ nguyên nhân và đầu vào/quyền truy cập cần bổ sung.
+
+### Communication
+
+Viết ngắn, dùng lời dễ hiểu và thuật ngữ nhất quán với README. Nêu kết quả trước, sau đó là việc cần làm và cách kiểm tra. Giải thích thuật ngữ mới; tránh lặp hướng dẫn hoặc thêm chi tiết không giúp thực hiện task.
+
+Khi cung cấp lệnh, ghi rõ terminal, nơi chạy và kết quả mong đợi. Phân biệt lệnh, đường dẫn và ví dụ. Hướng dẫn dùng mẫu tổng quát; chỉ ghi tên file, phiên bản hoặc hiện trạng cụ thể khi cần.
+
+### Task Prompt
 
 ```text
-Tôi đang làm việc với dự án RogueKnight.
+Task:
+[Task ID/tên task và nguồn tài liệu, hoặc liên kết Issue.]
 
-Tôi muốn:
-[Mô tả điều muốn hiểu hoặc làm được.]
+Mục tiêu:
+[Kết quả cần đạt.]
 
-Tôi đã làm:
-[Ghi thao tác hoặc lệnh đã chạy; bỏ qua nếu chưa làm gì.]
+Thực hiện đến:
+[Code + kiểm tra / commit + push / mở PR /
+resolve review comments / merge.]
 
-Thông tin liên quan:
-[Dán code, thông báo lỗi, ảnh hoặc tài liệu nếu có.]
+Thông tin thêm:
+[Phạm vi, việc đã làm, log/lỗi nếu có.]
 
-Hãy giải thích bằng lời dễ hiểu:
-1. Phần này dùng để làm gì và nằm ở đâu trong dự án?
-2. Tôi cần làm gì tiếp theo? Ghi rõ từng bước, file cần mở
-   và nơi chạy lệnh.
-3. Sau mỗi bước, tôi kiểm tra kết quả như thế nào?
+Đọc README và thực hiện theo Working with AI.
 
-Giải thích thuật ngữ mới.
-Nếu thiếu thông tin, chỉ rõ cần tìm ở đâu và gửi gì.
-Không tự đoán code hiện có hoặc thay đổi luật chơi.
+Báo kết quả:
+- Thay đổi.
+- Kiểm tra và kết quả.
+- Phần còn lại/bị chặn.
+- Trạng thái commit, push và PR.
+- Nơi đã cập nhật tiến độ.
 ```
 
-Đọc lại thay đổi và kiểm tra kết quả. Nếu chưa hiểu một bước, yêu cầu giải thích trước khi tiếp tục.
+Kiểm tra diff và kết quả trước khi review/merge.
 
 </details>
 
@@ -353,7 +403,7 @@ Test logic không thay thế kiểm tra giao diện.
 ```
 
 | Loại lỗi | Điểm kiểm tra |
-|---|---|
+| --- | --- |
 | Compile | Package, import, chữ ký API |
 | Gradle hoặc JVM | JDK, Wrapper, dependency |
 | Không tìm thấy test | Vị trí test, import Jupiter, `useJUnitPlatform()` |
@@ -373,7 +423,7 @@ Quy tắc viết và tổ chức code nhất quán giữa các thành viên.
 ### Naming
 
 | Thành phần | Quy ước | Ví dụ |
-|---|---|---|
+| --- | --- | --- |
 | Class, interface, enum | PascalCase | `BattleController` |
 | Method, biến, tham số | camelCase | `currentTurn` |
 | Hằng số | UPPER_SNAKE_CASE | `BOARD_SIZE` |
@@ -406,7 +456,7 @@ Tài liệu thiết kế, hướng dẫn triển khai và nguồn tham khảo.
 <summary>Project Documents</summary>
 
 | Tài liệu | Nội dung |
-|---|---|
+| --- | --- |
 | `RogueKnight_TD_v0.1_Full.pdf` | Yêu cầu, kiến trúc, state, contract, gameplay và kiểm thử |
 | - | - |
 
@@ -416,8 +466,8 @@ Tài liệu thiết kế, hướng dẫn triển khai và nguồn tham khảo.
 <summary>Related Documents</summary>
 
 - [GitHub Project](https://github.com/users/do-manh-hiep/projects/5)
-- [CREDITS.md](CREDITS.md): Thông tin ghi công.
-- [licenses/](licenses/): Giấy phép.
+- [CREDITS.md](CREDITS.md)
+- [licenses/](licenses/)
 
 </details>
 
