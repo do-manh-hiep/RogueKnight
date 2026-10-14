@@ -37,26 +37,6 @@ configure(subprojects) {
     maven { url 'https://jitpack.io' }
   }
 
-  // From https://lyze.dev/2021/04/29/libGDX-Internal-Assets-List/
-  // The article can be helpful when using assets.txt in your project.
-  tasks.register('generateAssetList') {
-    inputs.dir("${project.rootDir}/assets/")
-    // projectFolder/assets
-    File assetsFolder = new File("${project.rootDir}/assets/")
-    // projectFolder/assets/assets.txt
-    File assetsFile = new File(assetsFolder, "assets.txt")
-    // delete that file in case we've already created it
-    assetsFile.delete()
-
-    // iterate through all files inside that folder
-    // convert it to a relative path
-    // and append it to the file assets.txt
-    fileTree(assetsFolder).collect { assetsFolder.relativePath(it) }.sort().each {
-      assetsFile.append(it + "\n")
-    }
-  }
-  processResources.dependsOn 'generateAssetList'
-
   compileJava {
     options.incremental = true
   }
@@ -75,3 +55,58 @@ subprojects {
 }
 
 eclipse.project.name = 'RogueKnight' + '-parent'
+
+def generateAssetList = tasks.register('generateAssetList') {
+  def assetsFolder = layout.projectDirectory.dir('assets')
+  def assetsFile = assetsFolder.file('assets.txt')
+
+  inputs.files(fileTree(assetsFolder.asFile) {
+    exclude 'assets.txt'
+  })
+  outputs.file(assetsFile)
+
+  doLast {
+    def paths = fileTree(assetsFolder.asFile).matching {
+      exclude 'assets.txt'
+    }.files.collect {
+      assetsFolder.asFile.toPath().relativize(it.toPath())
+        .toString().replace('\\', '/')
+    }.sort()
+
+    assetsFile.asFile.setText(
+      paths.isEmpty() ? '' : paths.join('\n') + '\n',
+      'UTF-8'
+    )
+  }
+}
+
+project(':lwjgl3') {
+  tasks.named('processResources') {
+    dependsOn(generateAssetList)
+  }
+}
+
+// IDE generated-directory filters
+allprojects {
+  eclipse {
+    project {
+      ['.gradle', 'build', 'bin'].each { folderName ->
+        resourceFilter {
+          appliesTo = 'FOLDERS'
+          type = 'EXCLUDE_ALL'
+          recursive = true
+          matcher {
+            id = 'org.eclipse.ui.ide.multiFilter'
+            arguments = "1.0-name-matches-false-false-${folderName}"
+          }
+        }
+      }
+    }
+  }
+
+  idea {
+    module {
+      excludeDirs += files('.gradle', 'build', 'bin')
+    }
+  }
+}
