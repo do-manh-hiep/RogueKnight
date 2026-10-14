@@ -286,7 +286,7 @@ AI hỗ trợ đọc dự án, triển khai task và debug. Coding agent có th�
 
 Đọc phần liên quan đến task. Xác định nguồn task từ yêu cầu: tài liệu hướng dẫn/triển khai hoặc GitHub Issues được theo dõi trên Project. Nếu chưa rõ nguồn hoặc thiếu thông tin cần thiết, yêu cầu bổ sung context.
 
-Ưu tiên CLI. Có công cụ và quyền thì thực hiện trực tiếp; nếu thiếu, cung cấp lệnh và đọc kết quả người dùng gửi trước khi tiếp tục.
+Ưu tiên CLI. Có công cụ và quyền thì thực hiện trực tiếp; nếu thiếu, cung cấp lệnh và đọc kết quả người dùng gửi trước khi tiếp tục. Dùng GitHub CLI (`gh`) cho GitHub và ripgrep (`rg`) để tìm code/file. Thiếu công cụ thì hướng dẫn cài đặt hoặc dùng công cụ tương đương; với `gh`, cần đăng nhập và có quyền phù hợp với task.
 
 Đặt log, báo cáo và script tạm trong `temp/`; không commit. Chuyển nội dung cần giữ sang vị trí phù hợp trước khi dọn file tạm.
 
