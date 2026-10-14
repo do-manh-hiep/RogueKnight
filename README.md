@@ -40,7 +40,7 @@ Các thành phần thuộc libGDX dùng phiên bản theo framework.
 
 ## 2. Project Structure
 
-Dự án tách gameplay, giao diện và launcher desktop thành ba module, dùng package gốc `rogueknight`.
+Dự án tách gameplay, giao diện và launcher desktop thành ba module.
 
 ```text
 RogueKnight/
@@ -69,16 +69,18 @@ RogueKnight/
 <details open>
 <summary>Where to Add Code</summary>
 
-Chọn module theo responsibilities, rồi tạo subsystem dưới package gốc.
+**RogueKnight dùng `<package gốc>` là `rogueknight`**.
+
+Chọn module theo responsibilities, rồi tạo subsystem dưới `<package gốc>`.
 
 ```text
 Code: <module>/src/main/java/<package_gốc>/<subsystem>/
 Test: <module>/src/test/java/<package_gốc>/<subsystem>/
 ```
 
-`<package_gốc>` là đường dẫn tương ứng với namespace Java. RogueKnight dùng package gốc `rogueknight`; nếu package gốc có nhiều phần, chẳng hạn `org.example.game`, đường dẫn tương ứng là `org/example/game/`.
+`<package_gốc>` là đường dẫn tương ứng với namespace Java; nếu `<package gốc>` có nhiều phần, chẳng hạn `org.example.game`, đường dẫn tương ứng là `org/example/game/`.
 
-Code và test cùng subsystem dùng package `<package_gốc>.<subsystem>`. Tạo thêm `<subsystem>` dưới cùng package gốc khi cần chia responsibilities.
+Code và test cùng subsystem dùng package `<package_gốc>.<subsystem>`. Tạo thêm `<subsystem>` dưới cùng `<package gốc>` khi cần chia responsibilities.
 
 | Content | Location |
 |---|---|
