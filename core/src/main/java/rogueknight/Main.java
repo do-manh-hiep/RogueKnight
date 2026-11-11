@@ -3,53 +3,73 @@ package rogueknight;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import rogueknight.skeleton.WaitDemoController;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
+import rogueknight.core.input.BoardInputHandler;
+import rogueknight.core.input.FixtureBattleController;
+import rogueknight.core.view.BoardProjection;
+import rogueknight.core.view.BoardRenderer;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
+/**
+ * Main application listener implementing the UI slice for T-02.02:
+ * Click and see Knight move on an 8x8 chessboard.
+ */
 public class Main extends ApplicationAdapter {
-    private SpriteBatch batch;
-    private Texture image;
-    private BitmapFont font;
-    private final WaitDemoController controller = new WaitDemoController();
-    private String message = "Space: WAIT | Demo only; no enemy queue";
+    public static final float VIRTUAL_WIDTH = 640f;
+    public static final float VIRTUAL_HEIGHT = 480f;
+    public static final float TILE_SIZE = 48f;
+    public static final float BOARD_ORIGIN_X = 128f;
+    public static final float BOARD_ORIGIN_Y = 48f;
 
-    /** Initializes the demo's rendering resources. */
+    private OrthographicCamera camera;
+    private Viewport viewport;
+    private final Vector3 touchPoint = new Vector3();
+
+    private BoardProjection projection;
+    private FixtureBattleController controller;
+    private BoardInputHandler inputHandler;
+    private BoardRenderer renderer;
+
     @Override
     public void create() {
-        batch = new SpriteBatch();
-        image = new Texture("libgdx.png");
-        font = new BitmapFont();
+        camera = new OrthographicCamera();
+        viewport = new FitViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, camera);
+        camera.position.set(VIRTUAL_WIDTH / 2f, VIRTUAL_HEIGHT / 2f, 0);
+
+        projection = new BoardProjection(BOARD_ORIGIN_X, BOARD_ORIGIN_Y, TILE_SIZE);
+        controller = new FixtureBattleController();
+        inputHandler = new BoardInputHandler(projection, controller);
+        renderer = new BoardRenderer();
     }
 
-    /** Submits WAIT on a new Space press and renders the current demo state. */
     @Override
     public void render() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            var result = controller.submit(
-                new WaitDemoController.Request("knight", "WAIT")
-            );
-            message = result.accepted()
-                ? "WAIT accepted | Demo only; no enemy queue"
-                : result.error().name();
+        // Handle mouse click input
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            touchPoint.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+            viewport.unproject(touchPoint);
+            inputHandler.handleWorldClick(touchPoint.x, touchPoint.y);
         }
-        ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
-        batch.begin();
-        batch.draw(image, 140, 210);
-        font.draw(batch, "Skeleton WAIT demo", 20, 100);
-        font.draw(batch, "Turn: " + controller.snapshot().globalTurn(), 20, 75);
-        font.draw(batch, message, 20, 50);
-        batch.end();
+
+        ScreenUtils.clear(0.12f, 0.12f, 0.16f, 1f);
+        viewport.apply();
+        camera.update();
+
+        renderer.render(camera, inputHandler);
     }
 
-    /** Releases the demo's rendering resources. */
+    @Override
+    public void resize(int width, int height) {
+        viewport.update(width, height, true);
+    }
+
     @Override
     public void dispose() {
-        batch.dispose();
-        image.dispose();
-        font.dispose();
+        if (renderer != null) {
+            renderer.dispose();
+        }
     }
 }
