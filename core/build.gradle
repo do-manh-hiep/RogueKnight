@@ -5,10 +5,16 @@ dependencies {
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
   implementation project(':logic')
   implementation "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-backend-lwjgl3:$graalHelperVersion"
   }
+}
+
+test {
+  useJUnitPlatform()
 }
 
 jar {
