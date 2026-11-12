@@ -1,0 +1,56 @@
+{
+  "width": 8,
+  "height": 8,
+  "rocks": [
+    { "column": 2, "row": 3 },
+    { "column": 2, "row": 4 },
+    { "column": 3, "row": 2 },
+    { "column": 4, "row": 5 },
+    { "column": 5, "row": 3 },
+    { "column": 5, "row": 4 }
+  ],
+  "pieces": [
+    {
+      "id": "knight",
+      "type": "KNIGHT",
+      "column": 3,
+      "row": 0,
+      "spawnOrder": 0
+    },
+    {
+      "id": "pawn-1",
+      "type": "PAWN",
+      "column": 2,
+      "row": 6,
+      "spawnOrder": 1
+    },
+    {
+      "id": "pawn-2",
+      "type": "PAWN",
+      "column": 3,
+      "row": 6,
+      "spawnOrder": 2
+    },
+    {
+      "id": "rook-1",
+      "type": "ROOK",
+      "column": 7,
+      "row": 7,
+      "spawnOrder": 3
+    },
+    {
+      "id": "bishop-1",
+      "type": "BISHOP",
+      "column": 2,
+      "row": 7,
+      "spawnOrder": 4
+    },
+    {
+      "id": "king-1",
+      "type": "KING",
+      "column": 3,
+      "row": 7,
+      "spawnOrder": 5
+    }
+  ]
+}
