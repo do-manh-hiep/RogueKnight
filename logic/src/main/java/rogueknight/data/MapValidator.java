@@ -101,7 +101,7 @@ public class MapValidator {
         Integer column, Integer row, int width, int height, String location
     ) {
         if(column == null || row == null){
-            throw new IllegalArgumentException("location thieu column, row");
+            throw new IllegalArgumentException(location + " thieu column, row");
         }
 
         if(column < 0 || column >= width || row < 0 || row>= height){
