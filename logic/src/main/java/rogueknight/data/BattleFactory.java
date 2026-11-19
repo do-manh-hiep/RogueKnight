@@ -5,6 +5,7 @@ import rogueknight.battle.EquipmentType;
 import rogueknight.battle.Inventory;
 import rogueknight.battle.PieceState;
 import rogueknight.battle.PieceType;
+import rogueknight.battle.BattleSnapshot;
 import rogueknight.board.Position;
 import rogueknight.data.dto.MapData;
 import rogueknight.data.dto.PieceData;
@@ -61,6 +62,24 @@ public final class BattleFactory {
                     new Position(piece.column(), piece.row());
 
             battle.addPiece(state, position);
+        }
+
+        // Chỉ tính hướng sau khi đã đặt đầy đủ đá và quân.
+        // Hai Pawn cùng được tính từ một snapshot ban đầu.
+        BattleSnapshot initialSnapshot = battle.snapshot();
+        PawnDirectionResolver directionResolver = new PawnDirectionResolver();
+
+        for (BattleSnapshot.PieceView piece : initialSnapshot.pieces()) {
+            if (piece.type() == PieceType.PAWN) {
+                var direction = directionResolver.initialDirection(
+                    initialSnapshot,
+                    piece.id()
+                );
+
+                PieceState pawn = battle.pieceState(piece.id()).orElseThrow();
+
+                battle.replacePiece(pawn.withDirection(direction));
+            }
         }
 
         return battle;

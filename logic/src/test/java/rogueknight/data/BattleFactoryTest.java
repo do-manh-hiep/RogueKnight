@@ -9,7 +9,10 @@ import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.BattleState;
 import rogueknight.battle.EquipmentType;
 import rogueknight.battle.PieceType;
+import rogueknight.battle.Direction;
 import rogueknight.board.Position;
+
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
 import java.util.Set;
@@ -302,5 +305,54 @@ class BattleFactoryTest {
             controller.snapshot(),
             "Đi vào đá phải giữ nguyên toàn bộ trạng thái trận"
         );
+    }
+
+    @Test
+    void initializesPawnDirectionsFromCompleteMap() throws IOException {
+        BattleState battle = new BattleFactory().createMap01(
+            EquipmentType.CANNON_MOVEMENT,
+            EquipmentType.DIAGONAL_SKEWER
+        );
+
+        BattleSnapshot snapshot = battle.snapshot();
+
+        // Với Map01 và quy tắc hòa column → row,
+        // cả hai Pawn chọn bước đầu về phía SOUTH_WEST.
+        assertEquals(
+            Direction.SOUTH_WEST,
+            snapshot.pieceById("pawn-1").orElseThrow().currentDirection()
+        );
+        assertEquals(
+            Direction.SOUTH_WEST,
+            snapshot.pieceById("pawn-2").orElseThrow().currentDirection()
+        );
+
+        // Kiểm tra hướng đã được lưu trong state thật.
+        assertEquals(
+            Direction.SOUTH_WEST,
+            battle.pieceState("pawn-1").orElseThrow().currentDirection()
+        );
+        assertEquals(
+            Direction.SOUTH_WEST,
+            battle.pieceState("pawn-2").orElseThrow().currentDirection()
+        );
+
+        // Tính hướng không làm di chuyển quân hoặc tăng lượt.
+        assertEquals(
+            new Position(2, 6),
+            snapshot.pieceById("pawn-1").orElseThrow().position()
+        );
+        assertEquals(
+            new Position(3, 6),
+            snapshot.pieceById("pawn-2").orElseThrow().position()
+        );
+        assertEquals(1, snapshot.globalTurn());
+
+        // Các quân khác không có hướng Pawn.
+        for (BattleSnapshot.PieceView piece : snapshot.pieces()) {
+            if (piece.type() != PieceType.PAWN) {
+                assertNull(piece.currentDirection(), piece.id());
+            }
+        }
     }
 }
