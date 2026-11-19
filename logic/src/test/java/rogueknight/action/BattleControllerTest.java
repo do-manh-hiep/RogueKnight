@@ -191,7 +191,10 @@ class BattleControllerTest {
 
         ActionResult result = controller.submit(ActionRequest.move(KNIGHT, at("e6")));
 
-        assertEquals(List.of(new BattleEvent.PieceMoved(KNIGHT, at("d4"), at("e6")), enemyEvent), result.events());
+        assertEquals(List.of(
+                new BattleEvent.ActionPerformed(ActionKind.MOVE, KNIGHT),
+                new BattleEvent.PieceMoved(KNIGHT, at("d4"), at("e6")),
+                enemyEvent), result.events());
         assertEquals(at("a7"), result.after().pieceById("R1").orElseThrow().position());
     }
 }
