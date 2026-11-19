@@ -9,9 +9,11 @@ import java.util.Set;
 import rogueknight.board.Position;
 
 /** Detached, deeply immutable value snapshot for UI, tests and later replay integration. */
-public record BattleSnapshot(int globalTurn, Set<Position> rocks, List<PieceView> pieces, Inventory inventory) {
+public record BattleSnapshot(int globalTurn, BattlePhase phase, BattleResult result, Set<Position> rocks, List<PieceView> pieces, Inventory inventory) {
     public BattleSnapshot {
         if (globalTurn < 1) throw new IllegalArgumentException("globalTurn must be >= 1");
+        Objects.requireNonNull(phase, "phase");
+        Objects.requireNonNull(result, "result");
         Objects.requireNonNull(rocks, "rocks");
         Objects.requireNonNull(pieces, "pieces");
         Objects.requireNonNull(inventory, "inventory");
