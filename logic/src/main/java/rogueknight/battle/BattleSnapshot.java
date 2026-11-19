@@ -31,13 +31,61 @@ public record BattleSnapshot(int globalTurn, BattlePhase phase, BattleResult res
     public Optional<PieceView> pieceById(String id) { return pieces.stream().filter(piece -> piece.id().equals(id)).findFirst(); }
     public Optional<PieceView> pieceAt(Position position) { return pieces.stream().filter(piece -> piece.position().equals(position)).findFirst(); }
 
-    public record PieceView(String id, PieceType type, int hp, int cycle, int nextActivationTurn,
-                            int spawnOrder, Position position) {
+        public record PieceView(
+        String id,
+        PieceType type,
+        int hp,
+        int cycle,
+        int nextActivationTurn,
+        int spawnOrder,
+        Position position,
+        Direction currentDirection
+    ) {
         public PieceView {
-            if (id == null || id.isBlank()) throw new IllegalArgumentException("Piece id must not be blank");
+            if (id == null || id.isBlank()) {
+                throw new IllegalArgumentException("Piece id must not be blank");
+            }
+
             Objects.requireNonNull(type, "type");
             Objects.requireNonNull(position, "position");
-            if (hp <= 0 || cycle < 0 || nextActivationTurn < 0) throw new IllegalArgumentException("Invalid live piece stats");
+
+            if (hp <= 0 || cycle < 0 || nextActivationTurn < 0) {
+                throw new IllegalArgumentException("Invalid live piece stats");
+            }
+
+            if (type == PieceType.PAWN && currentDirection == null) {
+                throw new IllegalArgumentException(
+                    "Pawn view must have currentDirection"
+                );
+            }
+
+            if (type != PieceType.PAWN && currentDirection != null) {
+                throw new IllegalArgumentException(
+                    "Only Pawn view can have currentDirection"
+                );
+            }
+        }
+
+        // Giữ tương thích với code cũ chưa truyền hướng.
+        public PieceView(
+            String id,
+            PieceType type,
+            int hp,
+            int cycle,
+            int nextActivationTurn,
+            int spawnOrder,
+            Position position
+        ) {
+            this(
+                id,
+                type,
+                hp,
+                cycle,
+                nextActivationTurn,
+                spawnOrder,
+                position,
+                type == PieceType.PAWN ? Direction.SOUTH : null
+            );
         }
     }
 }

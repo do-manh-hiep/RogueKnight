@@ -71,8 +71,16 @@ public final class BattleState {
         for (PieceState piece : pieces.values()) {
             Position position = board.positionOf(piece.id()).orElseThrow(
                     () -> new IllegalStateException("Piece without position: " + piece.id()));
-            views.add(new PieceView(piece.id(), piece.type(), piece.hp(), piece.cycle(),
-                    piece.nextActivationTurn(), piece.spawnOrder(), position));
+            views.add(new PieceView(
+                piece.id(),
+                piece.type(),
+                piece.hp(),
+                piece.cycle(),
+                piece.nextActivationTurn(),
+                piece.spawnOrder(),
+                position,
+                piece.currentDirection()
+            ));
         }
         Set<String> boardIds = board.pieceIds();
         if (views.size() != boardIds.size() || views.stream().anyMatch(view -> !boardIds.contains(view.id())))
