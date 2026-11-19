@@ -17,18 +17,23 @@ public final class BattleState {
     private final Board board;
     private final Map<String, PieceState> pieces = new LinkedHashMap<>();
     private Inventory inventory;
-    private final int globalTurn = INITIAL_TURN;
+    private int globalTurn = INITIAL_TURN;
+    private BattlePhase phase = BattlePhase.PLAYER_SELECT;
+    private BattleResult result = BattleResult.ONGOING;
 
     public BattleState(Set<Position> rocks, Inventory inventory) {
         this.board = new Board(rocks);
         this.inventory = Objects.requireNonNull(inventory, "inventory");
     }
     public int globalTurn() { return globalTurn; }
+    public BattlePhase phase() { return phase; }
+    public BattleResult result() { return result; }
     public Inventory inventory() { return inventory; }
     public Optional<PieceState> pieceState(String id) { return Optional.ofNullable(pieces.get(id)); }
     public Optional<Position> positionOf(String id) { return board.positionOf(id); }
     public Optional<String> pieceAt(Position position) { return board.pieceAt(position); }
     public boolean isEmpty(Position position) { return board.isEmpty(position); }
+    public boolean isRock(Position position) { return board.isRock(position); }
 
     public void addPiece(PieceState piece, Position position) {
         Objects.requireNonNull(piece, "piece");
@@ -48,6 +53,16 @@ public final class BattleState {
             throw new IllegalArgumentException("spawnOrder is immutable for a piece");
         pieces.put(updated.id(), updated);
     }
+    /** Only the battle controller advances the turn, once per accepted Player Action (TD 5.2). */
+    public void advanceTurn() { globalTurn++; }
+    public void setPhase(BattlePhase phase) { this.phase = Objects.requireNonNull(phase, "phase"); }
+    /** Ending the battle also moves the phase to FINISHED; ONGOING cannot be restored here. */
+    public void finish(BattleResult result) {
+        Objects.requireNonNull(result, "result");
+        if (result == BattleResult.ONGOING) throw new IllegalArgumentException("finish requires a terminal result");
+        this.result = result;
+        this.phase = BattlePhase.FINISHED;
+    }
     /** Aggregate mutation point intended for a successful Equipment Action resolver call. */
     public void consumeEquipment(EquipmentType type) { inventory = inventory.consumeOneCharge(type); }
 
@@ -62,7 +77,7 @@ public final class BattleState {
         Set<String> boardIds = board.pieceIds();
         if (views.size() != boardIds.size() || views.stream().anyMatch(view -> !boardIds.contains(view.id())))
             throw new IllegalStateException("Board occupants and piece states differ");
-        return new BattleSnapshot(globalTurn, board.rocks(), views, inventory);
+        return new BattleSnapshot(globalTurn, phase, result, board.rocks(), views, inventory);
     }
     private void requireKnown(String id) {
         if (!pieces.containsKey(id)) throw new IllegalArgumentException("Unknown piece id: " + id);

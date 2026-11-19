@@ -94,4 +94,20 @@ class BattleStateTest {
         assertEquals(before, state.snapshot());
     }
     @Test void globalTurnStartsAtOne() { assertEquals(1, new BattleState(Set.of(), loadout()).globalTurn()); }
+    @Test void startsOngoingInPlayerSelectAndFinishMovesToFinished() {
+        BattleState state = new BattleState(Set.of(), loadout());
+        assertEquals(BattlePhase.PLAYER_SELECT, state.snapshot().phase());
+        assertEquals(BattleResult.ONGOING, state.snapshot().result());
+        assertThrows(IllegalArgumentException.class, () -> state.finish(BattleResult.ONGOING));
+        state.finish(BattleResult.DEFEAT);
+        assertEquals(BattlePhase.FINISHED, state.phase());
+        assertEquals(BattleResult.DEFEAT, state.snapshot().result());
+    }
+    @Test void advanceTurnIsReflectedOnlyInLaterSnapshots() {
+        BattleState state = new BattleState(Set.of(), loadout());
+        BattleSnapshot first = state.snapshot();
+        state.advanceTurn();
+        assertEquals(1, first.globalTurn());
+        assertEquals(2, state.snapshot().globalTurn());
+    }
 }
