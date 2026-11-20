@@ -2,19 +2,15 @@ package rogueknight.action;
 
 import java.util.Objects;
 
-/*
- * ValidationOutcome.java  |  T-02.01
- * Kết quả validate nội bộ: hoặc có plan, hoặc có error, không bao giờ cả hai.
- */
-record ValidationOutcome(MovePlan plan, ActionError error) {
-
+/** Internal validation result: exactly one of plan or error is present. */
+record ValidationOutcome(ActionPlan plan, ActionError error) {
     ValidationOutcome {
         if ((plan == null) == (error == null)) {
             throw new IllegalArgumentException("exactly one of plan or error is required");
         }
     }
 
-    static ValidationOutcome valid(MovePlan plan) {
+    static ValidationOutcome valid(ActionPlan plan) {
         return new ValidationOutcome(Objects.requireNonNull(plan), null);
     }
 
