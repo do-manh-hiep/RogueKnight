@@ -30,7 +30,7 @@ public final class BoardRenderer {
     private final Color legalHighlightColor = new Color(0.2f, 0.85f, 0.35f, 0.45f);
     private final Color legalBorderColor = new Color(0.1f, 0.7f, 0.25f, 0.9f);
     private final Color selectedKnightColor = new Color(0.2f, 0.6f, 0.95f, 0.55f);
-    private final Color rockColor = new Color(0.28f, 0.28f, 0.32f, 0.95f);
+    // private final Color rockColor = new Color(0.28f, 0.28f, 0.32f, 0.95f);
     private final Color enemyColor = new Color(0.85f, 0.25f, 0.25f, 0.95f);
 
     public BoardRenderer() {

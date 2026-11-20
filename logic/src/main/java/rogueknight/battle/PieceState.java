@@ -1,37 +1,73 @@
 package rogueknight.battle;
 
 /*
- * PieceState.java  |  T-01.02  |  TD: 4.1-4.2, 6.1, I04
- *
- * Dữ liệu của một quân: id, type, hp, cycle, nextActivationTurn, spawnOrder.
- * - KHÔNG chứa position: vị trí chỉ do Board giữ (một nguồn duy nhất, I04).
- * - Bất biến (record). Thay đổi HP dùng withHp() rồi BattleState.replacePiece();
- *   hp không âm (I06): withHp clamp tối thiểu 0.
- * - Knight không có lịch kích hoạt: dùng cycle = 0, nextActivationTurn = 0.
- * - currentDirection của Pawn và PieceSpec/balance.json thuộc T-02.03 (DEC-01, DEC-10).
- * Từ khóa tìm kiếm: withHp, spawnOrder, nextActivationTurn.
+ * PieceState bất biến; vị trí chỉ do Board giữ.
+ * currentDirection chỉ áp dụng cho Pawn.
  */
 public record PieceState(
-        String id,
-        PieceType type,
-        int hp,
-        int cycle,
-        int nextActivationTurn,
-        int spawnOrder) {
+    String id,
+    PieceType type,
+    int hp,
+    int cycle,
+    int nextActivationTurn,
+    int spawnOrder,
+    Direction currentDirection
+) {
 
     public PieceState {
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("Piece id must not be blank");
         }
+
         if (type == null) {
             throw new IllegalArgumentException("Piece type must not be null");
         }
+
         if (hp < 0 || cycle < 0 || nextActivationTurn < 0) {
-            throw new IllegalArgumentException("hp, cycle, nextActivationTurn must be >= 0");
+            throw new IllegalArgumentException(
+                "hp, cycle, nextActivationTurn must be >= 0"
+            );
+        }
+
+        if (type == PieceType.PAWN && currentDirection == null) {
+            throw new IllegalArgumentException("Pawn must have currentDirection");
+        }
+
+        if (type != PieceType.PAWN && currentDirection != null) {
+            throw new IllegalArgumentException("Only Pawn can have currentDirection");
         }
     }
 
+    // Tương thích với code cũ dùng sáu tham số.
+    public PieceState(
+        String id,
+        PieceType type,
+        int hp,
+        int cycle,
+        int nextActivationTurn,
+        int spawnOrder
+    ) {
+        this(
+            id, type, hp, cycle, nextActivationTurn, spawnOrder,
+            type == PieceType.PAWN ? Direction.SOUTH : null
+        );
+    }
+
     public PieceState withHp(int newHp) {
-        return new PieceState(id, type, Math.max(0, newHp), cycle, nextActivationTurn, spawnOrder);
+        return new PieceState(
+            id, type, Math.max(0, newHp),
+            cycle, nextActivationTurn, spawnOrder, currentDirection
+        );
+    }
+
+    public PieceState withDirection(Direction newDirection) {
+        if (type != PieceType.PAWN) {
+            throw new IllegalStateException("Only Pawn can change direction");
+        }
+
+        return new PieceState(
+            id, type, hp,
+            cycle, nextActivationTurn, spawnOrder, newDirection
+        );
     }
 }

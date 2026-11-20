@@ -9,9 +9,17 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import rogueknight.core.input.BoardInputHandler;
-import rogueknight.core.input.FixtureBattleController;
 import rogueknight.core.view.BoardProjection;
 import rogueknight.core.view.BoardRenderer;
+
+import rogueknight.action.BattleController;
+import rogueknight.battle.BattleState;
+import rogueknight.battle.EquipmentType;
+import rogueknight.core.input.BattleControllerAdapter;
+import rogueknight.core.input.BattleControllerPort;
+import rogueknight.data.BattleFactory;
+
+import java.io.IOException;
 
 /**
  * Main application listener implementing the UI slice for T-02.02:
@@ -29,7 +37,7 @@ public class Main extends ApplicationAdapter {
     private final Vector3 touchPoint = new Vector3();
 
     private BoardProjection projection;
-    private FixtureBattleController controller;
+    private BattleControllerPort  controller;
     private BoardInputHandler inputHandler;
     private BoardRenderer renderer;
 
@@ -40,7 +48,22 @@ public class Main extends ApplicationAdapter {
         camera.position.set(VIRTUAL_WIDTH / 2f, VIRTUAL_HEIGHT / 2f, 0);
 
         projection = new BoardProjection(BOARD_ORIGIN_X, BOARD_ORIGIN_Y, TILE_SIZE);
-        controller = new FixtureBattleController();
+        try {
+            BattleState battle = new BattleFactory().createMap01(
+                EquipmentType.CANNON_MOVEMENT,
+                EquipmentType.DIAGONAL_SKEWER
+            );
+
+            controller = new BattleControllerAdapter(
+                new BattleController(battle)
+            );
+        } catch (IOException | IllegalArgumentException exception) {
+            throw new IllegalStateException(
+                "Không thể khởi tạo trận Map01",
+                exception
+            );
+        }
+        
         inputHandler = new BoardInputHandler(projection, controller);
         renderer = new BoardRenderer();
     }
