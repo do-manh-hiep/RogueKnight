@@ -63,7 +63,9 @@ class KnightMoveTest {
         assertTrue(after.pieceAt(at("d4")).isEmpty());
         assertEquals(KNIGHT, after.pieceAt(at("e6")).orElseThrow().id());
         assertEquals(5, after.pieceById(KNIGHT).orElseThrow().hp());
-        assertEquals(List.of(new BattleEvent.PieceMoved(KNIGHT, at("d4"), at("e6"))), result.events());
+        assertEquals(List.of(
+                new BattleEvent.ActionPerformed(ActionKind.MOVE, KNIGHT),
+                new BattleEvent.PieceMoved(KNIGHT, at("d4"), at("e6"))), result.events());
     }
 
     @Test
