@@ -172,7 +172,10 @@ public final class BoardRenderer {
         }
 
         font.setColor(Color.WHITE);
-        font.draw(batch, "Turn: " + snapshot.globalTurn() + "  |  Vị trí Knight: " + knightPos.notation(), 20, 425);
+        String headerInfo = !snapshot.statusMessage().isBlank()
+            ? snapshot.statusMessage()
+            : "Turn: " + snapshot.globalTurn() + "  |  Vị trí Knight: " + knightPos.notation();
+        font.draw(batch, headerInfo, 20, 425);
 
         // Feedback message
         font.setColor(Color.CYAN);
