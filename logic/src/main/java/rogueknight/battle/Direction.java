@@ -25,4 +25,24 @@ public enum Direction {
     public int deltaRow() {
         return deltaRow;
     }
+
+    public static Direction fromDelta(int deltaColumn, int deltaRow) {
+        for (Direction direction : Direction.values()) {
+            if (direction.deltaColumn == deltaColumn
+                    && direction.deltaRow == deltaRow) {
+                return direction;
+            }
+        }
+        throw new IllegalArgumentException(
+                "Invalid direction delta: (" + deltaColumn + ", " + deltaRow + ")"
+        );
+    }
+
+    public Direction rotate45Clockwise() {
+        return values()[(ordinal() + 1) % 8];
+    }
+
+    public Direction rotate45CounterClockwise() {
+        return values()[(ordinal() + 7) % 8];
+    }
 }

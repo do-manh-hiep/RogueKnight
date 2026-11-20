@@ -13,6 +13,7 @@ import rogueknight.core.view.BoardProjection;
 import rogueknight.core.view.BoardRenderer;
 
 import rogueknight.action.BattleController;
+import rogueknight.action.PawnEnemyPhase;
 import rogueknight.battle.BattleState;
 import rogueknight.battle.EquipmentType;
 import rogueknight.core.input.BattleControllerAdapter;
@@ -55,7 +56,7 @@ public class Main extends ApplicationAdapter {
             );
 
             controller = new BattleControllerAdapter(
-                new BattleController(battle)
+                new BattleController(battle, new PawnEnemyPhase())
             );
         } catch (IOException | IllegalArgumentException exception) {
             throw new IllegalStateException(

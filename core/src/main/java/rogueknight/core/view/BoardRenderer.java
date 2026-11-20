@@ -158,9 +158,16 @@ public final class BoardRenderer {
         });
 
         // Draw Knight
-        font.setColor(new Color(0.1f, 0.95f, 1.0f, 1f));
-        drawCenteredText(">>> KNIGHT <<<", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) + 8);
-        drawCenteredText("(" + knightPos.notation() + ")", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) - 8);
+        boolean isKnightDead = snapshot.statusMessage().contains("DEAD");
+        if (isKnightDead) {
+            font.setColor(new Color(0.8f, 0.2f, 0.2f, 1f));
+            drawCenteredText("[FALLEN]", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) + 8);
+            drawCenteredText("(" + knightPos.notation() + ")", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) - 8);
+        } else {
+            font.setColor(new Color(0.1f, 0.95f, 1.0f, 1f));
+            drawCenteredText(">>> KNIGHT <<<", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) + 8);
+            drawCenteredText("(" + knightPos.notation() + ")", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) - 8);
+        }
 
         // 3. Draw HUD Information Header and Footer
         font.setColor(Color.YELLOW);
@@ -172,7 +179,10 @@ public final class BoardRenderer {
         }
 
         font.setColor(Color.WHITE);
-        font.draw(batch, "Turn: " + snapshot.globalTurn() + "  |  Vị trí Knight: " + knightPos.notation(), 20, 425);
+        String headerInfo = !snapshot.statusMessage().isBlank()
+            ? snapshot.statusMessage()
+            : "Turn: " + snapshot.globalTurn() + "  |  Vị trí Knight: " + knightPos.notation();
+        font.draw(batch, headerInfo, 20, 425);
 
         // Feedback message
         font.setColor(Color.CYAN);
