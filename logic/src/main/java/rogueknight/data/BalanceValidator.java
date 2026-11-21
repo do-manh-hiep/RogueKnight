@@ -28,11 +28,11 @@ public final class BalanceValidator {
             requirePositive(stats.hp(), type + ".hp");
 
             if ("KNIGHT".equals(type)) {
-                requirePresent(stats.swordDamage(), type + ".swordDamage");
-                requirePresent(stats.captureDamage(), type + ".captureDamage");
+                requireNonNegative(stats.swordDamage(), type + ".swordDamage");
+                requireNonNegative(stats.captureDamage(), type + ".captureDamage");
             } else {
                 requirePositive(stats.cycle(), type + ".cycle");
-                requirePresent(stats.damage(), type + ".damage");
+                requireNonNegative(stats.damage(), type + ".damage");
             }
         }
     }
@@ -45,9 +45,11 @@ public final class BalanceValidator {
         }
     }
 
-    private void requirePresent(Integer value, String field) {
-        if (value == null) {
-            throw new IllegalArgumentException("Thiếu thông số " + field + ".");
+    private void requireNonNegative(Integer value, String field) {
+        if (value == null || value < 0) {
+            throw new IllegalArgumentException(
+                field + " phải có giá trị >= 0, nhận được: " + value + "."
+            );
         }
     }
 }

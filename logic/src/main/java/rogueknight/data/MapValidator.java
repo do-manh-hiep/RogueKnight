@@ -76,6 +76,18 @@ public class MapValidator {
                     location + " có type không hợp lệ: " + type + "."
                 );
             }
+            
+            if ("KNIGHT".equals(type) && !"knight".equals(id)) {
+                throw new IllegalArgumentException(
+                    location + " có type KNIGHT nhưng id phải là knight."
+                );
+            }
+
+            if ("knight".equals(id) && !"KNIGHT".equals(type)) {
+                throw new IllegalArgumentException(
+                    location + " dùng id knight nhưng type phải là KNIGHT."
+                );
+            }
 
             if("KNIGHT".equals(type)){
                 hasKnight = true;
