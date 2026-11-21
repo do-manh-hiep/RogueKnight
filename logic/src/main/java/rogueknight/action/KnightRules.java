@@ -13,8 +13,7 @@ import rogueknight.board.Position;
 
 /** Read-only validation and legal-target generation for the player's Knight. */
 public final class KnightRules {
-    /** DEC-03 toggles: adjust if team finalizes edge-case rules differently. */
-    public static final boolean ALLOW_CANNON_MOVE_WITHOUT_TERMINAL_BLOCKER = true;
+    /** DEC-03: Skewer must hit at least one Enemy; Cannon Movement may land on any empty tile after the screen. */
     public static final boolean ALLOW_EMPTY_SKEWER = false;
 
     private KnightRules() { }
@@ -141,9 +140,6 @@ public final class KnightRules {
             ));
         }
 
-        if (!ALLOW_CANNON_MOVE_WITHOUT_TERMINAL_BLOCKER && !scan.hasTerminalBlockerBehindTarget) {
-            return ValidationOutcome.invalid(ActionError.INVALID_GEOMETRY);
-        }
         return ValidationOutcome.valid(new ActionPlan(
             ActionKind.CANNON_MOVEMENT,
             request.actorId(),
@@ -240,13 +236,13 @@ public final class KnightRules {
         ));
     }
 
-    private record RayScanResult(boolean orthogonal, int obstaclesBeforeTarget, boolean hasTerminalBlockerBehindTarget) { }
+    private record RayScanResult(boolean orthogonal, int obstaclesBeforeTarget) { }
 
     private static RayScanResult scanOrthogonalRay(BattleState state, Position from, Position target) {
         int dx = target.column() - from.column();
         int dy = target.row() - from.row();
         if ((dx == 0 && dy == 0) || (dx != 0 && dy != 0)) {
-            return new RayScanResult(false, 0, false);
+            return new RayScanResult(false, 0);
         }
         int stepCol = Integer.signum(dx);
         int stepRow = Integer.signum(dy);
@@ -262,20 +258,7 @@ public final class KnightRules {
             col += stepCol;
             row += stepRow;
         }
-
-        boolean hasBlockerBehind = false;
-        col = target.column() + stepCol;
-        row = target.row() + stepRow;
-        while (Position.isInBounds(col, row)) {
-            Position behind = new Position(col, row);
-            if (state.isRock(behind) || state.pieceAt(behind).isPresent()) {
-                hasBlockerBehind = true;
-                break;
-            }
-            col += stepCol;
-            row += stepRow;
-        }
-        return new RayScanResult(true, obstaclesBefore, hasBlockerBehind);
+        return new RayScanResult(true, obstaclesBefore);
     }
 
     private static Optional<ActionError> checkEquipmentReady(BattleState state, EquipmentType type) {
