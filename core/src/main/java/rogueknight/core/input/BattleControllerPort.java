@@ -3,6 +3,7 @@ package rogueknight.core.input;
 import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -21,4 +22,20 @@ public interface BattleControllerPort {
      * Advances turn on success; leaves state completely unchanged on rejection.
      */
     MoveResult submitMove(String actorId, BoardPosition target);
+
+    /** Modes the player can use now: MOVE plus each owned equipment with charges left. */
+    default List<ActionMode> availableModes() {
+        return List.of(ActionMode.MOVE);
+    }
+
+    /** Legal target positions for the given mode; default supports MOVE only. */
+    default Set<BoardPosition> legalTargets(String actorId, ActionMode mode) {
+        return mode == ActionMode.MOVE ? legalMoves(actorId) : Set.of();
+    }
+
+    /** Submits an action in the given mode; default supports MOVE only and rejects the rest. */
+    default MoveResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
+        if (mode == ActionMode.MOVE) return submitMove(actorId, target);
+        return MoveResult.rejected("UNSUPPORTED_ACTION", snapshot());
+    }
 }

@@ -21,6 +21,7 @@ public final class BoardInputHandler {
     private BoardPosition lastClickedPosition;
     private String feedbackMessage;
     private int submitInvocationCount = 0;
+    private ActionMode mode = ActionMode.MOVE;
 
     public BoardInputHandler(BoardProjection projection, BattleControllerPort controller) {
         this.projection = Objects.requireNonNull(projection, "projection must not be null");
@@ -58,13 +59,15 @@ public final class BoardInputHandler {
 
         // Submit move request to controller
         submitInvocationCount++;
-        MoveResult result = controller.submitMove("knight", target);
+        MoveResult result = controller.submitAction("knight", mode, target);
 
         if (result.accepted()) {
             this.currentSnapshot = result.after();
             this.selectedPosition = currentSnapshot.knightPosition();
-            this.feedbackMessage = "Di chuyển Knight: " + result.before().knightPosition().notation()
+            String label = mode == ActionMode.MOVE ? "Di chuyển Knight" : "Dùng " + mode;
+            this.feedbackMessage = label + ": " + result.before().knightPosition().notation()
                 + " -> " + target.notation() + " (Turn " + currentSnapshot.globalTurn() + ")";
+            this.mode = ActionMode.MOVE;
         } else {
             // Rejected: DO NOT update snapshot, preserve previous state
             this.currentSnapshot = result.before();
@@ -73,6 +76,31 @@ public final class BoardInputHandler {
         }
 
         return true;
+    }
+
+    /** Selects the action mode; selecting the active mode again returns to MOVE. */
+    public void selectMode(ActionMode newMode) {
+        if (newMode != null && !getAvailableModes().contains(newMode)) {
+            this.feedbackMessage = "Thẻ " + newMode.label() + " không có hoặc đã dùng hết";
+            return;
+        }
+        this.mode = (newMode == null || newMode == this.mode) ? ActionMode.MOVE : newMode;
+        this.feedbackMessage = "Chế độ: " + this.mode.label();
+    }
+
+    /** Modes usable now; used-up equipment is absent. */
+    public java.util.List<ActionMode> getAvailableModes() {
+        return controller.availableModes();
+    }
+
+    public ActionMode getMode() {
+        return mode;
+    }
+
+    /** Tiles to highlight for the active mode; MOVE uses the snapshot, others query the controller. */
+    public java.util.Set<BoardPosition> getHighlightTargets() {
+        if (mode == ActionMode.MOVE) return currentSnapshot.legalMoves();
+        return controller.legalTargets("knight", mode);
     }
 
     public BattleViewSnapshot getCurrentSnapshot() {

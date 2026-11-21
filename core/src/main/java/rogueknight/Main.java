@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import rogueknight.core.input.ActionMode;
 import rogueknight.core.input.BoardInputHandler;
 import rogueknight.core.view.BoardProjection;
 import rogueknight.core.view.BoardRenderer;
@@ -70,6 +71,11 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void render() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) inputHandler.selectMode(ActionMode.MOVE);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) inputHandler.selectMode(ActionMode.CANNON_MOVEMENT);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) inputHandler.selectMode(ActionMode.CANNON_ATTACK);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_4)) inputHandler.selectMode(ActionMode.DIAGONAL_SKEWER);
+
         // Handle mouse click input
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             touchPoint.set(Gdx.input.getX(), Gdx.input.getY(), 0);
