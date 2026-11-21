@@ -1,58 +1,62 @@
-# DEC-01 bổ sung — Hướng khởi tạo Pawn
+# DEC-01 — Hướng khởi tạo Pawn
 
-Trạng thái: Đã chọn và triển khai trên branch T02.03;
-chờ nhóm review qua PR.
+## Mục đích
 
-## Phạm vi
+Khởi tạo currentDirection theo TD v0.1, mục 5.5.
+Pawn tìm đường tới hàng phong cấp row = 0, không tìm tới Knight.
 
-Tính currentDirection khi khởi tạo Battle.
-Không triển khai hành động hoặc tính lại hướng trong lượt địch.
+## Quy tắc
 
-## Quyết định
-
-- Dùng BFS tám hướng, mỗi bước có cost 1.
+- Dùng BFS tám hướng, mỗi bước cost 1.
 - Cho phép đi chéo, không kiểm tra thêm hai ô cạnh góc.
-- Đá và các quân khác chặn đường.
-- Ô Pawn đang xét là điểm xuất phát; ô Knight là đích BFS.
-  Tìm tới Knight không đồng nghĩa được Move vào ô Knight.
-- Nếu nhiều đường ngắn bằng nhau, ưu tiên ô bước đầu theo
-  column tăng dần, rồi row tăng dần.
-- Duyệt các ô lân cận theo column rồi row tăng dần
-  để kết quả có tính xác định.
-- Hướng khởi tạo là hướng từ Pawn tới bước đầu được chọn.
-- Không có đường: dùng SOUTH.
-- NORTH tăng row; SOUTH giảm row;
-  EAST tăng column; WEST giảm column.
-- Tính hướng không di chuyển quân và không tăng lượt.
+- Đá và các Enemy khác là vật cản.
+- Bỏ qua Knight khi tính đường khởi tạo.
+- Đích là bất kỳ ô không bị chặn trên hàng row = 0.
+- Chỉ xét bước đầu thuộc đường ngắn nhất.
+- Nếu có nhiều lựa chọn, ưu tiên bước SOUTH thẳng xuống;
+  sau đó chọn column nhỏ nhất, rồi row nhỏ nhất.
+- Không có đường ban đầu: dùng SOUTH.
+- NORTH tăng row; SOUTH giảm row.
+- Tính hướng không di chuyển quân, không tăng lượt.
 
 ## Tích hợp
 
-- Factory đặt đầy đủ đá và quân trước khi tính hướng.
-- Tính hướng của mọi Pawn từ cùng một snapshot ban đầu.
-- Lưu hướng trong PieceState và xuất qua BattleSnapshot.PieceView.
+- BattleFactory đặt đầy đủ đá và quân trước khi tính hướng.
+- Mọi Pawn được tính từ cùng một snapshot ban đầu.
+- Hướng được lưu trong PieceState và BattleSnapshot.PieceView.
 - withHp giữ nguyên hướng.
 - Quân không phải Pawn có currentDirection = null.
-- Giữ constructor cũ để tương thích:
-  Pawn mặc định SOUTH; các quân khác mặc định null.
-- Factory phải gán lại hướng bằng BFS trước khi trả Battle.
+- Constructor cũ mặc định Pawn là SOUTH;
+  Factory gán lại hướng bằng resolver trước khi trả Battle.
 
-## Kết quả Map01
+## Map01
 
-Theo quy tắc trên:
-- pawn-1 tại c7: SOUTH_WEST, bước đầu b6.
-- pawn-2 tại d7: SOUTH_WEST, bước đầu c6.
+- pawn-1 tại c7: SOUTH.
+- pawn-2 tại d7: SOUTH.
+
+Cả hai đều có bước thẳng SOUTH thuộc đường ngắn nhất
+tới hàng phong cấp.
+
+## Sửa sai so với bản trước
+
+Bản trước tìm đường tới Knight và chỉ phá hòa theo column/row.
+Bản này sửa đích thành row = 0 và ưu tiên bước thẳng SOUTH
+trong các đường ngắn nhất, theo TD mục 5.5.
 
 ## Kiểm tra
 
-- Resolver: đường chéo, phân xử hòa, đá chặn, quân chặn,
-  không có đường, corner rule và đầu vào không hợp lệ.
-- State/snapshot: giữ hướng khi đổi HP, snapshot cũ không đổi.
-- Factory: hai Pawn có hướng đúng; vị trí và lượt không đổi.
-- Chạy test cả module logic và core.
+- Không hướng về Knight khi Knight nằm phía sau Pawn.
+- Ưu tiên SOUTH khi các đường ngắn bằng nhau.
+- Tránh đá và Enemy khác.
+- Bỏ qua Knight trong phép tính đường ban đầu.
+- Không có đường thì SOUTH.
+- Không thêm corner blocking.
+- Ưu tiên đường ngắn trước ưu tiên hướng thẳng.
+- Truy vấn không thay đổi Battle.
+- Hai Pawn Map01 được khởi tạo đúng hướng.
 
-## Phần thuộc gameplay sau này
+## Giới hạn
 
-Quy tắc tính lại hướng, fallback Move1 và Attack/MoveAttack
-trong activation được triển khai riêng theo DEC-01 của TD.
-Không dùng nguyên hàm initialDirection cho gameplay
-vì quy tắc bước đầu tới ô Knight có khác biệt.
+Chỉ xử lý hướng khởi tạo.
+Tính lại đường, chặn Knight ở bước đầu, fallback và hành động
+trong activation thuộc phần logic Pawn riêng.

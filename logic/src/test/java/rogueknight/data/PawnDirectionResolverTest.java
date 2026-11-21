@@ -22,32 +22,50 @@ class PawnDirectionResolverTest {
         new PawnDirectionResolver();
 
     @Test
-    void findsDiagonalDirectionWithoutChangingBattle() {
+    void targetsPromotionRowInsteadOfKnight() {
         BattleState battle = createBattle(
             new Position(3, 3),
-            new Position(4, 2),
+            new Position(3, 7),
             Set.of()
         );
 
         BattleSnapshot before = battle.snapshot();
 
-        Direction direction = resolver.initialDirection(before, "pawn-1");
+        assertEquals(
+            Direction.SOUTH,
+            resolver.initialDirection(before, "pawn-1")
+        );
 
-        assertEquals(Direction.SOUTH_EAST, direction);
         assertEquals(before, battle.snapshot());
     }
 
     @Test
-    void breaksShortestPathTieByColumnThenRow() {
+    void prefersStraightSouthAmongShortestPaths() {
         BattleState battle = createBattle(
             new Position(3, 3),
-            new Position(3, 1),
+            new Position(7, 7),
             Set.of()
         );
 
-        // Có ba đường dài hai bước:
-        // qua (2,2), (3,2), hoặc (4,2).
-        // Chọn (2,2) vì column nhỏ nhất.
+        // SOUTH, SOUTH_WEST và SOUTH_EAST đều có thể
+        // bắt đầu đường dài ba bước tới row = 0.
+        // Ưu tiên SOUTH.
+        assertEquals(
+            Direction.SOUTH,
+            resolver.initialDirection(battle.snapshot(), "pawn-1")
+        );
+    }
+
+    @Test
+    void avoidsRockAndBreaksTieByColumnThenRow() {
+        BattleState battle = createBattle(
+            new Position(3, 3),
+            new Position(7, 7),
+            Set.of(new Position(3, 2))
+        );
+
+        // SOUTH bị đá chặn.
+        // Hai đường chéo ngắn bằng nhau: chọn bên trái.
         assertEquals(
             Direction.SOUTH_WEST,
             resolver.initialDirection(battle.snapshot(), "pawn-1")
@@ -55,86 +73,109 @@ class PawnDirectionResolverTest {
     }
 
     @Test
-    void avoidsRocks() {
+    void avoidsOtherEnemyPieces() {
         BattleState battle = createBattle(
             new Position(3, 3),
-            new Position(3, 1),
-            Set.of(
-                new Position(2, 2),
-                new Position(3, 2)
-            )
-        );
-
-        // Hai bước đầu bên trái và ở giữa bị chặn.
-        // Đường ngắn nhất còn lại đi qua (4,2).
-        assertEquals(
-            Direction.SOUTH_EAST,
-            resolver.initialDirection(battle.snapshot(), "pawn-1")
-        );
-    }
-
-    @Test
-    void avoidsOtherPieces() {
-        BattleState battle = createBattle(
-            new Position(3, 3),
-            new Position(3, 1),
-            Set.of(new Position(3, 2))
+            new Position(7, 7),
+            Set.of()
         );
 
         battle.addPiece(
             new PieceState(
                 "rook-1", PieceType.ROOK, 2, 3, 3, 2
             ),
-            new Position(2, 2)
+            new Position(3, 2)
         );
 
         assertEquals(
-            Direction.SOUTH_EAST,
+            Direction.SOUTH_WEST,
             resolver.initialDirection(battle.snapshot(), "pawn-1")
         );
     }
 
     @Test
-    void usesSouthWhenNoPathExists() {
+    void ignoresKnightWhenCalculatingInitialPath() {
+        BattleState battle = createBattle(
+            new Position(3, 3),
+            new Position(3, 2),
+            Set.of()
+        );
+
+        BattleSnapshot before = battle.snapshot();
+
+        // Theo TD, bỏ qua Knight khi tính đường ban đầu.
+        // Đây chỉ là tính hướng, không Move vào ô Knight.
+        assertEquals(
+            Direction.SOUTH,
+            resolver.initialDirection(before, "pawn-1")
+        );
+
+        assertEquals(before, battle.snapshot());
+    }
+
+    @Test
+    void usesSouthWhenNoPromotionPathExists() {
         Set<Position> rocks = new HashSet<>();
 
-        // Tường đá chắn toàn bộ row 4.
-        for (int column = 0; column < 8; column++) {
-            rocks.add(new Position(column, 4));
+        // Chặn toàn bộ row = 1, ngăn đường xuống row = 0.
+        for (int column = 0; column < Position.BOARD_SIZE; column++) {
+            rocks.add(new Position(column, 1));
         }
 
         BattleState battle = createBattle(
-            new Position(3, 6),
-            new Position(3, 0),
+            new Position(3, 3),
+            new Position(7, 7),
             rocks
         );
 
+        BattleSnapshot before = battle.snapshot();
+
         assertEquals(
             Direction.SOUTH,
-            resolver.initialDirection(battle.snapshot(), "pawn-1")
+            resolver.initialDirection(before, "pawn-1")
         );
 
-        // Tính hướng không làm Pawn bước xuống.
-        assertEquals(
-            new Position(3, 6),
-            battle.positionOf("pawn-1").orElseThrow()
-        );
+        assertEquals(before, battle.snapshot());
     }
 
     @Test
     void allowsDiagonalWithoutAdditionalCornerRule() {
         BattleState battle = createBattle(
-            new Position(3, 3),
-            new Position(4, 2),
+            new Position(3, 1),
+            new Position(7, 7),
             Set.of(
-                new Position(4, 3),
-                new Position(3, 2)
+                new Position(3, 0),
+                new Position(2, 1)
             )
         );
 
-        // Hai ô cạnh bị chặn nhưng ô chéo vẫn được BFS xét.
+        // SOUTH bị chặn; ô chéo (2,0) vẫn hợp lệ cho BFS,
+        // dù hai ô cạnh góc là đá.
         assertEquals(
-            Direction.SOUTH_EAST,
+            Direction.SOUTH_WEST,
+            resolver.initialDirection(battle.snapshot(), "pawn-1")
+        );
+    }
+
+    @Test
+    void choosesShortestPathBeforeStraightSouthPreference() {
+        Set<Position> rocks = new HashSet<>();
+
+        // Row = 1 chỉ còn lối đi tại column = 0.
+        for (int column = 1; column < Position.BOARD_SIZE; column++) {
+            rocks.add(new Position(column, 1));
+        }
+
+        BattleState battle = createBattle(
+            new Position(3, 3),
+            new Position(7, 7),
+            rocks
+        );
+
+        // Đi chéo trái tới (2,2) cho đường ngắn hơn.
+        // SOUTH không được ưu tiên nếu làm đường dài hơn.
+        assertEquals(
+            Direction.SOUTH_WEST,
             resolver.initialDirection(battle.snapshot(), "pawn-1")
         );
     }
@@ -143,7 +184,7 @@ class PawnDirectionResolverTest {
     void rejectsUnknownPawnOrWrongPieceType() {
         BattleState battle = createBattle(
             new Position(3, 3),
-            new Position(3, 0),
+            new Position(7, 7),
             Set.of()
         );
 

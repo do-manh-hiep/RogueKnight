@@ -6,7 +6,9 @@ import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
 import java.util.ArrayDeque;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
@@ -28,76 +30,119 @@ public final class PawnDirectionResolver {
             throw new IllegalArgumentException("Piece must be PAWN: " + pawnId);
         }
 
-        BattleSnapshot.PieceView knight =
-            snapshot.pieceById("knight").orElseThrow(
-                () -> new IllegalArgumentException("Missing knight")
-            );
+        Position start = pawn.position();
 
-        if (knight.type() != PieceType.KNIGHT) {
-            throw new IllegalArgumentException("Piece knight must be KNIGHT");
+        // Pawn ở hàng phong cấp không còn bước đường đi để chọn.
+        if (start.row() == 0) {
+            return Direction.SOUTH;
         }
 
-        Position start = pawn.position();
-        Position target = knight.position();
-
-        // Đá và các quân còn lại là vật cản.
-        // Cho phép BFS tìm tới ô Knight, nhưng không di chuyển Pawn vào đó.
         Set<Position> blocked = new HashSet<>(snapshot.rocks());
 
         for (BattleSnapshot.PieceView piece : snapshot.pieces()) {
+            // Theo TD: bỏ qua Knight khi tính đường.
             if (!piece.id().equals(pawnId)
-                && !piece.id().equals(knight.id())) {
+                && piece.type() != PieceType.KNIGHT) {
                 blocked.add(piece.position());
             }
         }
 
-        Set<Position> visited = new HashSet<>();
-        Queue<SearchNode> queue = new ArrayDeque<>();
+        // BFS ngược từ tất cả ô đích còn trống trên row = 0.
+        Map<Position, Integer> distances = new HashMap<>();
+        Queue<Position> queue = new ArrayDeque<>();
 
-        visited.add(start);
-        queue.add(new SearchNode(start, null));
+        for (int column = 0; column < Position.BOARD_SIZE; column++) {
+            Position goal = new Position(column, 0);
+
+            if (!blocked.contains(goal)) {
+                distances.put(goal, 0);
+                queue.add(goal);
+            }
+        }
 
         while (!queue.isEmpty()) {
-            SearchNode current = queue.remove();
+            Position current = queue.remove();
+            int nextDistance = distances.get(current) + 1;
 
-            // Duyệt column trước, rồi row, đều tăng dần.
             for (int dc = -1; dc <= 1; dc++) {
                 for (int dr = -1; dr <= 1; dr++) {
                     if (dc == 0 && dr == 0) {
                         continue;
                     }
 
-                    int column = current.position().column() + dc;
-                    int row = current.position().row() + dr;
+                    int column = current.column() + dc;
+                    int row = current.row() + dr;
 
-                    if (column < 0 || column >= Position.BOARD_SIZE
-                        || row < 0 || row >= Position.BOARD_SIZE) {
+                    if (!isInside(column, row)) {
                         continue;
                     }
 
                     Position next = new Position(column, row);
 
-                    if (blocked.contains(next) || !visited.add(next)) {
+                    if (blocked.contains(next) || distances.containsKey(next)) {
                         continue;
                     }
 
-                    // Ghi nhớ hướng của bước đầu, không phải bước cuối.
-                    Direction firstDirection = current.firstDirection();
+                    distances.put(next, nextDistance);
+                    queue.add(next);
+                }
+            }
+        }
 
-                    if (firstDirection == null) {
-                        firstDirection = directionOf(dc, dr);
-                    }
+        Integer startDistance = distances.get(start);
 
-                    if (next.equals(target)) {
-                        return firstDirection;
-                    }
+        if (startDistance == null) {
+            return Direction.SOUTH;
+        }
 
-                    queue.add(new SearchNode(next, firstDirection));
+        // Trong các bước thuộc đường ngắn nhất:
+        // ưu tiên SOUTH, sau đó column rồi row tăng dần.
+        Position straightSouth = new Position(
+            start.column(),
+            start.row() - 1
+        );
+
+        if (isShortestStep(straightSouth, startDistance, distances)) {
+            return Direction.SOUTH;
+        }
+
+        for (int dc = -1; dc <= 1; dc++) {
+            for (int dr = -1; dr <= 1; dr++) {
+                if (dc == 0 && dr == 0) {
+                    continue;
+                }
+
+                int column = start.column() + dc;
+                int row = start.row() + dr;
+
+                if (!isInside(column, row)) {
+                    continue;
+                }
+
+                Position next = new Position(column, row);
+
+                if (isShortestStep(next, startDistance, distances)) {
+                    return directionOf(dc, dr);
                 }
             }
         }
 
         return Direction.SOUTH;
+    }
+
+    private boolean isShortestStep(
+        Position position,
+        int startDistance,
+        Map<Position, Integer> distances
+    ) {
+        Integer distance = distances.get(position);
+
+        return distance != null && distance == startDistance - 1;
+    }
+
+    private boolean isInside(int column, int row) {
+        return column >= 0 && column < Position.BOARD_SIZE
+            && row >= 0 && row < Position.BOARD_SIZE;
     }
 
     private Direction directionOf(int dc, int dr) {
@@ -111,11 +156,5 @@ public final class PawnDirectionResolver {
         throw new IllegalArgumentException(
             "Invalid direction: " + dc + "," + dr
         );
-    }
-
-    private record SearchNode(
-        Position position,
-        Direction firstDirection
-    ) {
     }
 }
