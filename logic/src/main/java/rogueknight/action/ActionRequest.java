@@ -29,6 +29,30 @@ public record ActionRequest(String actorId, ActionKind kind, int targetColumn, i
         return new ActionRequest(actorId, ActionKind.CAPTURE, targetColumn, targetRow);
     }
 
+    public static ActionRequest cannonMovement(String actorId, Position target) {
+        return new ActionRequest(actorId, ActionKind.CANNON_MOVEMENT, target.column(), target.row());
+    }
+
+    public static ActionRequest cannonMovement(String actorId, int targetColumn, int targetRow) {
+        return new ActionRequest(actorId, ActionKind.CANNON_MOVEMENT, targetColumn, targetRow);
+    }
+
+    public static ActionRequest cannonAttack(String actorId, Position target) {
+        return new ActionRequest(actorId, ActionKind.CANNON_ATTACK, target.column(), target.row());
+    }
+
+    public static ActionRequest cannonAttack(String actorId, int targetColumn, int targetRow) {
+        return new ActionRequest(actorId, ActionKind.CANNON_ATTACK, targetColumn, targetRow);
+    }
+
+    public static ActionRequest diagonalSkewer(String actorId, Position target) {
+        return new ActionRequest(actorId, ActionKind.DIAGONAL_SKEWER, target.column(), target.row());
+    }
+
+    public static ActionRequest diagonalSkewer(String actorId, int targetColumn, int targetRow) {
+        return new ActionRequest(actorId, ActionKind.DIAGONAL_SKEWER, targetColumn, targetRow);
+    }
+
     /** WAIT has no target; sentinel coordinates are ignored by its rule. */
     public static ActionRequest waitAction(String actorId) {
         return new ActionRequest(actorId, ActionKind.WAIT, -1, -1);

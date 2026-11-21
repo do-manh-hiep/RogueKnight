@@ -1,9 +1,12 @@
 package rogueknight.action;
 
-/** Player Action kinds supported by the base battle controller. */
+/** Player Action kinds supported by the battle controller. */
 public enum ActionKind {
     MOVE,
     SWORD,
     CAPTURE,
-    WAIT
+    WAIT,
+    CANNON_MOVEMENT,
+    CANNON_ATTACK,
+    DIAGONAL_SKEWER
 }
