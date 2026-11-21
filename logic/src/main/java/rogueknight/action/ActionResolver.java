@@ -50,10 +50,6 @@ final class ActionResolver {
                 for (String hitId : plan.affectedTargetIds()) {
                     applyDamage(state, events, hitId, 1);
                 }
-                if (!plan.landingPosition().equals(plan.from())) {
-                    state.movePiece(plan.actorId(), plan.landingPosition());
-                    events.add(new BattleEvent.PieceMoved(plan.actorId(), plan.from(), plan.landingPosition()));
-                }
             }
         }
         return List.copyOf(events);

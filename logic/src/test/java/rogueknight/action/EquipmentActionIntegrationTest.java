@@ -12,62 +12,107 @@ import rogueknight.board.Position;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * T-04.01 / T-04.02 integration tests: Cannon Movement, Cannon Attack, Diagonal Skewer.
+ * Rules: GDD s6, TD 4.9, R-Q05..R-Q11, FX-04..FX-07. DEC-03: Skewer must hit >= 1 Enemy.
+ * Skewer never moves the Knight. Fixtures are built directly; no terminal check exists yet (T-03.01).
+ */
 class EquipmentActionIntegrationTest {
+
+    private static Position p(String notation) {
+        return Position.fromNotation(notation);
+    }
+
+    private static PieceState knight() {
+        return new PieceState("knight", PieceType.KNIGHT, 3, 1, 1, 0);
+    }
+
+    private static PieceState pawn(int hp) {
+        return new PieceState("pawn_1", PieceType.PAWN, hp, 2, 2, 1);
+    }
 
     @Test
     void cannonMovement_map01Fixture_movesCapturesAndConsumesCharge() {
-        // Knight d1, Rock d3 (screen), Pawn d7 (HP 1), King d8
         Inventory inv = Inventory.initial(EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK);
-        BattleState state = new BattleState(Set.of(Position.fromNotation("d3")), inv);
-        state.addPiece(new PieceState("knight", PieceType.KNIGHT, 3, 1, 1, 0), Position.fromNotation("d1"));
-        state.addPiece(new PieceState("pawn_1", PieceType.PAWN, 1, 2, 2, 1), Position.fromNotation("d7"));
-        state.addPiece(new PieceState("king", PieceType.KING, 3, 2, 2, 2), Position.fromNotation("d8"));
-
+        BattleState state = new BattleState(Set.of(p("d3")), inv);
+        state.addPiece(knight(), p("d1"));
+        state.addPiece(pawn(1), p("d7"));
+        state.addPiece(new PieceState("king", PieceType.KING, 3, 2, 2, 2), p("d8"));
         BattleController controller = new BattleController(state);
 
-        // Kiểm tra legalTargets trả về đúng d4, d5, d6 và d7 (không vượt qua d7 tới d8)
-        Set<Position> legal = controller.legalTargets("knight", ActionKind.CANNON_MOVEMENT);
-        assertEquals(Set.of(
-            Position.fromNotation("d4"),
-            Position.fromNotation("d5"),
-            Position.fromNotation("d6"),
-            Position.fromNotation("d7")
-        ), legal);
+        assertEquals(Set.of(p("d4"), p("d5"), p("d6"), p("d7")),
+            controller.legalTargets("knight", ActionKind.CANNON_MOVEMENT));
 
-        // Thực thi Cannon Capture vào d7
-        ActionResult res = controller.submit(ActionRequest.cannonMovement("knight", Position.fromNotation("d7")));
+        ActionResult res = controller.submit(ActionRequest.cannonMovement("knight", p("d7")));
         assertTrue(res.accepted());
-        assertEquals(Position.fromNotation("d7"), res.after().pieceById("knight").orElseThrow().position());
+        assertEquals(p("d7"), res.after().pieceById("knight").orElseThrow().position());
         assertTrue(res.after().pieceById("pawn_1").isEmpty());
         assertEquals(0, res.after().inventory().chargesOf(EquipmentType.CANNON_MOVEMENT));
         assertTrue(res.after().inventory().contains(EquipmentType.CANNON_MOVEMENT));
 
-        // Hết charge -> gọi lại bị từ chối và không tăng turn
-        int turnAfterFirstMove = res.after().globalTurn();
-        ActionResult exhaustedRes = controller.submit(ActionRequest.cannonMovement("knight", Position.fromNotation("d6")));
-        assertFalse(exhaustedRes.accepted());
-        assertEquals(ActionError.NO_EQUIPMENT_CHARGES, exhaustedRes.error());
-        assertEquals(turnAfterFirstMove, exhaustedRes.after().globalTurn());
+        int turnAfter = res.after().globalTurn();
+        ActionResult exhausted = controller.submit(ActionRequest.cannonMovement("knight", p("d6")));
+        assertFalse(exhausted.accepted());
+        assertEquals(ActionError.NO_EQUIPMENT_CHARGES, exhausted.error());
+        assertEquals(turnAfter, exhausted.after().globalTurn());
+    }
+
+    @Test
+    void cannonMovement_toKingBehindTerminalBlocker_isInvalidAndKeepsState() {
+        Inventory inv = Inventory.initial(EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK);
+        BattleState state = new BattleState(Set.of(p("d3")), inv);
+        state.addPiece(knight(), p("d1"));
+        state.addPiece(pawn(1), p("d7"));
+        state.addPiece(new PieceState("king", PieceType.KING, 3, 2, 2, 2), p("d8"));
+        BattleController controller = new BattleController(state);
+
+        var before = controller.snapshot();
+        ActionResult res = controller.submit(ActionRequest.cannonMovement("knight", p("d8")));
+        assertFalse(res.accepted());
+        assertEquals(before, controller.snapshot());
+    }
+
+    @Test
+    void cannonMovement_enemyHp3_onlyEmptyLandingsAreLegal() {
+        Inventory inv = Inventory.initial(EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK);
+        BattleState state = new BattleState(Set.of(p("d3")), inv);
+        state.addPiece(knight(), p("d1"));
+        state.addPiece(pawn(3), p("d7"));
+        BattleController controller = new BattleController(state);
+
+        assertEquals(Set.of(p("d4"), p("d5"), p("d6")),
+            controller.legalTargets("knight", ActionKind.CANNON_MOVEMENT));
+        assertEquals(Set.of(p("d7")), controller.legalTargets("knight", ActionKind.CANNON_ATTACK));
+    }
+
+    @Test
+    void cannonMovement_adjacentScreenWithoutGap_captureStillLegal() {
+        Inventory inv = Inventory.initial(EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK);
+        BattleState state = new BattleState(Set.of(p("a2")), inv);
+        state.addPiece(knight(), p("a1"));
+        state.addPiece(pawn(2), p("a3"));
+        BattleController controller = new BattleController(state);
+
+        assertEquals(Set.of(p("a3")), controller.legalTargets("knight", ActionKind.CANNON_MOVEMENT));
+        ActionResult screen = controller.submit(ActionRequest.cannonMovement("knight", p("a2")));
+        assertFalse(screen.accepted());
     }
 
     @Test
     void cannonAttack_damagesTargetBehindScreenWithoutMovingKnight() {
         Inventory inv = Inventory.initial(EquipmentType.CANNON_ATTACK, EquipmentType.DIAGONAL_SKEWER);
-        BattleState state = new BattleState(Set.of(Position.fromNotation("d3")), inv);
-        state.addPiece(new PieceState("knight", PieceType.KNIGHT, 3, 1, 1, 0), Position.fromNotation("d1"));
-        state.addPiece(new PieceState("rook_1", PieceType.ROOK, 3, 2, 2, 1), Position.fromNotation("d6"));
-
+        BattleState state = new BattleState(Set.of(p("d3")), inv);
+        state.addPiece(knight(), p("d1"));
+        state.addPiece(new PieceState("rook_1", PieceType.ROOK, 3, 2, 2, 1), p("d6"));
         BattleController controller = new BattleController(state);
 
-        // Cannon Movement không sở hữu trong túi -> bị chặn
-        ActionResult unowned = controller.submit(ActionRequest.cannonMovement("knight", Position.fromNotation("d4")));
+        ActionResult unowned = controller.submit(ActionRequest.cannonMovement("knight", p("d4")));
         assertFalse(unowned.accepted());
         assertEquals(ActionError.EQUIPMENT_NOT_OWNED, unowned.error());
 
-        // Cannon Attack bắn d6: Knight đứng yên ở d1, Rook mất 1 HP còn 2 HP, tốn 1 charge
-        ActionResult res = controller.submit(ActionRequest.cannonAttack("knight", Position.fromNotation("d6")));
+        ActionResult res = controller.submit(ActionRequest.cannonAttack("knight", p("d6")));
         assertTrue(res.accepted());
-        assertEquals(Position.fromNotation("d1"), res.after().pieceById("knight").orElseThrow().position());
+        assertEquals(p("d1"), res.after().pieceById("knight").orElseThrow().position());
         assertEquals(2, res.after().pieceById("rook_1").orElseThrow().hp());
         assertEquals(0, res.after().inventory().chargesOf(EquipmentType.CANNON_ATTACK));
         assertEquals(List.of(
@@ -77,26 +122,67 @@ class EquipmentActionIntegrationTest {
     }
 
     @Test
-    void diagonalSkewer_hitsMultipleEnemiesAndStopsBeforeRock() {
+    void diagonalSkewer_hitsTwoEnemies_knightStaysAndOneChargeUsed() {
         Inventory inv = Inventory.initial(EquipmentType.DIAGONAL_SKEWER, EquipmentType.CANNON_MOVEMENT);
-        BattleState state = new BattleState(Set.of(Position.fromNotation("b3")), inv);
-        state.addPiece(new PieceState("knight", PieceType.KNIGHT, 3, 1, 1, 0), Position.fromNotation("c2"));
-        state.addPiece(new PieceState("pawn_1", PieceType.PAWN, 1, 2, 2, 1), Position.fromNotation("d3"));
-        state.addPiece(new PieceState("bishop_1", PieceType.BISHOP, 2, 2, 2, 2), Position.fromNotation("e4"));
-
+        BattleState state = new BattleState(Set.of(p("b3")), inv);
+        state.addPiece(knight(), p("c2"));
+        state.addPiece(pawn(1), p("d3"));
+        state.addPiece(new PieceState("bishop_1", PieceType.BISHOP, 2, 2, 2, 2), p("e4"));
         BattleController controller = new BattleController(state);
 
-        // Hướng chéo lên-trái bị Rock ở b3 chặn
-        ActionResult blocked = controller.submit(ActionRequest.diagonalSkewer("knight", Position.fromNotation("b3")));
+        ActionResult blocked = controller.submit(ActionRequest.diagonalSkewer("knight", p("b3")));
         assertFalse(blocked.accepted());
         assertEquals(ActionError.OCCUPIED_BY_ROCK, blocked.error());
 
-        // Lướt chéo lên-phải tới e4: hạ pawn_1 (d3, 1 HP), gây 1 dmg lên bishop_1 (e4, 2->1 HP), Knight đáp tại d3
-        ActionResult res = controller.submit(ActionRequest.diagonalSkewer("knight", Position.fromNotation("e4")));
+        ActionResult res = controller.submit(ActionRequest.diagonalSkewer("knight", p("e4")));
         assertTrue(res.accepted());
         assertTrue(res.after().pieceById("pawn_1").isEmpty());
         assertEquals(1, res.after().pieceById("bishop_1").orElseThrow().hp());
-        assertEquals(Position.fromNotation("d3"), res.after().pieceById("knight").orElseThrow().position());
+        assertEquals(p("c2"), res.after().pieceById("knight").orElseThrow().position());
         assertEquals(0, res.after().inventory().chargesOf(EquipmentType.DIAGONAL_SKEWER));
+        assertEquals(1, res.after().inventory().chargesOf(EquipmentType.CANNON_MOVEMENT));
+    }
+
+    @Test
+    void diagonalSkewer_noEnemyInRange_isInvalidAndKeepsState() {
+        Inventory inv = Inventory.initial(EquipmentType.DIAGONAL_SKEWER, EquipmentType.CANNON_MOVEMENT);
+        BattleState state = new BattleState(Set.of(), inv);
+        state.addPiece(knight(), p("b2"));
+        state.addPiece(pawn(1), p("e5"));
+        BattleController controller = new BattleController(state);
+
+        var before = controller.snapshot();
+        ActionResult res = controller.submit(ActionRequest.diagonalSkewer("knight", p("c3")));
+        assertFalse(res.accepted());
+        assertEquals(ActionError.NO_TARGET_PIECE, res.error());
+        assertEquals(before, controller.snapshot());
+    }
+
+    @Test
+    void diagonalSkewer_rockOnFirstCell_blocksEnemyBehind() {
+        Inventory inv = Inventory.initial(EquipmentType.DIAGONAL_SKEWER, EquipmentType.CANNON_MOVEMENT);
+        BattleState state = new BattleState(Set.of(p("c3")), inv);
+        state.addPiece(knight(), p("b2"));
+        state.addPiece(pawn(1), p("d4"));
+        BattleController controller = new BattleController(state);
+
+        ActionResult res = controller.submit(ActionRequest.diagonalSkewer("knight", p("d4")));
+        assertFalse(res.accepted());
+        assertEquals(1, controller.snapshot().pieceById("pawn_1").orElseThrow().hp());
+        assertEquals(1, controller.snapshot().inventory().chargesOf(EquipmentType.DIAGONAL_SKEWER));
+    }
+
+    @Test
+    void diagonalSkewer_rockOnSecondCell_onlyFirstEnemyDamaged() {
+        Inventory inv = Inventory.initial(EquipmentType.DIAGONAL_SKEWER, EquipmentType.CANNON_MOVEMENT);
+        BattleState state = new BattleState(Set.of(p("d4")), inv);
+        state.addPiece(knight(), p("b2"));
+        state.addPiece(new PieceState("rook_1", PieceType.ROOK, 2, 2, 2, 1), p("c3"));
+        BattleController controller = new BattleController(state);
+
+        ActionResult res = controller.submit(ActionRequest.diagonalSkewer("knight", p("c3")));
+        assertTrue(res.accepted());
+        assertEquals(1, res.after().pieceById("rook_1").orElseThrow().hp());
+        assertEquals(p("b2"), res.after().pieceById("knight").orElseThrow().position());
     }
 }

@@ -197,11 +197,11 @@ public final class KnightRules {
             return ValidationOutcome.invalid(ActionError.INVALID_GEOMETRY);
         }
 
+        // Skewer never moves the Knight (GDD s6) and requires at least one hit (DEC-03).
         int stepCol = Integer.signum(dx);
         int stepRow = Integer.signum(dy);
         List<Position> traversed = new ArrayList<>(2);
         List<String> hitIds = new ArrayList<>(2);
-        Position landing = from;
 
         for (int step = 1; step <= 2; step++) {
             int col = from.column() + step * stepCol;
@@ -218,11 +218,6 @@ public final class KnightRules {
                     return ValidationOutcome.invalid(ActionError.NOT_ENEMY_TARGET);
                 }
                 hitIds.add(victim.id());
-                if (victim.hp() <= 1) {
-                    landing = cur;
-                }
-            } else {
-                landing = cur;
             }
         }
 
@@ -240,7 +235,7 @@ public final class KnightRules {
             target,
             hitIds.isEmpty() ? null : hitIds.get(0),
             EquipmentType.DIAGONAL_SKEWER,
-            landing,
+            from,
             hitIds
         ));
     }
@@ -302,7 +297,7 @@ public final class KnightRules {
     private static Optional<Position> knightPosition(BattleState state, String actorId) {
         if (actorId == null) return Optional.empty();
         return state.pieceState(actorId)
-            .filter(piece -> piece.type() == PieceType.KNIGHT)
-            .flatMap(piece -> state.positionOf(actorId));
+                .filter(piece -> piece.type() == PieceType.KNIGHT)
+                .flatMap(piece -> state.positionOf(actorId));
     }
 }
