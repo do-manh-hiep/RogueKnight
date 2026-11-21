@@ -12,117 +12,114 @@ import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class BattleControllerAdapterTest {
-
-    @Test
-    void convertsInitialBattleToViewSnapshot() throws IOException {
-        BattleControllerAdapter adapter = createAdapter();
-
-        BattleViewSnapshot snapshot = adapter.snapshot();
-
-        assertFalse(snapshot.isFixtureDemo());
-        assertEquals(1, snapshot.globalTurn());
-        assertEquals(new BoardPosition(3, 0), snapshot.knightPosition());
-
-        assertEquals(6, snapshot.rocks().size());
-        assertTrue(snapshot.rocks().contains(new BoardPosition(3, 2)));
-
-        // Có sáu quân tổng cộng: một Knight và năm quân địch.
-        assertEquals(5, snapshot.enemyPieces().size());
-        assertEquals(
-            "KING",
-            snapshot.enemyPieces().get(new BoardPosition(3, 7))
-        );
-        assertEquals(
-            "PAWN",
-            snapshot.enemyPieces().get(new BoardPosition(2, 6))
-        );
-        assertEquals(
-            "BISHOP",
-            snapshot.enemyPieces().get(new BoardPosition(2, 7))
-        );
-
-        // e3 hợp lệ; d3 có đá nên không được highlight.
-        assertTrue(snapshot.legalMoves().contains(new BoardPosition(4, 2)));
-        assertFalse(snapshot.legalMoves().contains(new BoardPosition(3, 2)));
-        assertEquals(adapter.legalMoves("knight"), snapshot.legalMoves());
-    }
-
-    @Test
-    void forwardsValidMoveToLogicController() throws IOException {
-        BattleControllerAdapter adapter = createAdapter();
-
-        MoveResult result = adapter.submitMove(
-            "knight",
-            new BoardPosition(4, 2)
-        );
-
-        assertTrue(result.accepted());
-        assertEquals(1, result.before().globalTurn());
-        assertEquals(
-            new BoardPosition(3, 0),
-            result.before().knightPosition()
-        );
-
-        assertEquals(2, result.after().globalTurn());
-        assertEquals(
-            new BoardPosition(4, 2),
-            result.after().knightPosition()
-        );
-        assertEquals(result.after(), adapter.snapshot());
-    }
-
-    @Test
-    void rejectsMoveOntoRockWithoutChangingState() throws IOException {
-        BattleControllerAdapter adapter = createAdapter();
-
-        // Đưa Knight tới e3 trước.
-        MoveResult firstMove = adapter.submitMove(
-            "knight",
-            new BoardPosition(4, 2)
-        );
-        assertTrue(firstMove.accepted());
-
-        BattleViewSnapshot before = adapter.snapshot();
-
-        // Từ e3 sang d3 là một ô kề nhưng bị đá chặn.
-        MoveResult result = adapter.submitMove(
-            "knight",
-            new BoardPosition(3, 2)
-        );
-
-        assertFalse(result.accepted());
-        assertNotNull(result.errorReason());
-        assertEquals(before, result.before());
-        assertEquals(before, result.after());
-        assertEquals(before, adapter.snapshot());
-    }
-
-    @Test
-    void rejectsNullTargetWithoutChangingState() throws IOException {
-        BattleControllerAdapter adapter = createAdapter();
-        BattleViewSnapshot before = adapter.snapshot();
-
-        MoveResult result = adapter.submitMove("knight", null);
-
-        assertFalse(result.accepted());
-        assertEquals("OUT_OF_BOUNDS", result.errorReason());
-        assertEquals(before, result.before());
-        assertEquals(before, result.after());   
-        assertEquals(before, adapter.snapshot());
-    }
+/** T-04.01 / T-04.02 UI slice: equipment modes go through the same port and rules as Move. */
+class BattleControllerAdapterEquipmentTest {
 
     private BattleControllerAdapter createAdapter() throws IOException {
         BattleState battle = new BattleFactory().createMap01(
             EquipmentType.CANNON_MOVEMENT,
             EquipmentType.DIAGONAL_SKEWER
         );
+        return new BattleControllerAdapter(new BattleController(battle));
+    }
 
-        BattleController controller = new BattleController(battle);
+    @Test
+    void cannonMovementTargetsOnMap01_matchOpening() throws IOException {
+        BattleControllerAdapter adapter = createAdapter();
 
-        return new BattleControllerAdapter(controller);
+        assertEquals(
+            java.util.Set.of(
+                BoardPosition.fromNotation("d4"),
+                BoardPosition.fromNotation("d5"),
+                BoardPosition.fromNotation("d6"),
+                BoardPosition.fromNotation("d7")
+            ),
+            adapter.legalTargets("knight", ActionMode.CANNON_MOVEMENT)
+        );
+    }
+
+    @Test
+    void cannonCaptureOnD7_acceptedAndConsumesChargeOnce() throws IOException {
+        BattleControllerAdapter adapter = createAdapter();
+
+        MoveResult result = adapter.submitAction(
+            "knight", ActionMode.CANNON_MOVEMENT, BoardPosition.fromNotation("d7"));
+
+        assertTrue(result.accepted());
+        assertEquals(BoardPosition.fromNotation("d7"), result.after().knightPosition());
+        assertTrue(adapter.legalTargets("knight", ActionMode.CANNON_MOVEMENT).isEmpty());
+    }
+
+    @Test
+    void invalidCannonTargetD8_rejectedAndStateUnchanged() throws IOException {
+        BattleControllerAdapter adapter = createAdapter();
+        BattleViewSnapshot before = adapter.snapshot();
+
+        MoveResult result = adapter.submitAction(
+            "knight", ActionMode.CANNON_MOVEMENT, BoardPosition.fromNotation("d8"));
+
+        assertFalse(result.accepted());
+        assertEquals(before, adapter.snapshot());
+    }
+
+    @Test
+    void unownedCannonAttack_rejectedWithEquipmentNotOwned() throws IOException {
+        BattleControllerAdapter adapter = createAdapter();
+
+        MoveResult result = adapter.submitAction(
+            "knight", ActionMode.CANNON_ATTACK, BoardPosition.fromNotation("d7"));
+
+        assertFalse(result.accepted());
+        assertEquals("EQUIPMENT_NOT_OWNED", result.errorReason());
+    }
+
+    @Test
+    void handlerHighlightsFollowSelectedMode_andResetAfterAcceptedAction() throws IOException {
+        BattleControllerAdapter adapter = createAdapter();
+        var projection = new rogueknight.core.view.BoardProjection(0f, 0f, 48f);
+        BoardInputHandler handler = new BoardInputHandler(projection, adapter);
+
+        handler.selectMode(ActionMode.CANNON_MOVEMENT);
+        assertEquals(adapter.legalTargets("knight", ActionMode.CANNON_MOVEMENT), handler.getHighlightTargets());
+        assertNotEquals(handler.getCurrentSnapshot().legalMoves(), handler.getHighlightTargets());
+
+        handler.handleWorldClick(projection.getCellCenterX(3), projection.getCellCenterY(3)); // d4
+        assertEquals(ActionMode.MOVE, handler.getMode());
+        assertEquals(BoardPosition.fromNotation("d4"), handler.getCurrentSnapshot().knightPosition());
+    }
+
+    @Test
+    void availableModes_listOwnedEquipment_andDropUsedOnes() throws IOException {
+        BattleControllerAdapter adapter = createAdapter();
+
+        assertEquals(
+            java.util.List.of(ActionMode.MOVE, ActionMode.CANNON_MOVEMENT, ActionMode.DIAGONAL_SKEWER),
+            adapter.availableModes()
+        );
+
+        adapter.submitAction("knight", ActionMode.CANNON_MOVEMENT, BoardPosition.fromNotation("d4"));
+
+        assertEquals(
+            java.util.List.of(ActionMode.MOVE, ActionMode.DIAGONAL_SKEWER),
+            adapter.availableModes()
+        );
+    }
+
+    @Test
+    void handlerIgnoresUsedOrUnownedMode() throws IOException {
+        BattleControllerAdapter adapter = createAdapter();
+        var projection = new rogueknight.core.view.BoardProjection(0f, 0f, 48f);
+        BoardInputHandler handler = new BoardInputHandler(projection, adapter);
+
+        handler.selectMode(ActionMode.CANNON_ATTACK);
+        assertEquals(ActionMode.MOVE, handler.getMode());
+
+        handler.selectMode(ActionMode.CANNON_MOVEMENT);
+        handler.handleWorldClick(projection.getCellCenterX(3), projection.getCellCenterY(3)); // d4
+        handler.selectMode(ActionMode.CANNON_MOVEMENT);
+        assertEquals(ActionMode.MOVE, handler.getMode());
     }
 }

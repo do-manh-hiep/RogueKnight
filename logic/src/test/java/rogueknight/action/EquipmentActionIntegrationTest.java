@@ -185,4 +185,84 @@ class EquipmentActionIntegrationTest {
         assertEquals(1, res.after().pieceById("rook_1").orElseThrow().hp());
         assertEquals(p("b2"), res.after().pieceById("knight").orElseThrow().position());
     }
+
+    @Test
+    void cannonAttack_map01Opening_killsPawnAndRejectsKingBehind() {
+        Inventory inv = Inventory.initial(EquipmentType.CANNON_ATTACK, EquipmentType.CANNON_MOVEMENT);
+        BattleState state = new BattleState(Set.of(p("d3")), inv);
+        state.addPiece(knight(), p("d1"));
+        state.addPiece(pawn(1), p("d7"));
+        state.addPiece(new PieceState("king", PieceType.KING, 5, 5, 5, 2), p("d8"));
+        BattleController controller = new BattleController(state);
+
+        var before = controller.snapshot();
+        ActionResult behind = controller.submit(ActionRequest.cannonAttack("knight", p("d8")));
+        assertFalse(behind.accepted());
+        assertEquals(before, controller.snapshot());
+
+        ActionResult res = controller.submit(ActionRequest.cannonAttack("knight", p("d7")));
+        assertTrue(res.accepted());
+        assertTrue(res.after().pieceById("pawn_1").isEmpty());
+        assertEquals(p("d1"), res.after().pieceById("knight").orElseThrow().position());
+        assertEquals(0, res.after().inventory().chargesOf(EquipmentType.CANNON_ATTACK));
+    }
+
+    @Test
+    void cannonMovement_noSecondBlocker_allEmptyTilesToEdgeAreLegal() {
+        Inventory inv = Inventory.initial(EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK);
+        BattleState state = new BattleState(Set.of(p("a2")), inv);
+        state.addPiece(knight(), p("a1"));
+        state.addPiece(new PieceState("king", PieceType.KING, 5, 5, 5, 2), p("h8"));
+        BattleController controller = new BattleController(state);
+
+        assertEquals(Set.of(p("a3"), p("a4"), p("a5"), p("a6"), p("a7"), p("a8")),
+            controller.legalTargets("knight", ActionKind.CANNON_MOVEMENT));
+        assertTrue(controller.legalTargets("knight", ActionKind.CANNON_ATTACK).isEmpty());
+    }
+
+    @Test
+    void exhaustedEquipment_staysInInventoryWithNoLegalTargets() {
+        Inventory inv = Inventory.initial(EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK);
+        BattleState state = new BattleState(Set.of(p("d3")), inv);
+        state.addPiece(knight(), p("d1"));
+        state.addPiece(pawn(1), p("d7"));
+        BattleController controller = new BattleController(state);
+
+        ActionResult res = controller.submit(ActionRequest.cannonMovement("knight", p("d4")));
+        assertTrue(res.accepted());
+        assertTrue(controller.legalTargets("knight", ActionKind.CANNON_MOVEMENT).isEmpty());
+        assertTrue(controller.snapshot().inventory().contains(EquipmentType.CANNON_MOVEMENT));
+        assertEquals(0, controller.snapshot().inventory().chargesOf(EquipmentType.CANNON_MOVEMENT));
+    }
+
+    @Test
+    void diagonalSkewer_atBoardEdge_hitsOnlyTheInBoundsCell() {
+        Inventory inv = Inventory.initial(EquipmentType.DIAGONAL_SKEWER, EquipmentType.CANNON_MOVEMENT);
+        BattleState state = new BattleState(Set.of(), inv);
+        state.addPiece(knight(), p("g7"));
+        state.addPiece(new PieceState("rook_1", PieceType.ROOK, 2, 2, 2, 1), p("h8"));
+        BattleController controller = new BattleController(state);
+
+        assertTrue(controller.legalTargets("knight", ActionKind.DIAGONAL_SKEWER).contains(p("h8")));
+        ActionResult res = controller.submit(ActionRequest.diagonalSkewer("knight", p("h8")));
+        assertTrue(res.accepted());
+        assertEquals(1, res.after().pieceById("rook_1").orElseThrow().hp());
+        assertEquals(p("g7"), res.after().pieceById("knight").orElseThrow().position());
+    }
+
+    @Test
+    void cannonAttack_enemyScreen_hitsTargetBehindButNotTheScreen() {
+        Inventory inv = Inventory.initial(EquipmentType.CANNON_ATTACK, EquipmentType.CANNON_MOVEMENT);
+        BattleState state = new BattleState(Set.of(), inv);
+        state.addPiece(knight(), p("a1"));
+        state.addPiece(pawn(1), p("a2"));
+        state.addPiece(new PieceState("rook_1", PieceType.ROOK, 2, 2, 2, 2), p("a3"));
+        BattleController controller = new BattleController(state);
+
+        assertEquals(Set.of(p("a3")), controller.legalTargets("knight", ActionKind.CANNON_ATTACK));
+        ActionResult res = controller.submit(ActionRequest.cannonAttack("knight", p("a3")));
+        assertTrue(res.accepted());
+        assertEquals(1, res.after().pieceById("rook_1").orElseThrow().hp());
+        assertEquals(1, res.after().pieceById("pawn_1").orElseThrow().hp());
+    }
 }

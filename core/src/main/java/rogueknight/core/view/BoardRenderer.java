@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import rogueknight.core.input.ActionMode;
 import rogueknight.core.input.BoardInputHandler;
 import rogueknight.core.input.FixtureBattleController;
 
@@ -46,7 +47,7 @@ public final class BoardRenderer {
 
         BoardProjection projection = inputHandler.getProjection();
         BattleViewSnapshot snapshot = inputHandler.getCurrentSnapshot();
-        Set<BoardPosition> legalMoves = snapshot.legalMoves();
+        Set<BoardPosition> legalMoves = inputHandler.getHighlightTargets();
         BoardPosition knightPos = snapshot.knightPosition();
         float tileSize = projection.getTileSize();
 
@@ -179,7 +180,17 @@ public final class BoardRenderer {
         font.draw(batch, "Thông báo: " + inputHandler.getFeedbackMessage(), 20, 35);
 
         font.setColor(Color.LIGHT_GRAY);
-        font.draw(batch, "Hướng dẫn: Click ô viền xanh lá để di chuyển | Knight đi L-shape hoặc 1 ô kề trống", 20, 18);
+        font.draw(batch, "Bấm phím số của thẻ để chọn, bấm lại để hủy | Click ô viền xanh lá để thực hiện", 20, 18);
+
+        // Equipment cards: only owned items with charges left are listed.
+        float cardY = 400f;
+        font.setColor(Color.WHITE);
+        font.draw(batch, "THẺ HIỆN CÓ", 8, cardY);
+        for (ActionMode available : inputHandler.getAvailableModes()) {
+            cardY -= 20f;
+            font.setColor(available == inputHandler.getMode() ? Color.YELLOW : Color.LIGHT_GRAY);
+            font.draw(batch, "[" + available.key() + "] " + available.label(), 8, cardY);
+        }
 
         batch.end();
     }
