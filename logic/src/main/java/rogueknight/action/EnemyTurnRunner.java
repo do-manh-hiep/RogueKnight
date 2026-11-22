@@ -11,32 +11,27 @@ import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
 /*
- * EnemyTurnRunner.java  |  T-03.01 (+ sequencing T-03.02)  |  TD: 2.1, 5.3, 5.4, 5.9, 5.11, C-03..C-06
+ * EnemyTurnRunner.java  |  T-03.01 (+ sequencing T-03.02/T-03.03)  |  TD: 2.1, 5.3-5.5, 5.9-5.11, C-03..C-06
  *
- * Lượt địch thật, thay EnemyPhase.NONE. BattleController gọi run() sau khi đã tăng Turn đúng một lần.
+ * Lượt địch thật. BattleController gọi run() sau khi đã tăng Turn đúng một lần.
  * - Queue = ID đến hạn theo TurnScheduler, chụp một lần đầu lượt; không thêm Queen mới vào queue đang chạy.
  * - Trước mỗi activation đọc lại state: ID đã chết thì bỏ qua (R-T04); Enemy sau thấy state mới nhất (R-T05).
- * - Generic (Rook/Bishop/King/Queen): policy chọn Action đầu tiên -> validate -> resolve -> check terminal;
- *   nếu Action đầu là MOVE thì runner tự xét Attack trên state sau Move (không hỏi policy Move lần hai).
- * - Pawn: giao trọn activation cho PawnActivation (T-03.03); mặc định SKIP.
+ * - Mọi Enemy: policy chọn Action đầu tiên -> EnemyRules.validate -> ActionResolver -> check terminal.
+ * - Chỉ Enemy generic (loại lúc BẮT ĐẦU activation là Rook/Bishop/King/Queen) mới được xét Attack sau Move,
+ *   trên state sau Move và không hỏi policy lần hai. Pawn vừa phong Queen không đánh tiếp (R-P05).
  * - Check terminal sau MỖI Action, kể cả giữa Move và Attack; terminal thì dừng queue ngay (R-T06).
  * - Không có legal action: skip, lịch vẫn tiến, không retry trong cùng lượt (R-T07).
+ * - Phong cấp đã đặt lịch T+5 trong Resolver: type đổi trong activation thì không cộng cycle (I09).
  * - Không tăng globalTurn theo từng Enemy (I08).
  * - DEC-12: AI chọn request invalid là bug tích hợp -> IllegalStateException, không âm thầm skip.
  */
 public final class EnemyTurnRunner implements EnemyPhase {
 
-    private final EnemyPolicy genericPolicy;
-    private final PawnActivation pawnActivation;
+    private final EnemyPolicy policy;
 
-    /** Generic Enemies use {@code genericPolicy}; Pawns skip until T-03.03 provides a PawnActivation. */
-    public EnemyTurnRunner(EnemyPolicy genericPolicy) {
-        this(genericPolicy, PawnActivation.SKIP);
-    }
-
-    public EnemyTurnRunner(EnemyPolicy genericPolicy, PawnActivation pawnActivation) {
-        this.genericPolicy = Objects.requireNonNull(genericPolicy, "genericPolicy");
-        this.pawnActivation = Objects.requireNonNull(pawnActivation, "pawnActivation");
+    /** {@code policy} decides for every Enemy type; the game uses rogueknight.ai.EnemyAI. */
+    public EnemyTurnRunner(EnemyPolicy policy) {
+        this.policy = Objects.requireNonNull(policy, "policy");
     }
 
     @Override
@@ -55,30 +50,24 @@ public final class EnemyTurnRunner implements EnemyPhase {
             Position at = state.positionOf(enemyId).orElseThrow();
             events.add(new BattleEvent.ActorActivated(enemyId, at, state.globalTurn()));
 
-            boolean battleEnded = typeAtStart == PieceType.PAWN
-                    ? activatePawn(state, enemyId, events)
-                    : activateGeneric(state, enemyId, events);
-            if (battleEnded) break; // a finished battle does not need its schedule completed
-
+            if (activate(state, enemyId, typeAtStart, events)) break; // a finished battle needs no schedule update
             completeSchedule(state, enemyId, typeAtStart);
         }
         return List.copyOf(events);
     }
 
-    private boolean activatePawn(BattleState state, String pawnId, List<BattleEvent> events) {
-        events.addAll(pawnActivation.activate(state, pawnId));
-        return BattleController.endIfTerminal(state, events);
-    }
-
-    private boolean activateGeneric(BattleState state, String enemyId, List<BattleEvent> events) {
-        EnemyDecision decision = genericPolicy.choose(state, enemyId);
+    /** Runs one activation. Returns true when the battle ended during it. */
+    private boolean activate(BattleState state, String enemyId, PieceType typeAtStart, List<BattleEvent> events) {
+        EnemyDecision decision = policy.choose(state, enemyId);
         if (!(decision instanceof EnemyDecision.Act act)) return false; // Skip: no legal action this activation
 
         ActionRequest first = act.request();
         if (resolveEnemyAction(state, first, events)) return true;
 
         // Generic Move -> Attack (TD 5.4 step 6): only an Attack may follow, judged on the post-Move state.
-        if (first.kind() == ActionKind.MOVE && EnemyRules.canAttackKnight(state, enemyId)) {
+        if (first.kind() == ActionKind.MOVE
+                && EnemyRules.isGenericEnemy(typeAtStart)
+                && EnemyRules.canAttackKnight(state, enemyId)) {
             Position knight = EnemyRules.knightPosition(state).orElseThrow();
             return resolveEnemyAction(state, ActionRequest.attack(enemyId, knight), events);
         }

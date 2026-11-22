@@ -8,7 +8,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import rogueknight.action.BattleController;
 import rogueknight.action.EnemyTurnRunner;
-import rogueknight.ai.GenericEnemyPolicy;
+import rogueknight.ai.EnemyAI;
 import rogueknight.battle.BattleState;
 import rogueknight.battle.EquipmentType;
 import rogueknight.battle.Inventory;
@@ -28,7 +28,7 @@ class BattleControllerAdapterEnemyTurnTest {
         state.addPiece(new PieceState("rook-1", PieceType.ROOK, 2, 3, 2, 1), Position.fromNotation("d6"));
         state.addPiece(new PieceState("king-1", PieceType.KING, 5, 5, 5, 2), Position.fromNotation("h8"));
         BattleControllerAdapter adapter = new BattleControllerAdapter(
-            new BattleController(state, new EnemyTurnRunner(new GenericEnemyPolicy())));
+            new BattleController(state, new EnemyTurnRunner(new EnemyAI())));
 
         // Knight d4 -> d3; the Rook (due at Turn 2) moves d6 -> d4 and attacks d3: HP 1 -> 0.
         MoveResult result = adapter.submitAction("knight", ActionMode.MOVE, BoardPosition.fromNotation("d3"));

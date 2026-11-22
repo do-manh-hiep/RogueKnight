@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import rogueknight.battle.BattleResult;
 import rogueknight.battle.BattleState;
 import rogueknight.battle.Direction;
 import rogueknight.battle.EquipmentType;
@@ -66,39 +65,15 @@ class PawnAttackRuleTest {
     }
 
     @Test
-    @DisplayName("executeAttack damages Knight by 1 and keeps battle ongoing if Knight HP > 0")
-    void executeAttackDamagesKnight() {
+    @DisplayName("canAttackKnight finds the Knight by type, not by the fixed ID \"knight\"")
+    void canAttackKnightWithAnyKnightId() {
         BattleState state = new BattleState(Set.of(), loadout());
-        state.addPiece(new PieceState("knight", PieceType.KNIGHT, 3, 0, 0, 0), new Position(2, 3));
+        state.addPiece(new PieceState("K1", PieceType.KNIGHT, 5, 0, 0, 0), new Position(2, 3));
         state.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Direction.SOUTH), new Position(3, 4));
 
-        List<BattleEvent> events = PawnAttackRule.executeAttack(state, "pawn-1");
-
-        assertEquals(1, events.size());
-        assertTrue(events.get(0) instanceof BattleEvent.PieceDamaged);
-        BattleEvent.PieceDamaged damaged = (BattleEvent.PieceDamaged) events.get(0);
-        assertEquals("knight", damaged.pieceId());
-        assertEquals(1, damaged.amount());
-        assertEquals(2, damaged.remainingHp());
-
-        assertEquals(2, state.pieceState("knight").orElseThrow().hp());
-        assertEquals(BattleResult.ONGOING, state.result());
+        assertTrue(PawnAttackRule.canAttackKnight(state, "pawn-1"));
     }
 
-    @Test
-    @DisplayName("executeAttack kills Knight when HP drops to 0 and ends game with DEFEAT")
-    void executeAttackKillsKnightEndsGame() {
-        BattleState state = new BattleState(Set.of(), loadout());
-        state.addPiece(new PieceState("knight", PieceType.KNIGHT, 1, 0, 0, 0), new Position(3, 3));
-        state.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Direction.SOUTH), new Position(3, 4));
-
-        List<BattleEvent> events = PawnAttackRule.executeAttack(state, "pawn-1");
-
-        assertEquals(2, events.size());
-        assertTrue(events.get(0) instanceof BattleEvent.PieceDamaged);
-        assertTrue(events.get(1) instanceof BattleEvent.PieceRemoved);
-
-        assertTrue(state.pieceState("knight").isEmpty());
-        assertEquals(BattleResult.DEFEAT, state.result());
-    }
+    // The Pawn attack itself (damage, Knight death, DEFEAT) now goes through EnemyRules + ActionResolver +
+    // BattleController like every Enemy Action; see rogueknight.ai.PawnTurnTest.
 }

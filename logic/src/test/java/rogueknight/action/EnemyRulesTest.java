@@ -10,6 +10,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.BattleState;
+import rogueknight.battle.Direction;
 import rogueknight.battle.EquipmentType;
 import rogueknight.battle.Inventory;
 import rogueknight.battle.PieceState;
@@ -130,7 +131,37 @@ class EnemyRulesTest {
         assertEquals(ActionError.UNSUPPORTED_ACTION, EnemyRules.validate(state, ActionRequest.sword("R", at("d3"))).error());
         assertEquals(ActionError.NOT_ENEMY_ACTOR, EnemyRules.validate(state, ActionRequest.move("K", at("c2"))).error());
         assertEquals(ActionError.UNKNOWN_ACTOR, EnemyRules.validate(state, ActionRequest.move("ghost", at("d3"))).error());
-        assertEquals(ActionError.UNSUPPORTED_ACTION, EnemyRules.validate(state, ActionRequest.move("P", at("a6"))).error());
+    }
+
+    @Test
+    void pawnStepsOneSquareInEightDirectionsAndAttacksItsFacingCone() {
+        BattleState state = battle(Set.of(at("c4")));
+        state.addPiece(knight(), at("d4"));
+        state.addPiece(new PieceState("P", PieceType.PAWN, 1, 2, 2, 1, Direction.SOUTH), at("d5"));
+        state.addPiece(enemy("KG", PieceType.KING, 2), at("e6"));
+
+        // DEC-01: 8 neighbours, Rock/Knight/Enemy squares excluded; which one is used is decided by BFS.
+        assertEquals(squares("c5", "c6", "d6", "e4", "e5"), EnemyRules.moveDestinations(state, "P"));
+        // Facing SOUTH: d4 and the two 45-degree squares c4, e4 (Rock squares still belong to the area).
+        assertEquals(squares("c4", "d4", "e4"), EnemyRules.attackCells(state, "P"));
+        assertTrue(EnemyRules.canAttackKnight(state, "P"));
+        assertFalse(EnemyRules.isGenericEnemy(PieceType.PAWN), "Pawn never gets a post-Move Attack");
+
+        assertTrue(EnemyRules.validate(state, ActionRequest.move("P", at("c6"))).isValid());
+        assertTrue(EnemyRules.validate(state, ActionRequest.attack("P", at("d4"))).isValid());
+        assertEquals(ActionError.INVALID_GEOMETRY, EnemyRules.validate(state, ActionRequest.move("P", at("d7"))).error());
+        assertEquals(ActionError.OCCUPIED_BY_PIECE, EnemyRules.validate(state, ActionRequest.move("P", at("d4"))).error());
+    }
+
+    @Test
+    void pawnDoesNotAttackOutsideItsStoredDirection() {
+        BattleState state = battle(Set.of());
+        state.addPiece(knight(), at("d4"));
+        state.addPiece(new PieceState("P", PieceType.PAWN, 1, 2, 2, 1, Direction.EAST), at("d5"));
+
+        assertEquals(squares("e4", "e5", "e6"), EnemyRules.attackCells(state, "P"));
+        assertFalse(EnemyRules.canAttackKnight(state, "P"), "the Knight directly south is outside an EAST cone");
+        assertEquals(ActionError.INVALID_GEOMETRY, EnemyRules.validate(state, ActionRequest.attack("P", at("d4"))).error());
     }
 
     @Test

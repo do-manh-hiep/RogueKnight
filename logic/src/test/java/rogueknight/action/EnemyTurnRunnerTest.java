@@ -132,7 +132,8 @@ class EnemyTurnRunnerTest {
 
         ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
 
-        assertEquals(List.of("R@2:hp=5", "B@2:hp=4"), trace, "Bishop must see the Rook's damage");
+        // Pawn a7 faces SOUTH (a6, b6): the Knight is outside its cone, so the stub skips it.
+        assertEquals(List.of("P@2:hp=5", "R@2:hp=5", "B@2:hp=4"), trace, "Bishop must see the Rook's damage");
         assertEquals(List.of(
                 new BattleEvent.ActionPerformed(ActionKind.WAIT, KNIGHT),
                 new BattleEvent.TurnAdvanced(1, 2),
@@ -269,62 +270,53 @@ class EnemyTurnRunnerTest {
         assertTrue(error.getMessage().contains("OCCUPIED_BY_ROCK"));
     }
 
+
     @Test
-    void defaultPawnSlotSkipsButScheduleStillAdvances() {
-        BattleState state = battle(5);
+    void promotionKeepsItsScheduleAndThePromotedQueenDoesNotAttackYet() {
+        // Pawn c2 steps to c1 and promotes inside the Move (ActionResolver). The new Queen on c1 is diagonal-adjacent
+        // to the Knight on d2, but the activation started as a Pawn, so no post-Move Attack (R-P05).
+        BattleState state = new BattleState(Set.of(),
+                Inventory.initial(EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK));
+        state.addPiece(new PieceState(KNIGHT, PieceType.KNIGHT, 5, 0, 0, 0), at("d2"));
+        state.addPiece(new PieceState("KG", PieceType.KING, 5, 5, 5, 9), at("h8"));
         state.addPiece(rook("R", 9, 1), at("a8"));
-        state.addPiece(pawn("P", 2, 2), at("c6"));
-        BattleController controller = new BattleController(state, new EnemyTurnRunner(attackOrSkip(new ArrayList<>())));
+        state.addPiece(pawn("P", 2, 2), at("c2"));
+        BattleController controller = new BattleController(state,
+                new EnemyTurnRunner(fixed(ActionRequest.move("P", at("c1")), new ArrayList<>())));
 
         ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
 
         assertEquals(List.of(
                 new BattleEvent.ActionPerformed(ActionKind.WAIT, KNIGHT),
                 new BattleEvent.TurnAdvanced(1, 2),
-                new BattleEvent.ActorActivated("P", at("c6"), 2)), result.events());
-        assertEquals(at("c6"), result.after().pieceById("P").orElseThrow().position());
-        assertEquals(4, result.after().pieceById("P").orElseThrow().nextActivationTurn());
-    }
-
-    @Test
-    void promotionScheduleSetByPawnHookIsNotOverwrittenAndQueenDoesNotAttackYet() {
-        BattleState state = battle(5);
-        state.addPiece(rook("R", 9, 1), at("a8"));
-        state.addPiece(pawn("P", 2, 2), at("c3")); // diagonal-adjacent to the Knight: a Queen could attack
-        // Stand-in for T-03.03: promote in place and set the T+5 schedule inside the same Action.
-        PawnActivation promote = (s, pawnId) -> {
-            PieceState pawn = s.pieceState(pawnId).orElseThrow();
-            s.replacePiece(new PieceState(pawnId, PieceType.QUEEN, 2, 4, s.globalTurn() + 5, pawn.spawnOrder(), null));
-            return List.of(new BattleEvent.ActionPerformed(ActionKind.MOVE, pawnId));
-        };
-        BattleController controller = new BattleController(state,
-                new EnemyTurnRunner(attackOrSkip(new ArrayList<>()), promote));
-
-        ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
-
-        PieceState queen = state.pieceState("P").orElseThrow();
+                new BattleEvent.ActorActivated("P", at("c2"), 2),
+                new BattleEvent.ActionPerformed(ActionKind.MOVE, "P"),
+                new BattleEvent.PieceMoved("P", at("c2"), at("c1")),
+                new BattleEvent.PiecePromoted("P", PieceType.PAWN, PieceType.QUEEN, at("c1"))), result.events());
+        BattleSnapshot.PieceView queen = result.after().pieceById("P").orElseThrow();
         assertEquals(PieceType.QUEEN, queen.type());
         assertEquals(7, queen.nextActivationTurn(), "T+5 from turn 2 must not get +cycle on top");
         assertEquals(5, result.after().pieceById(KNIGHT).orElseThrow().hp(), "no Queen Attack in the promotion activation");
     }
 
     @Test
-    void pawnHookThatKillsKnightEndsBattleBeforeLaterEnemies() {
+    void pawnAttackKillingKnightEndsBattleBeforeLaterEnemies() {
         List<String> trace = new ArrayList<>();
         BattleState state = battle(1);
-        state.addPiece(pawn("P", 2, 1), at("c6"));
-        state.addPiece(rook("R", 2, 2), at("d5"));
-        PawnActivation lethal = (s, pawnId) -> {
-            s.removePiece(KNIGHT);
-            return List.of(new BattleEvent.ActionPerformed(ActionKind.ATTACK, pawnId));
-        };
-        BattleController controller = new BattleController(state, new EnemyTurnRunner(attackOrSkip(trace), lethal));
+        state.addPiece(pawn("P", 2, 1), at("d5")); // faces SOUTH: d4, c4, e4
+        state.addPiece(rook("R", 2, 2), at("a8"));
+        BattleController controller = new BattleController(state, new EnemyTurnRunner(attackOrSkip(trace)));
 
         ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
 
+        assertEquals(List.of("P@2:hp=1"), trace, "Rook must not act after the Pawn ended the battle");
+        List<BattleEvent> events = result.events();
+        assertEquals(List.of(
+                new BattleEvent.ActionPerformed(ActionKind.ATTACK, "P"),
+                new BattleEvent.PieceDamaged(KNIGHT, 1, 0),
+                new BattleEvent.PieceRemoved(KNIGHT, at("d4")),
+                new BattleEvent.BattleEnded(BattleResult.DEFEAT)), events.subList(events.size() - 4, events.size()));
         assertEquals(BattleResult.DEFEAT, result.after().result());
-        assertTrue(trace.isEmpty(), "Rook must not act after the Pawn ended the battle");
-        assertEquals(new BattleEvent.BattleEnded(BattleResult.DEFEAT), result.events().get(result.events().size() - 1));
     }
 
     @Test
@@ -334,15 +326,17 @@ class EnemyTurnRunnerTest {
         state.addPiece(pawn("P", 2, 1), at("a7"));
         state.addPiece(rook("R", 2, 2), at("d5"));
         state.addPiece(bishop("B", 2, 3), at("e5"));
-        PawnActivation removesRook = (s, pawnId) -> {
-            s.removePiece("R");
-            return List.of();
+        EnemyPolicy recording = attackOrSkip(trace);
+        // Test-only side effect: no baseline Action kills an Enemy during the Enemy queue, so the stub forces it.
+        EnemyPolicy removesRookOnPawnTurn = (view, enemyId) -> {
+            if (enemyId.equals("P")) state.removePiece("R");
+            return recording.choose(view, enemyId);
         };
-        BattleController controller = new BattleController(state, new EnemyTurnRunner(attackOrSkip(trace), removesRook));
+        BattleController controller = new BattleController(state, new EnemyTurnRunner(removesRookOnPawnTurn));
 
         ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
 
-        assertEquals(List.of("B@2:hp=5"), trace);
+        assertEquals(List.of("P@2:hp=5", "B@2:hp=5"), trace);
         assertTrue(result.events().stream().noneMatch(e -> e instanceof BattleEvent.ActorActivated a && a.actorId().equals("R")));
     }
 }

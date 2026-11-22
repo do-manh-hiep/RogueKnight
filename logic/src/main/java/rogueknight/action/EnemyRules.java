@@ -15,13 +15,14 @@ import rogueknight.board.Position;
 /*
  * EnemyRules.java  |  T-03.02  |  TD: 2.4, 4.7 (C-01, C-02), R-E02..R-E04, R-B03..R-B04
  *
- * Luật Move/Attack của Enemy generic (Rook, Bishop, King, Queen) và validate request của Enemy.
+ * Luật Move/Attack của mọi Enemy và validate request của Enemy (Player dùng KnightRules).
  * - Rook trượt orthogonal, Bishop trượt diagonal, Queen = Rook + Bishop; dừng trước blocker đầu tiên
  *   (Rock, Enemy khác hoặc Knight). King đi một ô tám hướng. Đích Move luôn là ô trống.
  * - Attack chỉ ô kề: Rook kề orthogonal, Bishop kề diagonal, King/Queen kề tám hướng; damage 1.
+ * - Pawn (T-03.03): Move một ô tám hướng (DEC-01; BFS trong PawnPathfinder chọn ô nào), Attack ba ô
+ *   theo currentDirection và ±45° (PawnAttackRule). Hướng và phong cấp do ActionResolver áp dụng.
  * - Thuần đọc trên StateView, nên AI dùng được cùng bộ luật trên HypotheticalView (R-TECH02).
  * - Hình học khai báo bằng dữ liệu (bảng GEOMETRY), không switch(type) rải rác.
- * - Pawn có luật riêng (BFS, hướng, phong cấp) thuộc T-03.03, không nằm ở đây.
  * Từ khóa tìm kiếm: moveDestinations, attackCells, canAttackKnight, knightPosition, validate.
  */
 public final class EnemyRules {
@@ -35,8 +36,16 @@ public final class EnemyRules {
             List.of(Direction.NORTH_EAST, Direction.SOUTH_EAST, Direction.SOUTH_WEST, Direction.NORTH_WEST);
     private static final List<Direction> ALL_DIRECTIONS = List.of(Direction.values());
 
-    /** slide: rays until a blocker; step: exactly one square; attack: adjacent squares in these directions. */
-    private record Geometry(List<Direction> slide, List<Direction> step, List<Direction> attack) { }
+    /**
+     * slide: rays until a blocker; step: exactly one square; attack: adjacent squares in these directions.
+     * {@code attackFollowsFacing}: the attack cone comes from the piece's currentDirection (Pawn) instead.
+     */
+    private record Geometry(List<Direction> slide, List<Direction> step, List<Direction> attack,
+                            boolean attackFollowsFacing) {
+        Geometry(List<Direction> slide, List<Direction> step, List<Direction> attack) {
+            this(slide, step, attack, false);
+        }
+    }
 
     private static final Map<PieceType, Geometry> GEOMETRY = geometryTable();
 
@@ -51,12 +60,13 @@ public final class EnemyRules {
         table.put(PieceType.BISHOP, new Geometry(DIAGONAL, List.of(), DIAGONAL));
         table.put(PieceType.QUEEN, new Geometry(ALL_DIRECTIONS, List.of(), ALL_DIRECTIONS));
         table.put(PieceType.KING, new Geometry(List.of(), ALL_DIRECTIONS, ALL_DIRECTIONS));
+        table.put(PieceType.PAWN, new Geometry(List.of(), ALL_DIRECTIONS, List.of(), true));
         return table;
     }
 
     /** Rook, Bishop, King and Queen follow the generic Attack / Move-then-Attack flow (TD 5.4). */
     public static boolean isGenericEnemy(PieceType type) {
-        return type != null && GEOMETRY.containsKey(type);
+        return type != null && type != PieceType.PAWN && GEOMETRY.containsKey(type);
     }
 
     /** Empty squares the Enemy may move to, sorted by column then row. Empty list if it cannot move. */
@@ -89,8 +99,13 @@ public final class EnemyRules {
         if (geometry.isEmpty() || from.isEmpty()) return List.of();
 
         List<Position> cells = new ArrayList<>();
-        for (Direction direction : geometry.get().attack()) {
-            step(from.get(), direction).ifPresent(cells::add);
+        if (geometry.get().attackFollowsFacing()) {
+            Direction facing = view.pieceState(enemyId).orElseThrow().currentDirection();
+            cells.addAll(PawnAttackRule.attackTargets(from.get(), facing));
+        } else {
+            for (Direction direction : geometry.get().attack()) {
+                step(from.get(), direction).ifPresent(cells::add);
+            }
         }
         cells.sort(BOARD_ORDER);
         return List.copyOf(cells);
@@ -119,7 +134,7 @@ public final class EnemyRules {
         Optional<Position> from = view.positionOf(request.actorId());
         if (actor.isEmpty() || from.isEmpty()) return ValidationOutcome.invalid(ActionError.UNKNOWN_ACTOR);
         if (actor.get().type() == PieceType.KNIGHT) return ValidationOutcome.invalid(ActionError.NOT_ENEMY_ACTOR);
-        if (!isGenericEnemy(actor.get().type())) return ValidationOutcome.invalid(ActionError.UNSUPPORTED_ACTION);
+        if (!GEOMETRY.containsKey(actor.get().type())) return ValidationOutcome.invalid(ActionError.UNSUPPORTED_ACTION);
         if (!request.targetInBounds()) return ValidationOutcome.invalid(ActionError.OUT_OF_BOUNDS);
 
         Position target = request.target();

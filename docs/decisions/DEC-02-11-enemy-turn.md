@@ -29,7 +29,7 @@ DEFEAT được ưu tiên. Fixture: `ResultEvaluatorTest`.
 - `nextActivationTurn` tường minh, ban đầu bằng cycle; xong activation hoặc skip thì cộng cycle.
 - Queue: PAWN, ROOK, BISHOP, KING, QUEEN, rồi spawnOrder, rồi id.
 - Queue chụp một lần sau Turn+1; ID đã chết bị bỏ qua.
-- Type đổi trong activation (phong cấp) thì runner giữ lịch T+5 do Pawn đặt.
+- Type đổi trong activation (phong cấp) thì runner giữ lịch T+5 do Resolver đặt.
 
 ## DEC-12 — AI chọn request invalid
 
@@ -42,14 +42,27 @@ DEFEAT được ưu tiên. Fixture: `ResultEvaluatorTest`.
 - `ActionError.NOT_ENEMY_ACTOR`.
 - Knight HP về 0 bị gỡ khỏi Board như mọi quân; không còn Knight = DEFEAT.
 - `BattleController(state)` vẫn dùng `EnemyPhase.NONE` cho test luật Player.
-  Game dùng `new EnemyTurnRunner(new GenericEnemyPolicy())`.
+  Game dùng `new EnemyTurnRunner(new EnemyAI())`.
 - Fixture test phải có King **và** một Enemy non-King nếu cần trận ONGOING.
 
-## Điểm nối cho T-03.03
+## Tích hợp T-03.03 (Pawn)
 
-Pawn đang dùng `PawnActivation.SKIP`: chỉ phát `ActorActivated`, lịch vẫn tiến.
-T-03.03 cắm logic thật qua `new EnemyTurnRunner(policy, pawnActivation)`:
+Mọi Enemy, kể cả Pawn, đi cùng một luồng:
+`EnemyTurnRunner` → `EnemyAI` → `EnemyRules.validate` → `ActionResolver` → check terminal.
 
-- Không phát `ActorActivated`, không cộng cycle, không tăng Turn, không tự kết thúc trận.
-- Phong cấp: đổi type và đặt `nextActivationTurn = T + 5` trong cùng Action.
-- Không Attack sau Move.
+- `EnemyAI`: Pawn dùng `PawnPolicy`, các loại khác dùng `GenericEnemyPolicy`.
+- `PawnPolicy`: Knight trong ba ô theo hướng đang lưu thì ATTACK;
+  nếu không thì MOVE bước đầu của `PawnPathfinder` (BFS, DEC-01); không có bước thì Skip.
+- `EnemyRules`: Pawn Move một ô tám hướng; Attack theo `PawnAttackRule.attackTargets`.
+- `ActionResolver`: Pawn Move đổi `currentDirection` theo bước vừa đi;
+  tới hàng 1 thì `PawnPromotionApplier` phong Queen (HP 2, cycle 4, T+5) trong cùng Action.
+- Runner chỉ xét Attack sau Move cho loại quân lúc bắt đầu activation là generic,
+  nên Pawn và Queen vừa phong cấp không đánh tiếp.
+- Bỏ `PawnEnemyPhase` (queue và lịch trùng với runner) và `PawnAttackRule.executeAttack`
+  (tự gọi `finish`, bỏ qua `ActionPerformed`). Knight được tìm theo type, không theo ID `"knight"`.
+- Test cũ được chuyển sang `rogueknight.ai.PawnTurnTest` qua controller thật.
+
+## Còn mở
+
+- DEC-01 fallback khi Pawn **không có đường phong cấp**: repo chưa định nghĩa hình học fallback,
+  nên Pawn hiện Skip (lịch vẫn tiến). Cần nhóm chốt trước khi tuyên bố G3.

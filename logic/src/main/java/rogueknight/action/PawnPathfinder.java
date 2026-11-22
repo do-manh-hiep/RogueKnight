@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
-import rogueknight.battle.BattleState;
 import rogueknight.battle.Direction;
 import rogueknight.battle.PieceState;
 import rogueknight.battle.PieceType;
+import rogueknight.battle.StateView;
 import rogueknight.board.Position;
 
 /**
@@ -35,11 +35,13 @@ public final class PawnPathfinder {
     /**
      * Calculates the next optimal single-step move for the specified Pawn to reach row 0.
      *
+     * Read-only, so the Pawn AI can run it on any StateView.
+     *
      * @param state  the current battle state
      * @param pawnId ID of the Pawn
      * @return the chosen next move, or empty if already at row 0 or no valid path exists
      */
-    public static Optional<NextMove> findNextMove(BattleState state, String pawnId) {
+    public static Optional<NextMove> findNextMove(StateView state, String pawnId) {
         Objects.requireNonNull(state, "state must not be null");
         Objects.requireNonNull(pawnId, "pawnId must not be null");
 
@@ -169,7 +171,7 @@ public final class PawnPathfinder {
         return Optional.of(new NextMove(chosen, dir));
     }
 
-    private static boolean isObstacleForPath(BattleState state, String pawnId, Position pos) {
+    private static boolean isObstacleForPath(StateView state, String pawnId, Position pos) {
         if (state.isRock(pos)) {
             return true;
         }
@@ -178,8 +180,8 @@ public final class PawnPathfinder {
             return false;
         }
         String id = pieceId.get();
-        // Knight is ignored when pathfinding globally
-        if ("knight".equals(id)) {
+        // Knight is ignored when pathfinding globally (found by type, not by a fixed ID)
+        if (state.pieceState(id).map(piece -> piece.type() == PieceType.KNIGHT).orElse(false)) {
             return false;
         }
         // Pawn's own current square is not an obstacle

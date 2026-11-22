@@ -17,6 +17,7 @@ import rogueknight.battle.BattlePhase;
 import rogueknight.battle.BattleResult;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.BattleState;
+import rogueknight.battle.Direction;
 import rogueknight.battle.EquipmentType;
 import rogueknight.battle.Inventory;
 import rogueknight.battle.PieceState;
@@ -25,9 +26,9 @@ import rogueknight.board.Position;
 import rogueknight.data.BattleFactory;
 
 /*
- * EnemyTurnIntegrationTest  |  T-03.01 + T-03.02 (G2)  |  IT-02, IT-04, TC-E02, TD 5.12A/B
- * BattleController thật + EnemyTurnRunner + GenericEnemyPolicy thật.
- * Pawn vẫn dùng PawnActivation.SKIP (T-03.03 chưa merge): Pawn chỉ phát ActorActivated, lịch vẫn tiến.
+ * EnemyTurnIntegrationTest  |  T-03.01 + T-03.02 + T-03.03 (G2)  |  IT-02, IT-04, TC-E02, TD 5.12A/B
+ * BattleController thật + EnemyTurnRunner + EnemyAI thật (PawnPolicy + GenericEnemyPolicy), không stub.
+ * Pawn-only scenarios (attack cone, BFS, promotion timeline) live in PawnTurnTest.
  */
 class EnemyTurnIntegrationTest {
 
@@ -36,7 +37,7 @@ class EnemyTurnIntegrationTest {
     }
 
     private static BattleController realController(BattleState state) {
-        return new BattleController(state, new EnemyTurnRunner(new GenericEnemyPolicy()));
+        return new BattleController(state, new EnemyTurnRunner(new EnemyAI()));
     }
 
     @Test
@@ -93,8 +94,9 @@ class EnemyTurnIntegrationTest {
     }
 
     @Test
-    void map01CannonAttackOpeningQueuesOnlyPawnOne() throws IOException {
-        // TD 5.12A / IT-02: Pawn2 dies, Turn 1 -> 2, the queue holds only Pawn1.
+    void map01CannonAttackOpeningMatchesTdWalkthrough() throws IOException {
+        // TD 5.12A / IT-02: Pawn2 dies, Turn 1 -> 2, the queue holds only Pawn1, which steps c7 -> c6 (DEC-01:
+        // b6, c6, d6 are all 5 steps from row 1; straight SOUTH wins) and does not attack after moving.
         BattleState state = new BattleFactory().createMap01(EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK);
         BattleController controller = realController(state);
 
@@ -105,17 +107,24 @@ class EnemyTurnIntegrationTest {
                 new BattleEvent.PieceDamaged("pawn-2", 1, 0),
                 new BattleEvent.PieceRemoved("pawn-2", at("d7")),
                 new BattleEvent.TurnAdvanced(1, 2),
-                new BattleEvent.ActorActivated("pawn-1", at("c7"), 2)), result.events());
-        assertEquals(0, result.after().inventory().chargesOf(EquipmentType.CANNON_ATTACK));
-        assertEquals(1, result.after().inventory().chargesOf(EquipmentType.CANNON_MOVEMENT));
-        assertEquals(BattleResult.ONGOING, result.after().result());
+                new BattleEvent.ActorActivated("pawn-1", at("c7"), 2),
+                new BattleEvent.ActionPerformed(ActionKind.MOVE, "pawn-1"),
+                new BattleEvent.PieceMoved("pawn-1", at("c7"), at("c6"))), result.events());
+        BattleSnapshot after = result.after();
+        assertEquals(0, after.inventory().chargesOf(EquipmentType.CANNON_ATTACK));
+        assertEquals(1, after.inventory().chargesOf(EquipmentType.CANNON_MOVEMENT));
+        assertEquals(BattleResult.ONGOING, after.result());
+        assertEquals(4, after.pieceById("pawn-1").orElseThrow().nextActivationTurn());
+        assertEquals(Direction.SOUTH, after.pieceById("pawn-1").orElseThrow().currentDirection());
+        assertEquals(5, after.pieceById("knight").orElseThrow().hp());
     }
 
     @Test
     void map01RookAndBishopActDeterministicallyOnTurnThree() throws IOException {
-        // Turn 3 on Map01 (Knight d1 waits). Hand-ranked with DEC-02:
+        // Turn 2: both Pawns step SOUTH (c7 -> c6, then d7 -> d6). Turn 3 (Knight d1 waits), hand-ranked with DEC-02:
         // Rook h8: no Move->Attack, all squares safe; threat only from h1 (-> e1) and h2 (-> d2), both distance 4,
-        //          h1 wins on row. Bishop c8: only b7 and a6 (d7 blocks); neither threatens, a6 is closer (5 < 6).
+        //          h1 wins on row. Bishop c8: d7, b7, a6 (Rock e6 and Pawn c6 block the rays); none threatens,
+        //          a6 is closest (5 < 6).
         List<BattleEvent> firstRun = playTwoWaitsOnMap01();
         List<BattleEvent> secondRun = playTwoWaitsOnMap01();
 
@@ -140,7 +149,11 @@ class EnemyTurnIntegrationTest {
                 new BattleEvent.ActionPerformed(ActionKind.WAIT, "knight"),
                 new BattleEvent.TurnAdvanced(1, 2),
                 new BattleEvent.ActorActivated("pawn-1", at("c7"), 2),
-                new BattleEvent.ActorActivated("pawn-2", at("d7"), 2)), turn2.events());
+                new BattleEvent.ActionPerformed(ActionKind.MOVE, "pawn-1"),
+                new BattleEvent.PieceMoved("pawn-1", at("c7"), at("c6")),
+                new BattleEvent.ActorActivated("pawn-2", at("d7"), 2),
+                new BattleEvent.ActionPerformed(ActionKind.MOVE, "pawn-2"),
+                new BattleEvent.PieceMoved("pawn-2", at("d7"), at("d6"))), turn2.events());
 
         ActionResult turn3 = controller.submit(ActionRequest.waitAction("knight"));
         assertTrue(turn3.accepted());
