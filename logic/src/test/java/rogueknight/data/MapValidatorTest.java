@@ -190,4 +190,44 @@ class MapValidatorTest {
                 "Thông báo thực tế: " + error.getMessage()
         );
     }
+
+    @Test
+    void rejectsKnightWithUnexpectedId() {
+        MapData map = new MapData(
+            8,
+            8,
+            List.of(),
+            List.of(
+                new PieceData("hero", "KNIGHT", 3, 0, 0),
+                new PieceData("king-1", "KING", 3, 7, 1)
+            )
+        );
+
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new MapValidator().validate(map)
+        );
+    }
+
+    @Test
+    void rejectsKnightIdUsedByAnotherType() {
+        MapData map = new MapData(
+            8,
+            8,
+            List.of(),
+            List.of(
+                new PieceData("knight", "PAWN", 3, 0, 0),
+                new PieceData("king-1", "KING", 3, 7, 1)
+            )
+        );
+
+        IllegalArgumentException error = assertThrows(
+            IllegalArgumentException.class,
+            () -> new MapValidator().validate(map)
+        );
+
+        org.junit.jupiter.api.Assertions.assertTrue(
+            error.getMessage().contains("type phải là KNIGHT")
+        );
+    }
 }

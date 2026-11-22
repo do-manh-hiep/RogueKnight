@@ -316,24 +316,24 @@ class BattleFactoryTest {
 
         BattleSnapshot snapshot = battle.snapshot();
 
-        // Với Map01 và quy tắc hòa column → row,
-        // cả hai Pawn chọn bước đầu về phía SOUTH_WEST.
+        // Hai Pawn đều có bước SOUTH thuộc đường ngắn nhất
+        // tới hàng phong cấp, nên ưu tiên hướng SOUTH.
         assertEquals(
-            Direction.SOUTH_WEST,
+            Direction.SOUTH,
             snapshot.pieceById("pawn-1").orElseThrow().currentDirection()
         );
         assertEquals(
-            Direction.SOUTH_WEST,
+            Direction.SOUTH,
             snapshot.pieceById("pawn-2").orElseThrow().currentDirection()
         );
 
         // Kiểm tra hướng đã được lưu trong state thật.
         assertEquals(
-            Direction.SOUTH_WEST,
+            Direction.SOUTH,
             battle.pieceState("pawn-1").orElseThrow().currentDirection()
         );
         assertEquals(
-            Direction.SOUTH_WEST,
+            Direction.SOUTH,
             battle.pieceState("pawn-2").orElseThrow().currentDirection()
         );
 

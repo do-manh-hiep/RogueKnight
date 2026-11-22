@@ -59,4 +59,55 @@ class BalanceValidatorTest {
                 "Thông báo thực tế: " + error.getMessage()
         );
     }
+
+    @Test
+    void rejectsNegativePawnDamage() throws IOException {
+        BalanceData original = new BalanceLoader().load();
+        Map<String, PieceStatsData> pieces =
+            new HashMap<>(original.pieces());
+
+        pieces.put(
+            "PAWN",
+            new PieceStatsData(1, -1, 2, null, null)
+        );
+
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new BalanceValidator().validate(new BalanceData(pieces))
+        );
+    }
+
+    @Test
+    void rejectsNegativeSwordDamage() throws IOException {
+        BalanceData original = new BalanceLoader().load();
+        Map<String, PieceStatsData> pieces =
+            new HashMap<>(original.pieces());
+
+        pieces.put(
+            "KNIGHT",
+            new PieceStatsData(5, null, null, -1, 2)
+        );
+
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new BalanceValidator().validate(new BalanceData(pieces))
+        );
+    }
+
+    @Test
+    void rejectsNegativeCaptureDamage() throws IOException {
+        BalanceData original = new BalanceLoader().load();
+        Map<String, PieceStatsData> pieces =
+            new HashMap<>(original.pieces());
+
+        pieces.put(
+            "KNIGHT",
+            new PieceStatsData(5, null, null, 1, -1)
+        );
+
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new BalanceValidator().validate(new BalanceData(pieces))
+        );
+    }
 }
