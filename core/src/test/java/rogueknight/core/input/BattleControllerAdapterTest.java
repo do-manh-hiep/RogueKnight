@@ -26,7 +26,8 @@ class BattleControllerAdapterEquipmentTest {
         );
         // Reduce knight HP to 1 and attack with Pawn
         battle.replacePiece(battle.pieceState("knight").orElseThrow().withHp(1));
-        BattleController controller = new BattleController(battle, new rogueknight.action.PawnEnemyPhase());
+        BattleController controller = new BattleController(battle,
+            new rogueknight.action.EnemyTurnRunner(new rogueknight.ai.EnemyAI()));
         BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
 
         // Knight moves near pawn so Pawn attacks Knight to 0 HP

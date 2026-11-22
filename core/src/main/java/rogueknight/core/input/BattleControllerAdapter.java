@@ -4,6 +4,7 @@ import rogueknight.action.ActionKind;
 import rogueknight.action.ActionRequest;
 import rogueknight.action.ActionResult;
 import rogueknight.action.BattleController;
+import rogueknight.action.BattleEvent;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.EquipmentState;
 import rogueknight.battle.EquipmentType;
@@ -19,12 +20,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 public final class BattleControllerAdapter implements BattleControllerPort {
 
     private final BattleController controller;
-    private BoardPosition lastKnownKnightPosition = new BoardPosition(3, 0);
+    // A Knight at 0 HP is removed from the Board (Defeat); the view keeps showing its last square.
+    private BoardPosition lastKnownKnightPosition;
 
     public BattleControllerAdapter(BattleController controller) {
         this.controller = Objects.requireNonNull(
@@ -106,6 +109,12 @@ public final class BattleControllerAdapter implements BattleControllerPort {
             );
         }
 
+        // The Knight may move and then die in the same submit: its last square comes from the events.
+        for (BattleEvent event : result.events()) {
+            if (event instanceof BattleEvent.PieceRemoved removed && removed.pieceId().equals("knight")) {
+                lastKnownKnightPosition = toBoardPosition(removed.at());
+            }
+        }
         BattleViewSnapshot after = toViewSnapshot(result.after());
 
         return MoveResult.success(before, after);
@@ -129,20 +138,22 @@ public final class BattleControllerAdapter implements BattleControllerPort {
     }
 
     private BattleViewSnapshot toViewSnapshot(BattleSnapshot snapshot) {
-        java.util.Optional<BattleSnapshot.PieceView> knightOpt = snapshot.pieceById("knight");
+        Optional<BattleSnapshot.PieceView> knight = snapshot.pieceById("knight");
         BoardPosition knightPosition;
         int knightHp;
         Set<BoardPosition> moves;
 
-        if (knightOpt.isPresent()) {
-            knightPosition = toBoardPosition(knightOpt.get().position());
+        if (knight.isPresent()) {
+            knightPosition = toBoardPosition(knight.get().position());
             lastKnownKnightPosition = knightPosition;
-            knightHp = knightOpt.get().hp();
-            moves = legalMoves(knightOpt.get().id());
-        } else {
+            knightHp = knight.get().hp();
+            moves = legalMoves(knight.get().id());
+        } else if (lastKnownKnightPosition != null) {
             knightPosition = lastKnownKnightPosition;
             knightHp = 0;
             moves = Set.of();
+        } else {
+            throw new IllegalStateException("UI di chuyển hiện tại cần quân có ID knight");
         }
 
         Set<BoardPosition> rocks = new HashSet<>();

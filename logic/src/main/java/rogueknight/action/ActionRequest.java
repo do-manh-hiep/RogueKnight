@@ -53,6 +53,11 @@ public record ActionRequest(String actorId, ActionKind kind, int targetColumn, i
         return new ActionRequest(actorId, ActionKind.DIAGONAL_SKEWER, targetColumn, targetRow);
     }
 
+    /** Basic Enemy attack on the Knight's square; only EnemyRules accepts it (T-03.02). */
+    public static ActionRequest attack(String actorId, Position target) {
+        return new ActionRequest(actorId, ActionKind.ATTACK, target.column(), target.row());
+    }
+
     /** WAIT has no target; sentinel coordinates are ignored by its rule. */
     public static ActionRequest waitAction(String actorId) {
         return new ActionRequest(actorId, ActionKind.WAIT, -1, -1);

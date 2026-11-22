@@ -14,7 +14,8 @@ import rogueknight.core.view.BoardProjection;
 import rogueknight.core.view.BoardRenderer;
 
 import rogueknight.action.BattleController;
-import rogueknight.action.PawnEnemyPhase;
+import rogueknight.action.EnemyTurnRunner;
+import rogueknight.ai.EnemyAI;
 import rogueknight.battle.BattleState;
 import rogueknight.battle.EquipmentType;
 import rogueknight.core.input.BattleControllerAdapter;
@@ -56,8 +57,9 @@ public class Main extends ApplicationAdapter {
                 EquipmentType.DIAGONAL_SKEWER
             );
 
+            // T-03.01-T-03.03: real enemy turn for every Enemy type (Pawn, Rook, Bishop, King, Queen).
             controller = new BattleControllerAdapter(
-                new BattleController(battle, new PawnEnemyPhase())
+                new BattleController(battle, new EnemyTurnRunner(new EnemyAI()))
             );
         } catch (IOException | IllegalArgumentException exception) {
             throw new IllegalStateException(

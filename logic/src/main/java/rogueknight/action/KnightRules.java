@@ -15,8 +15,18 @@ import rogueknight.board.Position;
 public final class KnightRules {
     /** DEC-03: Skewer must hit at least one Enemy; Cannon Movement may land on any empty tile after the screen. */
     public static final boolean ALLOW_EMPTY_SKEWER = false;
+    /** Default Capture deals 2 damage, so it only targets Enemies with HP <= 2 (R-K05). */
+    public static final int CAPTURE_MAX_TARGET_HP = 2;
 
     private KnightRules() { }
+
+    /**
+     * Whether a Knight at {@code knight} could default-Capture an Enemy with {@code targetHp} at {@code target}.
+     * Enemy AI uses this same rule to judge capture safety (R-E07), so the HP condition is never skipped.
+     */
+    public static boolean canDefaultCapture(Position knight, Position target, int targetHp) {
+        return isCaptureGeometry(knight, target) && targetHp <= CAPTURE_MAX_TARGET_HP;
+    }
 
     public static boolean isMoveGeometry(Position from, Position to) {
         int dx = Math.abs(to.column() - from.column());
@@ -74,6 +84,7 @@ public final class KnightRules {
             case CANNON_MOVEMENT -> validateCannonMovement(state, request, from);
             case CANNON_ATTACK -> validateCannonAttack(state, request, from);
             case DIAGONAL_SKEWER -> validateDiagonalSkewer(state, request, from);
+            case ATTACK -> ValidationOutcome.invalid(ActionError.UNSUPPORTED_ACTION); // Enemy-only kind
         };
     }
 
@@ -107,7 +118,7 @@ public final class KnightRules {
         if (targetId.isEmpty()) return ValidationOutcome.invalid(ActionError.NO_TARGET_PIECE);
         PieceState victim = state.pieceState(targetId.get()).orElseThrow();
         if (victim.type() == PieceType.KNIGHT) return ValidationOutcome.invalid(ActionError.NOT_ENEMY_TARGET);
-        if (victim.hp() > 2) return ValidationOutcome.invalid(ActionError.CAPTURE_TARGET_TOO_STRONG);
+        if (victim.hp() > CAPTURE_MAX_TARGET_HP) return ValidationOutcome.invalid(ActionError.CAPTURE_TARGET_TOO_STRONG);
         return ValidationOutcome.valid(new ActionPlan(ActionKind.CAPTURE, request.actorId(), from, target, victim.id()));
     }
 

@@ -10,11 +10,15 @@ import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.BattleState;
 import rogueknight.board.Position;
 
-/** Single entry point for Player Actions; owns turn/phase lifecycle around the resolver. */
+/**
+ * Single entry point for Player Actions; owns turn/phase/result lifecycle around the resolver (C-04).
+ * Flow per TD 5.11: validate -> resolve Player Action -> check terminal -> Turn+1 -> Enemy queue -> selection.
+ */
 public final class BattleController {
     private final BattleState state;
     private final EnemyPhase enemyPhase;
 
+    /** Enemies never act (EnemyPhase.NONE); for Player-rule tests. The game uses an EnemyTurnRunner. */
     public BattleController(BattleState state) { this(state, EnemyPhase.NONE); }
 
     public BattleController(BattleState state, EnemyPhase enemyPhase) {
@@ -59,11 +63,31 @@ public final class BattleController {
         List<BattleEvent> events = new ArrayList<>();
         state.setPhase(BattlePhase.PLAYER_RESOLVE);
         events.addAll(ActionResolver.resolve(state, outcome.plan()));
+        // A Player Action that ends the battle does not advance the turn or run the Enemy queue (R-T03, R-R01).
+        if (endIfTerminal(state, events)) return ActionResult.accepted(before, state.snapshot(), events);
+
+        int oldTurn = state.globalTurn();
         state.advanceTurn();
+        events.add(new BattleEvent.TurnAdvanced(oldTurn, state.globalTurn()));
         state.setPhase(BattlePhase.ENEMY_RESOLVE);
         events.addAll(enemyPhase.run(state));
+        // Safety net for phases (e.g. test stubs) that change the state without ending the battle themselves.
+        endIfTerminal(state, events);
         if (state.result() == BattleResult.ONGOING) state.setPhase(BattlePhase.PLAYER_SELECT);
         return ActionResult.accepted(before, state.snapshot(), events);
+    }
+
+    /**
+     * Commits a terminal result right after a resolved Action (C-06): FINISHED phase plus one BattleEnded event.
+     * Returns true when the battle is over, including when it had already ended earlier in this submit.
+     */
+    static boolean endIfTerminal(BattleState state, List<BattleEvent> events) {
+        if (state.result() != BattleResult.ONGOING) return true;
+        BattleResult result = ResultEvaluator.evaluate(state);
+        if (result == BattleResult.ONGOING) return false;
+        state.finish(result);
+        events.add(new BattleEvent.BattleEnded(result));
+        return true;
     }
 
     private boolean acceptsPlayerAction() {
