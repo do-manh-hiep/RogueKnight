@@ -18,6 +18,31 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** T-04.01 / T-04.02 UI slice: equipment modes go through the same port and rules as Move. */
 class BattleControllerAdapterEquipmentTest {
 
+    @Test
+    void handlesKnightDeathGracefullyWithoutCrashing() throws IOException {
+        BattleState battle = new BattleFactory().createMap01(
+            EquipmentType.CANNON_MOVEMENT,
+            EquipmentType.DIAGONAL_SKEWER
+        );
+        // Reduce knight HP to 1 and attack with Pawn
+        battle.replacePiece(battle.pieceState("knight").orElseThrow().withHp(1));
+        BattleController controller = new BattleController(battle, new rogueknight.action.PawnEnemyPhase());
+        BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
+
+        // Knight moves near pawn so Pawn attacks Knight to 0 HP
+        // Knight at d1 (3,0). Move to e3 (4,2).
+        adapter.submitMove("knight", new BoardPosition(4, 2));
+
+        // When knight reaches 0 HP, snapshot should indicate DEAD without throwing exception
+        battle.removePiece("knight");
+        battle.finish(rogueknight.battle.BattleResult.DEFEAT);
+
+        BattleViewSnapshot snapshot = adapter.snapshot();
+        assertTrue(snapshot.statusMessage().contains("DEAD"));
+        assertTrue(snapshot.statusMessage().contains("DEFEAT"));
+        assertTrue(snapshot.legalMoves().isEmpty());
+    }
+
     private BattleControllerAdapter createAdapter() throws IOException {
         BattleState battle = new BattleFactory().createMap01(
             EquipmentType.CANNON_MOVEMENT,

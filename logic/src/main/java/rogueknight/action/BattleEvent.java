@@ -1,6 +1,7 @@
 package rogueknight.action;
 
 import rogueknight.battle.BattleResult;
+import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
 /**
@@ -12,6 +13,8 @@ public sealed interface BattleEvent {
     record PieceMoved(String pieceId, Position from, Position to) implements BattleEvent { }
     record PieceDamaged(String pieceId, int amount, int remainingHp) implements BattleEvent { }
     record PieceRemoved(String pieceId, Position at) implements BattleEvent { }
+    /** A Pawn reached row 1 inside its Move; same ID, new type (DEC-07). */
+    record PiecePromoted(String pieceId, PieceType fromType, PieceType toType, Position at) implements BattleEvent { }
     /** Emitted exactly once per accepted Player Action that leaves the battle ongoing; never per Enemy. */
     record TurnAdvanced(int oldTurn, int newTurn) implements BattleEvent { }
     /** An Enemy starts its activation, including activations that end in a skip (UI shake cue). */
