@@ -24,6 +24,7 @@ import java.util.Set;
 public final class BattleControllerAdapter implements BattleControllerPort {
 
     private final BattleController controller;
+    private BoardPosition lastKnownKnightPosition = new BoardPosition(3, 0);
 
     public BattleControllerAdapter(BattleController controller) {
         this.controller = Objects.requireNonNull(
@@ -128,12 +129,21 @@ public final class BattleControllerAdapter implements BattleControllerPort {
     }
 
     private BattleViewSnapshot toViewSnapshot(BattleSnapshot snapshot) {
-        BattleSnapshot.PieceView knight =
-            snapshot.pieceById("knight").orElseThrow(
-                () -> new IllegalStateException(
-                    "UI di chuyển hiện tại cần quân có ID knight"
-                )
-            );
+        java.util.Optional<BattleSnapshot.PieceView> knightOpt = snapshot.pieceById("knight");
+        BoardPosition knightPosition;
+        int knightHp;
+        Set<BoardPosition> moves;
+
+        if (knightOpt.isPresent()) {
+            knightPosition = toBoardPosition(knightOpt.get().position());
+            lastKnownKnightPosition = knightPosition;
+            knightHp = knightOpt.get().hp();
+            moves = legalMoves(knightOpt.get().id());
+        } else {
+            knightPosition = lastKnownKnightPosition;
+            knightHp = 0;
+            moves = Set.of();
+        }
 
         Set<BoardPosition> rocks = new HashSet<>();
 
@@ -152,12 +162,10 @@ public final class BattleControllerAdapter implements BattleControllerPort {
             }
         }
 
-        BoardPosition knightPosition = toBoardPosition(knight.position());
-
         String statusMessage =
             "Turn " + snapshot.globalTurn()
-            + " | Knight: " + knightPosition.notation()
-            + " | HP: " + knight.hp()
+            + " | Knight: " + (knightHp > 0 ? knightPosition.notation() : "DEAD")
+            + " | HP: " + knightHp
             + " | " + snapshot.phase()
             + " | " + snapshot.result();
 
@@ -166,7 +174,7 @@ public final class BattleControllerAdapter implements BattleControllerPort {
             knightPosition,
             rocks,
             enemies,
-            legalMoves(knight.id()),
+            moves,
             statusMessage,
             false
         );
