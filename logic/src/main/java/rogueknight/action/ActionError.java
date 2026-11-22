@@ -1,12 +1,13 @@
 package rogueknight.action;
 
-/** Reasons a Player Action request can be rejected without mutating battle state. */
+/** Reasons an Action request can be rejected without mutating battle state. */
 public enum ActionError {
     INVALID_PAYLOAD,
     BATTLE_FINISHED,
     WRONG_PHASE,
     UNKNOWN_ACTOR,
     NOT_PLAYER_ACTOR,
+    NOT_ENEMY_ACTOR,
     UNSUPPORTED_ACTION,
     OUT_OF_BOUNDS,
     INVALID_GEOMETRY,

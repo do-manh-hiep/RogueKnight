@@ -6,7 +6,10 @@ import rogueknight.battle.BattleState;
 import rogueknight.battle.PieceState;
 import rogueknight.board.Position;
 
-/** Applies a previously validated Player Action. It never validates or advances lifecycle. */
+/**
+ * Applies a previously validated Player or Enemy Action (C-02).
+ * It never validates, advances the turn, touches the schedule or decides the battle result.
+ */
 final class ActionResolver {
     private ActionResolver() { }
 
@@ -51,6 +54,8 @@ final class ActionResolver {
                     applyDamage(state, events, hitId, 1);
                 }
             }
+            // Enemy basic attack; the actor stays in place. A Knight at 0 HP leaves the Board like any piece.
+            case ATTACK -> applyDamage(state, events, plan.targetId(), EnemyRules.ENEMY_DAMAGE);
         }
         return List.copyOf(events);
     }

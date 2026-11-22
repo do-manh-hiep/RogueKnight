@@ -194,6 +194,7 @@ class BattleControllerTest {
         assertEquals(List.of(
                 new BattleEvent.ActionPerformed(ActionKind.MOVE, KNIGHT),
                 new BattleEvent.PieceMoved(KNIGHT, at("d4"), at("e6")),
+                new BattleEvent.TurnAdvanced(1, 2),
                 enemyEvent), result.events());
         assertEquals(at("a7"), result.after().pieceById("R1").orElseThrow().position());
     }

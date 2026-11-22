@@ -70,4 +70,11 @@ public record PieceState(
             cycle, nextActivationTurn, spawnOrder, newDirection
         );
     }
+
+    public PieceState withNextActivationTurn(int newNextActivationTurn) {
+        return new PieceState(
+            id, type, hp,
+            cycle, newNextActivationTurn, spawnOrder, currentDirection
+        );
+    }
 }

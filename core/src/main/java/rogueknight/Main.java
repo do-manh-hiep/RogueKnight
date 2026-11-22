@@ -14,6 +14,8 @@ import rogueknight.core.view.BoardProjection;
 import rogueknight.core.view.BoardRenderer;
 
 import rogueknight.action.BattleController;
+import rogueknight.action.EnemyTurnRunner;
+import rogueknight.ai.GenericEnemyPolicy;
 import rogueknight.battle.BattleState;
 import rogueknight.battle.EquipmentType;
 import rogueknight.core.input.BattleControllerAdapter;
@@ -55,8 +57,9 @@ public class Main extends ApplicationAdapter {
                 EquipmentType.DIAGONAL_SKEWER
             );
 
+            // T-03.01/T-03.02: real enemy turn. Pawns skip until T-03.03 plugs in a PawnActivation.
             controller = new BattleControllerAdapter(
-                new BattleController(battle)
+                new BattleController(battle, new EnemyTurnRunner(new GenericEnemyPolicy()))
             );
         } catch (IOException | IllegalArgumentException exception) {
             throw new IllegalStateException(

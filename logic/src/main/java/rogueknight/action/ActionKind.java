@@ -1,6 +1,10 @@
 package rogueknight.action;
 
-/** Player Action kinds supported by the battle controller. */
+/**
+ * Action kinds resolved by the battle controller.
+ * SWORD is the Knight's adjacent attack; ATTACK is the basic Enemy attack (T-03.02),
+ * which Player requests are never allowed to use.
+ */
 public enum ActionKind {
     MOVE,
     SWORD,
@@ -8,5 +12,6 @@ public enum ActionKind {
     WAIT,
     CANNON_MOVEMENT,
     CANNON_ATTACK,
-    DIAGONAL_SKEWER
+    DIAGONAL_SKEWER,
+    ATTACK
 }

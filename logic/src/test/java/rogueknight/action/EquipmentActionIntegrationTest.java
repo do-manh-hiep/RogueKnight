@@ -38,6 +38,8 @@ class EquipmentActionIntegrationTest {
         state.addPiece(knight(), p("d1"));
         state.addPiece(pawn(1), p("d7"));
         state.addPiece(new PieceState("king", PieceType.KING, 3, 2, 2, 2), p("d8"));
+        // Rook h8 as in Map01: capturing the Pawn must not leave the battle without non-King Enemies (R-R02).
+        state.addPiece(new PieceState("rook_1", PieceType.ROOK, 2, 3, 3, 3), p("h8"));
         BattleController controller = new BattleController(state);
 
         assertEquals(Set.of(p("d4"), p("d5"), p("d6"), p("d7")),
@@ -104,6 +106,8 @@ class EquipmentActionIntegrationTest {
         BattleState state = new BattleState(Set.of(p("d3")), inv);
         state.addPiece(knight(), p("d1"));
         state.addPiece(new PieceState("rook_1", PieceType.ROOK, 3, 2, 2, 1), p("d6"));
+        // King off the ray keeps the battle ongoing (no King would be an immediate VICTORY).
+        state.addPiece(new PieceState("king", PieceType.KING, 5, 5, 5, 2), p("h8"));
         BattleController controller = new BattleController(state);
 
         ActionResult unowned = controller.submit(ActionRequest.cannonMovement("knight", p("d4")));
@@ -117,7 +121,8 @@ class EquipmentActionIntegrationTest {
         assertEquals(0, res.after().inventory().chargesOf(EquipmentType.CANNON_ATTACK));
         assertEquals(List.of(
             new BattleEvent.ActionPerformed(ActionKind.CANNON_ATTACK, "knight"),
-            new BattleEvent.PieceDamaged("rook_1", 1, 2)
+            new BattleEvent.PieceDamaged("rook_1", 1, 2),
+            new BattleEvent.TurnAdvanced(1, 2)
         ), res.events());
     }
 

@@ -12,7 +12,7 @@ import rogueknight.board.Board;
 import rogueknight.board.Position;
 
 /** Mutable aggregate for one battle; owns Board, PieceState map and Inventory. */
-public final class BattleState {
+public final class BattleState implements StateView {
     private static final int INITIAL_TURN = 1;
     private final Board board;
     private final Map<String, PieceState> pieces = new LinkedHashMap<>();
@@ -25,15 +25,17 @@ public final class BattleState {
         this.board = new Board(rocks);
         this.inventory = Objects.requireNonNull(inventory, "inventory");
     }
-    public int globalTurn() { return globalTurn; }
+    @Override public int globalTurn() { return globalTurn; }
     public BattlePhase phase() { return phase; }
     public BattleResult result() { return result; }
     public Inventory inventory() { return inventory; }
-    public Optional<PieceState> pieceState(String id) { return Optional.ofNullable(pieces.get(id)); }
-    public Optional<Position> positionOf(String id) { return board.positionOf(id); }
-    public Optional<String> pieceAt(Position position) { return board.pieceAt(position); }
-    public boolean isEmpty(Position position) { return board.isEmpty(position); }
-    public boolean isRock(Position position) { return board.isRock(position); }
+    @Override public Optional<PieceState> pieceState(String id) { return Optional.ofNullable(pieces.get(id)); }
+    @Override public Optional<Position> positionOf(String id) { return board.positionOf(id); }
+    @Override public Optional<String> pieceAt(Position position) { return board.pieceAt(position); }
+    @Override public boolean isEmpty(Position position) { return board.isEmpty(position); }
+    @Override public boolean isRock(Position position) { return board.isRock(position); }
+    /** Read-only copy in insertion order; dead pieces are already removed from the aggregate. */
+    @Override public List<PieceState> livePieces() { return List.copyOf(pieces.values()); }
 
     public void addPiece(PieceState piece, Position position) {
         Objects.requireNonNull(piece, "piece");
