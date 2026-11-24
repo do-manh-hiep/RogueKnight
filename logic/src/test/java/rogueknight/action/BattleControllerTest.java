@@ -124,6 +124,20 @@ class BattleControllerTest {
     }
 
     @Test
+    void waitAdvancesTurnOnceWithoutMovingKnightOrChangingHp() {
+        BattleController controller = new BattleController(fixture(), state -> List.of());
+        BattleSnapshot before = controller.snapshot();
+
+        ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
+
+        assertTrue(result.accepted());
+        assertEquals(2, result.after().globalTurn());
+        assertEquals(at("d4"), result.after().pieceById(KNIGHT).orElseThrow().position());
+        assertEquals(3, result.after().pieceById(KNIGHT).orElseThrow().hp());
+        assertEquals(before.inventory(), result.after().inventory());
+    }
+
+    @Test
     void validMoveAdvancesTurnExactlyOnce() {
         BattleController controller = new BattleController(fixture());
 

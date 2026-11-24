@@ -28,7 +28,7 @@ public final class BoardInputHandler {
         this.controller = Objects.requireNonNull(controller, "controller must not be null");
         this.currentSnapshot = controller.snapshot();
         this.selectedPosition = currentSnapshot.knightPosition();
-        this.feedbackMessage = "Click một ô highlight xanh để di chuyển Knight.";
+        this.feedbackMessage = "[1] Move / Attack | [0] Wait";
     }
 
     /**
@@ -59,12 +59,15 @@ public final class BoardInputHandler {
 
         // Submit move request to controller
         submitInvocationCount++;
+        boolean attackTarget = mode == ActionMode.MOVE && currentSnapshot.enemyPieces().containsKey(target);
         MoveResult result = controller.submitAction("knight", mode, target);
 
         if (result.accepted()) {
             this.currentSnapshot = result.after();
             this.selectedPosition = currentSnapshot.knightPosition();
-            String label = mode == ActionMode.MOVE ? "Di chuyển Knight" : "Dùng " + mode;
+            String label = mode == ActionMode.MOVE
+                ? (attackTarget ? "Sword Attack" : "Di chuyển Knight")
+                : "Dùng " + mode.label();
             this.feedbackMessage = label + ": " + result.before().knightPosition().notation()
                 + " -> " + target.notation() + " (Turn " + currentSnapshot.globalTurn() + ")";
             this.mode = ActionMode.MOVE;
@@ -78,19 +81,60 @@ public final class BoardInputHandler {
         return true;
     }
 
-    /** Selects the action mode; selecting the active mode again returns to MOVE. */
+    /**
+     * Selects a numbered action. Wait executes immediately; selecting an active
+     * equipment action again falls back to the always-available Move/Attack mode.
+     */
     public void selectMode(ActionMode newMode) {
-        if (newMode != null && !getAvailableModes().contains(newMode)) {
-            this.feedbackMessage = "Thẻ " + newMode.label() + " không có hoặc đã dùng hết";
+        if (newMode == null) {
+            this.mode = ActionMode.MOVE;
+            this.feedbackMessage = "Chế độ: " + this.mode.label();
             return;
         }
-        this.mode = (newMode == null || newMode == this.mode) ? ActionMode.MOVE : newMode;
+        java.util.List<ActionMode> availableModes = getAvailableModes();
+        if (!availableModes.contains(newMode)) {
+            this.feedbackMessage = "Action không khả dụng: " + newMode.label();
+            return;
+        }
+        if (newMode == ActionMode.WAIT) {
+            submitInvocationCount++;
+            MoveResult result = controller.submitWait("knight");
+            if (result.accepted()) {
+                currentSnapshot = result.after();
+                selectedPosition = currentSnapshot.knightPosition();
+                feedbackMessage = "Wait: Turn " + currentSnapshot.globalTurn();
+            } else {
+                currentSnapshot = result.before();
+                feedbackMessage = "Wait không hợp lệ [" + result.errorReason() + "]";
+            }
+            mode = ActionMode.MOVE;
+            return;
+        }
+        this.mode = (newMode == this.mode) ? ActionMode.MOVE : newMode;
         this.feedbackMessage = "Chế độ: " + this.mode.label();
+    }
+
+    /**
+     * Selects an action by its current displayed/keyboard index. The list is
+     * rebuilt from available actions, so exhausted equipment never leaves a gap.
+     */
+    public void selectAction(int index) {
+        java.util.List<ActionMode> availableModes = getAvailableModes();
+        if (index < 0 || index >= availableModes.size()) {
+            feedbackMessage = "Action [" + index + "] không khả dụng";
+            return;
+        }
+        selectMode(availableModes.get(index));
     }
 
     /** Modes usable now; used-up equipment is absent. */
     public java.util.List<ActionMode> getAvailableModes() {
         return controller.availableModes();
+    }
+
+    /** Returns the current displayed index for an action, or -1 if unavailable. */
+    public int getActionIndex(ActionMode action) {
+        return getAvailableModes().indexOf(action);
     }
 
     public ActionMode getMode() {
@@ -99,7 +143,7 @@ public final class BoardInputHandler {
 
     /** Tiles to highlight for the active mode; MOVE uses the snapshot, others query the controller. */
     public java.util.Set<BoardPosition> getHighlightTargets() {
-        if (mode == ActionMode.MOVE) return currentSnapshot.legalMoves();
+        if (mode == ActionMode.WAIT) return java.util.Set.of();
         return controller.legalTargets("knight", mode);
     }
 

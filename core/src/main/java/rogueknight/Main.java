@@ -8,7 +8,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import rogueknight.core.input.ActionMode;
 import rogueknight.core.input.BoardInputHandler;
 import rogueknight.core.view.BoardProjection;
 import rogueknight.core.view.BoardRenderer;
@@ -67,17 +66,24 @@ public class Main extends ApplicationAdapter {
                 exception
             );
         }
-        
+
         inputHandler = new BoardInputHandler(projection, controller);
         renderer = new BoardRenderer();
     }
 
     @Override
     public void render() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) inputHandler.selectMode(ActionMode.MOVE);
-        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) inputHandler.selectMode(ActionMode.CANNON_MOVEMENT);
-        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) inputHandler.selectMode(ActionMode.CANNON_ATTACK);
-        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_4)) inputHandler.selectMode(ActionMode.DIAGONAL_SKEWER);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.W)) {
+            inputHandler.selectAction(0);
+        } else {
+            for (int index = 0; index <= 9; index++) {
+                if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_0 + index)
+                    || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_0 + index)) {
+                    inputHandler.selectAction(index);
+                    break;
+                }
+            }
+        }
 
         // Handle mouse click input
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {

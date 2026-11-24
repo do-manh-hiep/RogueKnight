@@ -104,6 +104,19 @@ public final class FixtureBattleController implements BattleControllerPort {
         return MoveResult.success(before, after);
     }
 
+    @Override
+    public java.util.List<ActionMode> availableModes() {
+        return java.util.List.of(ActionMode.WAIT, ActionMode.MOVE);
+    }
+
+    @Override
+    public MoveResult submitWait(String actorId) {
+        var before = snapshot();
+        if (!"knight".equals(actorId)) return MoveResult.rejected("UNKNOWN_ACTOR", before);
+        globalTurn++;
+        return MoveResult.success(before, snapshot());
+    }
+
     /**
      * Validates whether moving from `from` to `to` is a valid Knight move.
      * Returns null if valid, or an error reason string if invalid.

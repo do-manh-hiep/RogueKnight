@@ -6,36 +6,29 @@ import rogueknight.core.view.BoardPosition;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Controller Port abstraction connecting UI/Input handlers to the game battle state.
- * Allows decoupling UI development (T-02.02) from domain battle controller (T-02.01).
- */
+/** Port between input/UI and the battle domain controller. */
 public interface BattleControllerPort {
-    /** Returns an immutable view snapshot of current battle state. */
     BattleViewSnapshot snapshot();
-
-    /** Returns all legal target positions for the specified actor's move action. */
     Set<BoardPosition> legalMoves(String actorId);
-
-    /**
-     * Submits a move request for the specified actor to the target position.
-     * Advances turn on success; leaves state completely unchanged on rejection.
-     */
     MoveResult submitMove(String actorId, BoardPosition target);
 
-    /** Modes the player can use now: MOVE plus each owned equipment with charges left. */
+    /** Current action array: Wait [0], Move/Attack [1], then usable equipment in loadout order. */
     default List<ActionMode> availableModes() {
-        return List.of(ActionMode.MOVE);
+        return List.of(ActionMode.WAIT, ActionMode.MOVE);
     }
 
-    /** Legal target positions for the given mode; default supports MOVE only. */
+    /** Legal targets for an action mode. MOVE may include both move and sword targets. */
     default Set<BoardPosition> legalTargets(String actorId, ActionMode mode) {
         return mode == ActionMode.MOVE ? legalMoves(actorId) : Set.of();
     }
 
-    /** Submits an action in the given mode; default supports MOVE only and rejects the rest. */
     default MoveResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
         if (mode == ActionMode.MOVE) return submitMove(actorId, target);
+        return MoveResult.rejected("UNSUPPORTED_ACTION", snapshot());
+    }
+
+    /** Wait is targetless and consumes the player's action. */
+    default MoveResult submitWait(String actorId) {
         return MoveResult.rejected("UNSUPPORTED_ACTION", snapshot());
     }
 }

@@ -190,16 +190,18 @@ public final class BoardRenderer {
         font.draw(batch, "Thông báo: " + inputHandler.getFeedbackMessage(), 20, 35);
 
         font.setColor(Color.LIGHT_GRAY);
-        font.draw(batch, "Bấm phím số của thẻ để chọn, bấm lại để hủy | Click ô viền xanh lá để thực hiện", 20, 18);
+        font.draw(batch, "[0] Wait | [1] Move / Attack | [2+] Equipment | Bấm lại để bỏ chọn | Click ô hợp lệ để thực hiện", 20, 18);
 
         // Equipment cards: only owned items with charges left are listed.
         float cardY = 400f;
         font.setColor(Color.WHITE);
-        font.draw(batch, "THẺ HIỆN CÓ", 8, cardY);
-        for (ActionMode available : inputHandler.getAvailableModes()) {
+        font.draw(batch, "ACTIONS", 8, cardY);
+        java.util.List<ActionMode> availableActions = inputHandler.getAvailableModes();
+        for (int index = 0; index < availableActions.size(); index++) {
+            ActionMode available = availableActions.get(index);
             cardY -= 20f;
             font.setColor(available == inputHandler.getMode() ? Color.YELLOW : Color.LIGHT_GRAY);
-            font.draw(batch, "[" + available.key() + "] " + available.label(), 8, cardY);
+            font.draw(batch, "[" + index + "] " + available.label(), 8, cardY);
         }
 
         batch.end();

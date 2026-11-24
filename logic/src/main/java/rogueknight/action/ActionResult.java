@@ -12,7 +12,7 @@ import rogueknight.battle.BattleSnapshot;
  * - accepted=false: error khác null, after == before, events rỗng.
  */
 public record ActionResult(boolean accepted, ActionError error, BattleSnapshot before,
-                           BattleSnapshot after, List<BattleEvent> events) {
+                            BattleSnapshot after, List<BattleEvent> events) {
 
     public ActionResult {
         Objects.requireNonNull(before, "before");

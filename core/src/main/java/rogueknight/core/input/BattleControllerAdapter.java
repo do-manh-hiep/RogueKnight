@@ -14,7 +14,6 @@ import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -60,6 +59,8 @@ public final class BattleControllerAdapter implements BattleControllerPort {
     @Override
     public List<ActionMode> availableModes() {
         List<ActionMode> modes = new ArrayList<>();
+        if (!controller.canWait("knight")) return List.of();
+        modes.add(ActionMode.WAIT);
         modes.add(ActionMode.MOVE);
 
         for (EquipmentState item : controller.snapshot().inventory().equipment()) {
@@ -68,7 +69,8 @@ public final class BattleControllerAdapter implements BattleControllerPort {
             }
         }
 
-        modes.sort(Comparator.comparingInt(ActionMode::ordinal));
+        // The current list position is the keyboard number. Filtering exhausted
+        // equipment therefore compacts the remaining actions automatically.
         return List.copyOf(modes);
     }
 
@@ -76,10 +78,19 @@ public final class BattleControllerAdapter implements BattleControllerPort {
     public Set<BoardPosition> legalTargets(String actorId, ActionMode mode) {
         Set<BoardPosition> positions = new HashSet<>();
 
+        if (mode == ActionMode.MOVE) {
+            for (Position position : controller.legalMoves(actorId)) {
+                positions.add(toBoardPosition(position));
+            }
+            for (Position position : controller.legalTargets(actorId, ActionKind.SWORD)) {
+                positions.add(toBoardPosition(position));
+            }
+            return Set.copyOf(positions);
+        }
+        if (mode == ActionMode.WAIT) return Set.of();
         for (Position position : controller.legalTargets(actorId, toKind(mode))) {
             positions.add(toBoardPosition(position));
         }
-
         return Set.copyOf(positions);
     }
 
@@ -88,14 +99,20 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         // Chụp dữ liệu UI trước khi gửi yêu cầu.
         BattleViewSnapshot before = snapshot();
 
+        if (mode == ActionMode.WAIT) return submitWait(actorId);
         if (target == null || mode == null) {
             return MoveResult.rejected("OUT_OF_BOUNDS", before);
         }
 
         // Gửi tọa độ thô để logic kiểm tra cả trường hợp ngoài biên.
+        ActionKind kind = toKind(mode);
+        // Default [1] is contextual: clicking an occupied enemy square means Sword Attack.
+        if (mode == ActionMode.MOVE && before.enemyPieces().containsKey(target)) {
+            kind = ActionKind.SWORD;
+        }
         ActionRequest request = new ActionRequest(
             actorId,
-            toKind(mode),
+            kind,
             target.column(),
             target.row()
         );
@@ -120,6 +137,21 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         return MoveResult.success(before, after);
     }
 
+    @Override
+    public MoveResult submitWait(String actorId) {
+        BattleViewSnapshot before = snapshot();
+        ActionResult result = controller.submit(ActionRequest.waitAction(actorId));
+        if (!result.accepted()) {
+            return MoveResult.rejected(result.error().toString(), before);
+        }
+        for (BattleEvent event : result.events()) {
+            if (event instanceof BattleEvent.PieceRemoved removed && removed.pieceId().equals("knight")) {
+                lastKnownKnightPosition = toBoardPosition(removed.at());
+            }
+        }
+        return MoveResult.success(before, toViewSnapshot(result.after()));
+    }
+
     private static ActionMode toMode(EquipmentType type) {
         return switch (type) {
             case CANNON_MOVEMENT -> ActionMode.CANNON_MOVEMENT;
@@ -130,6 +162,7 @@ public final class BattleControllerAdapter implements BattleControllerPort {
 
     private static ActionKind toKind(ActionMode mode) {
         return switch (mode) {
+            case WAIT -> ActionKind.WAIT;
             case MOVE -> ActionKind.MOVE;
             case CANNON_MOVEMENT -> ActionKind.CANNON_MOVEMENT;
             case CANNON_ATTACK -> ActionKind.CANNON_ATTACK;
