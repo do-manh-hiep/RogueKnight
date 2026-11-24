@@ -1,21 +1,18 @@
 package rogueknight.core.input;
 
-/** Player-facing actions and their stable keyboard shortcuts. */
+/** Player-facing action types. Keyboard numbers are assigned by their current list position. */
 public enum ActionMode {
-    WAIT(0, "Wait"),
-    MOVE(1, "Move / Attack"),
-    CANNON_MOVEMENT(2, "Cannon Move"),
-    CANNON_ATTACK(3, "Cannon Attack"),
-    DIAGONAL_SKEWER(4, "Skewer");
+    WAIT("Wait"),
+    MOVE("Move / Attack"),
+    CANNON_MOVEMENT("Cannon Move"),
+    CANNON_ATTACK("Cannon Attack"),
+    DIAGONAL_SKEWER("Skewer");
 
-    private final int key;
     private final String label;
 
-    ActionMode(int key, String label) {
-        this.key = key;
+    ActionMode(String label) {
         this.label = label;
     }
 
-    public int key() { return key; }
     public String label() { return label; }
 }

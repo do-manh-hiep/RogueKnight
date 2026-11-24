@@ -136,6 +136,7 @@ class BattleControllerAdapterEquipmentTest {
             java.util.List.of(ActionMode.WAIT, ActionMode.MOVE, ActionMode.DIAGONAL_SKEWER),
             adapter.availableModes()
         );
+        assertEquals(ActionMode.DIAGONAL_SKEWER, adapter.availableModes().get(2));
     }
 
     @Test

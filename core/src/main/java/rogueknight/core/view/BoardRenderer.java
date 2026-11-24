@@ -196,10 +196,12 @@ public final class BoardRenderer {
         float cardY = 400f;
         font.setColor(Color.WHITE);
         font.draw(batch, "ACTIONS", 8, cardY);
-        for (ActionMode available : inputHandler.getAvailableModes()) {
+        java.util.List<ActionMode> availableActions = inputHandler.getAvailableModes();
+        for (int index = 0; index < availableActions.size(); index++) {
+            ActionMode available = availableActions.get(index);
             cardY -= 20f;
             font.setColor(available == inputHandler.getMode() ? Color.YELLOW : Color.LIGHT_GRAY);
-            font.draw(batch, "[" + available.key() + "] " + available.label(), 8, cardY);
+            font.draw(batch, "[" + index + "] " + available.label(), 8, cardY);
         }
 
         batch.end();

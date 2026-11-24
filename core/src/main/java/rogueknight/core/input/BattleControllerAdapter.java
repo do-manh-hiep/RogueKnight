@@ -14,7 +14,6 @@ import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -70,7 +69,8 @@ public final class BattleControllerAdapter implements BattleControllerPort {
             }
         }
 
-        modes.sort(Comparator.comparingInt(ActionMode::key));
+        // The current list position is the keyboard number. Filtering exhausted
+        // equipment therefore compacts the remaining actions automatically.
         return List.copyOf(modes);
     }
 

@@ -91,8 +91,9 @@ public final class BoardInputHandler {
             this.feedbackMessage = "Chế độ: " + this.mode.label();
             return;
         }
-        if (!getAvailableModes().contains(newMode)) {
-            this.feedbackMessage = "Action " + newMode.key() + " không khả dụng";
+        java.util.List<ActionMode> availableModes = getAvailableModes();
+        if (!availableModes.contains(newMode)) {
+            this.feedbackMessage = "Action không khả dụng: " + newMode.label();
             return;
         }
         if (newMode == ActionMode.WAIT) {
@@ -113,9 +114,27 @@ public final class BoardInputHandler {
         this.feedbackMessage = "Chế độ: " + this.mode.label();
     }
 
+    /**
+     * Selects an action by its current displayed/keyboard index. The list is
+     * rebuilt from available actions, so exhausted equipment never leaves a gap.
+     */
+    public void selectAction(int index) {
+        java.util.List<ActionMode> availableModes = getAvailableModes();
+        if (index < 0 || index >= availableModes.size()) {
+            feedbackMessage = "Action [" + index + "] không khả dụng";
+            return;
+        }
+        selectMode(availableModes.get(index));
+    }
+
     /** Modes usable now; used-up equipment is absent. */
     public java.util.List<ActionMode> getAvailableModes() {
         return controller.availableModes();
+    }
+
+    /** Returns the current displayed index for an action, or -1 if unavailable. */
+    public int getActionIndex(ActionMode action) {
+        return getAvailableModes().indexOf(action);
     }
 
     public ActionMode getMode() {

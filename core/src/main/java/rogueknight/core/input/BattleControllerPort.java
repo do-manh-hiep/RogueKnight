@@ -12,7 +12,7 @@ public interface BattleControllerPort {
     Set<BoardPosition> legalMoves(String actorId);
     MoveResult submitMove(String actorId, BoardPosition target);
 
-    /** Stable order: Wait [0], Move/Attack [1], then available equipment actions. */
+    /** Current action array: Wait [0], Move/Attack [1], then usable equipment in loadout order. */
     default List<ActionMode> availableModes() {
         return List.of(ActionMode.WAIT, ActionMode.MOVE);
     }
