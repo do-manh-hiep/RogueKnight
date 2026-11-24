@@ -69,6 +69,20 @@ class BoardInputHandlerTest {
     }
 
     @Test
+    void waitActionIsFirstAndExecutesImmediatelyWithoutBoardClick() {
+        var controller = new FixtureBattleController(new BoardPosition(3, 3));
+        var handler = new BoardInputHandler(projection, controller);
+        int beforeTurn = handler.getCurrentSnapshot().globalTurn();
+
+        assertEquals(java.util.List.of(ActionMode.WAIT, ActionMode.MOVE), handler.getAvailableModes());
+        handler.selectMode(ActionMode.WAIT);
+
+        assertEquals(beforeTurn + 1, handler.getCurrentSnapshot().globalTurn());
+        assertEquals(ActionMode.MOVE, handler.getMode());
+        assertEquals(1, handler.getSubmitInvocationCount());
+    }
+
+    @Test
     void clickingKnightItselfSelectsWithoutSubmittingMove() {
         var controller = new FixtureBattleController(new BoardPosition(3, 3)); // d4
         var handler = new BoardInputHandler(projection, controller);

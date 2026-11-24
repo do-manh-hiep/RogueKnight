@@ -3,6 +3,10 @@ package rogueknight.core.input;
 import org.junit.jupiter.api.Test;
 import rogueknight.action.BattleController;
 import rogueknight.battle.BattleState;
+import rogueknight.battle.Inventory;
+import rogueknight.battle.PieceState;
+import rogueknight.battle.PieceType;
+import rogueknight.board.Position;
 import rogueknight.battle.EquipmentType;
 import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
@@ -122,16 +126,57 @@ class BattleControllerAdapterEquipmentTest {
         BattleControllerAdapter adapter = createAdapter();
 
         assertEquals(
-            java.util.List.of(ActionMode.MOVE, ActionMode.CANNON_MOVEMENT, ActionMode.DIAGONAL_SKEWER),
+            java.util.List.of(ActionMode.WAIT, ActionMode.MOVE, ActionMode.CANNON_MOVEMENT, ActionMode.DIAGONAL_SKEWER),
             adapter.availableModes()
         );
 
         adapter.submitAction("knight", ActionMode.CANNON_MOVEMENT, BoardPosition.fromNotation("d4"));
 
         assertEquals(
-            java.util.List.of(ActionMode.MOVE, ActionMode.DIAGONAL_SKEWER),
+            java.util.List.of(ActionMode.WAIT, ActionMode.MOVE, ActionMode.DIAGONAL_SKEWER),
             adapter.availableModes()
         );
+    }
+
+    @Test
+    void waitIsAlwaysFirstAndSubmitsWithoutTarget() throws IOException {
+        BattleControllerAdapter adapter = createAdapter();
+        BattleViewSnapshot before = adapter.snapshot();
+
+        assertEquals(ActionMode.WAIT, adapter.availableModes().get(0));
+        MoveResult result = adapter.submitWait("knight");
+
+        assertTrue(result.accepted());
+        assertEquals(before.globalTurn() + 1, result.after().globalTurn());
+        assertEquals(before.knightPosition(), result.after().knightPosition());
+    }
+
+    @Test
+    void defaultMoveAttackClickOnAdjacentEnemySubmitsSword() {
+        BattleState state = new BattleState(java.util.Set.of(),
+            Inventory.initial(EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER));
+        state.addPiece(new PieceState("knight", PieceType.KNIGHT, 3, 0, 0, 0), Position.fromNotation("d4"));
+        state.addPiece(new PieceState("rook", PieceType.ROOK, 2, 3, 3, 1), Position.fromNotation("e5"));
+        state.addPiece(new PieceState("king", PieceType.KING, 5, 5, 5, 2), Position.fromNotation("h8"));
+        BattleController controller = new BattleController(state);
+        BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
+        var projection = new rogueknight.core.view.BoardProjection(0f, 0f, 48f);
+        BoardInputHandler handler = new BoardInputHandler(projection, adapter);
+
+        assertTrue(handler.getHighlightTargets().contains(BoardPosition.fromNotation("e5")));
+        handler.handleWorldClick(projection.getCellCenterX(4), projection.getCellCenterY(4));
+
+        assertEquals(1, controller.snapshot().pieceById("rook").orElseThrow().hp());
+        assertTrue(handler.getFeedbackMessage().contains("Sword Attack"));
+        assertEquals(ActionMode.MOVE, handler.getMode());
+    }
+
+    @Test
+    void defaultMoveModeHighlightsAdjacentEnemySquaresForSwordAttack() throws IOException {
+        BattleControllerAdapter adapter = createAdapter();
+        var targets = adapter.legalTargets("knight", ActionMode.MOVE);
+        // Opening board has enemies, and the combined default mode exposes all legal target types.
+        assertTrue(targets.containsAll(adapter.legalMoves("knight")));
     }
 
     @Test

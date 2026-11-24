@@ -1,11 +1,9 @@
 package rogueknight.core.input;
 
-/**
- * UI action mode selected by the player; maps one-to-one to a logic ActionKind in the adapter
- * (T-04.01, T-04.02). Each mode has a fixed keyboard key and a short label for the HUD.
- */
+/** Player-facing actions and their stable keyboard shortcuts. */
 public enum ActionMode {
-    MOVE(1, "Move"),
+    WAIT(0, "Wait"),
+    MOVE(1, "Move / Attack"),
     CANNON_MOVEMENT(2, "Cannon Move"),
     CANNON_ATTACK(3, "Cannon Attack"),
     DIAGONAL_SKEWER(4, "Skewer");
@@ -19,6 +17,5 @@ public enum ActionMode {
     }
 
     public int key() { return key; }
-
     public String label() { return label; }
 }

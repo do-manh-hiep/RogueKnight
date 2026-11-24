@@ -67,17 +67,21 @@ public class Main extends ApplicationAdapter {
                 exception
             );
         }
-        
+
         inputHandler = new BoardInputHandler(projection, controller);
         renderer = new BoardRenderer();
     }
 
     @Override
     public void render() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) inputHandler.selectMode(ActionMode.MOVE);
-        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) inputHandler.selectMode(ActionMode.CANNON_MOVEMENT);
-        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) inputHandler.selectMode(ActionMode.CANNON_ATTACK);
-        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_4)) inputHandler.selectMode(ActionMode.DIAGONAL_SKEWER);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_0) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_0)
+            || Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.W)) {
+            inputHandler.selectMode(ActionMode.WAIT);
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_1)) inputHandler.selectMode(ActionMode.MOVE);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_2)) inputHandler.selectMode(ActionMode.CANNON_MOVEMENT);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_3)) inputHandler.selectMode(ActionMode.CANNON_ATTACK);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_4) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_4)) inputHandler.selectMode(ActionMode.DIAGONAL_SKEWER);
 
         // Handle mouse click input
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
