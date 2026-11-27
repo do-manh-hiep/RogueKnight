@@ -12,6 +12,7 @@ import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
+import rogueknight.core.view.PresentationPiece;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -167,9 +168,14 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         for (Position rock : snapshot.rocks()) rocks.add(toBoardPosition(rock));
 
         Map<BoardPosition, String> enemies = new HashMap<>();
+        Map<String, PresentationPiece> piecesById = new HashMap<>();
         for (BattleSnapshot.PieceView piece : snapshot.pieces()) {
+            BoardPosition position = toBoardPosition(piece.position());
+            piecesById.put(piece.id(), new PresentationPiece(
+                piece.id(), piece.type(), piece.hp(), position
+            ));
             if (piece.type() != PieceType.KNIGHT) {
-                enemies.put(toBoardPosition(piece.position()), piece.type().name());
+                enemies.put(position, piece.type().name());
             }
         }
 
@@ -188,7 +194,8 @@ public final class BattleControllerAdapter implements BattleControllerPort {
             enemies,
             moves,
             statusMessage,
-            false
+            false,
+            piecesById
         );
     }
 
