@@ -160,7 +160,7 @@ Vì vậy, audit logic có thể được đóng như một **review/report phas
 | DEC-04 / DEC-12 decision | Approved, recorded in docs/decisions | Đã có xác nhận người dùng và decision records |
 | Logic audit source/test | Complete — static review | Findings và coverage matrix đã ghi ở tài liệu này |
 | Local verification | Pending | Người dùng pull head hiện tại và chạy `./gradlew build --rerun-tasks` (Windows: `.\gradlew.bat build --rerun-tasks`), gửi full result/exit code |
-| Audit PR | Not opened | Sau khi xác nhận audit note đúng; PR chỉ chứa decision/audit documentation nếu không có code implementation |
+| Audit PR | Existing PR #17 — Draft, updated | PR #17 đã tồn tại cho toàn bộ architecture-cleanup branch; phần audit/DEC được thêm vào cùng PR. Không tạo PR trùng. PR vẫn Draft chờ local verification và xử lý branch divergence |
 | DEC-04 implementation | Not started | Tạo task/plan riêng sau API-boundary design |
 | DEC-12 implementation | Not started | Tạo task/plan riêng cho fail-stop + setup error boundary |
 | Merge | Not done | Chỉ sau local/CI verification và review approval; không tự merge |
@@ -177,7 +177,15 @@ git pull
 
 Gửi toàn bộ phần summary test và dòng `BUILD_EXIT_CODE`. Nếu pass, có thể mở PR cho audit/decision documentation. Các implementation gap AUD-01..AUD-04 cần task/PR riêng hoặc được đưa vào một scope triển khai được duyệt; không được đánh dấu hoàn tất chỉ vì audit PR đã merge.
 
-## 7. Nguồn source chính đã kiểm tra
+## 7. PR handoff hiện tại
+
+- PR: https://github.com/do-manh-hiep/RogueKnight/pull/17 — **Draft**, base `main`, head `refactor/architecture-cleanup-7119`.
+- PR body đã được cập nhật với summary, AUD-01..AUD-05, verification checklist và điều kiện chưa merge.
+- Compare với `main` tại thời điểm audit: branch ahead 61, behind 1, status `diverged`; cần xử lý commit mới trên main trước khi merge.
+- Commit audit note: `26ff5e66fc4b2b907597467fb8d90777665031e9`.
+- Chưa có xác nhận build local trên branch head; không được chuyển PR sang Ready for review hoặc merge.
+
+## 8. Nguồn source chính đã kiểm tra
 
 - `logic/src/main/java/rogueknight/battle/BattleState.java`
 - `logic/src/main/java/rogueknight/battle/StateView.java`
