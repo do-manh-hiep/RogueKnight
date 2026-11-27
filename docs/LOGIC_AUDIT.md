@@ -159,7 +159,7 @@ Vì vậy, audit logic có thể được đóng như một **review/report phas
 |---|---|---|
 | DEC-04 / DEC-12 decision | Approved, recorded in docs/decisions | Đã có xác nhận người dùng và decision records |
 | Logic audit source/test | Complete — static review | Findings và coverage matrix đã ghi ở tài liệu này |
-| Local verification | Pending | Người dùng pull head hiện tại và chạy `./gradlew build --rerun-tasks` (Windows: `.\gradlew.bat build --rerun-tasks`), gửi full result/exit code |
+| Local verification | **Passed** | Người dùng xác nhận `:logic:test --rerun-tasks` và `build --rerun-tasks` đều exit code 0 trên head `647667c585e7c8f12fd35668f0d488b6ab894a7f` |
 | Audit PR | Existing PR #17 — Draft, updated | PR #17 đã tồn tại cho toàn bộ architecture-cleanup branch; phần audit/DEC được thêm vào cùng PR. Không tạo PR trùng. PR vẫn Draft; local logic tests và full build đã pass trên head được xác nhận, desktop playtest chưa được xác nhận; xử lý branch divergence trước khi merge |
 | DEC-04 implementation | Not started | Tạo task/plan riêng sau API-boundary design |
 | DEC-12 implementation | Not started | Tạo task/plan riêng cho fail-stop + setup error boundary |
