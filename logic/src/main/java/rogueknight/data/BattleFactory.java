@@ -1,5 +1,7 @@
 package rogueknight.data;
 
+import rogueknight.action.BattleController;
+import rogueknight.action.EnemyPhase;
 import rogueknight.battle.BattleState;
 import rogueknight.battle.EquipmentType;
 import rogueknight.battle.Inventory;
@@ -17,7 +19,17 @@ import java.util.Set;
 
 public final class BattleFactory {
 
-    public BattleState createMap01(
+    /** Creates a playable battle without exposing its mutable aggregate to callers. */
+    public BattleController createMap01Controller(
+            EquipmentType first,
+            EquipmentType second,
+            EnemyPhase enemyPhase
+    ) throws IOException {
+        return new BattleController(createMap01State(first, second), enemyPhase);
+    }
+
+    /** Package-private aggregate factory for logic fixtures and factory internals. */
+    BattleState createMap01State(
             EquipmentType first,
             EquipmentType second
     ) throws IOException {
