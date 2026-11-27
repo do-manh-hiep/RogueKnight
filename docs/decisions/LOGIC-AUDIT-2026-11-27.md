@@ -208,3 +208,8 @@ Gửi toàn bộ phần summary test và dòng `BUILD_EXIT_CODE`. Nếu pass, c�
 - `core/src/main/java/rogueknight/core/input/BattleControllerAdapter.java`
 - `core/src/main/java/rogueknight/core/input/BoardInputHandler.java`
 - Test suites listed in section 3.
+
+
+## 9. Requirement traceability supplement
+
+The BR1–BR4 logic requirement mapping has been expanded into a dedicated matrix at [`REQUIREMENT-TRACEABILITY-2026-11-27.md`](./REQUIREMENT-TRACEABILITY-2026-11-27.md). It maps requirement IDs to implementation responsibilities, TD test IDs, static status, and verification gaps. The matrix is based on source revision `6aa5a008f61621118f329a226443f6f858e5ecb8`; it does not claim tests passed on that revision. See its verification section before treating the audit as fully verified.
