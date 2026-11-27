@@ -201,7 +201,10 @@ class BoardInputHandlerTest {
             "knight", rogueknight.battle.PieceType.KNIGHT, 5, 0, 0, 0
         ), rogueknight.board.Position.fromNotation("d4"));
         battle.addPiece(new rogueknight.battle.PieceState(
-            "rook", rogueknight.battle.PieceType.ROOK, 3, 3, 3, 1
+            "king", rogueknight.battle.PieceType.KING, 5, 5, 5, 2
+        ), rogueknight.board.Position.fromNotation("h8"));
+        battle.addPiece(new rogueknight.battle.PieceState(
+            "rook", rogueknight.battle.PieceType.ROOK, 3, 3, 2, 1
         ), rogueknight.board.Position.fromNotation("e4"));
         var adapter = new BattleControllerAdapter(new rogueknight.action.BattleController(
             battle, new rogueknight.action.EnemyTurnRunner(new rogueknight.ai.EnemyAI())
