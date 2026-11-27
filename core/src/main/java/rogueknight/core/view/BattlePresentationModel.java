@@ -6,7 +6,6 @@ import java.util.Objects;
 import java.util.Optional;
 import rogueknight.action.BattleEvent;
 import rogueknight.battle.BattleResult;
-import rogueknight.battle.PieceType;
 
 /**
  * Mutable presentation-only projection of a battle.
