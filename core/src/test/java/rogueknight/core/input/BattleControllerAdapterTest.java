@@ -200,7 +200,8 @@ class BattleControllerAdapterEquipmentTest {
         BattleState state = new BattleState(java.util.Set.of(), Inventory.initial(
             EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER));
         state.addPiece(new PieceState("knight", PieceType.KNIGHT, 5, 0, 0, 0), Position.fromNotation("d4"));
-        state.addPiece(new PieceState("rook", PieceType.ROOK, 3, 3, 3, 1), Position.fromNotation("e4"));
+        state.addPiece(new PieceState("king", PieceType.KING, 5, 5, 5, 2), Position.fromNotation("h8"));
+        state.addPiece(new PieceState("rook", PieceType.ROOK, 3, 3, 2, 1), Position.fromNotation("e4"));
         BattleControllerAdapter adapter = new BattleControllerAdapter(new BattleController(
             state, new rogueknight.action.EnemyTurnRunner(new rogueknight.ai.EnemyAI())
         ));
