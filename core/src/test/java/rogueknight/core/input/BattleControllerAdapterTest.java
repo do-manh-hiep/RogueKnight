@@ -24,14 +24,13 @@ class BattleControllerAdapterEquipmentTest {
 
     @Test
     void handlesKnightDeathGracefullyWithoutCrashing() throws IOException {
-        BattleState battle = new BattleFactory().createMap01(
-            EquipmentType.CANNON_MOVEMENT,
-            EquipmentType.DIAGONAL_SKEWER
-        );
-        // Reduce knight HP to 1 and attack with Pawn
-        battle.replacePiece(battle.pieceState("knight").orElseThrow().withHp(1));
-        BattleController controller = new BattleController(battle,
-            new rogueknight.action.EnemyTurnRunner(new rogueknight.ai.EnemyAI()));
+        BattleState battle = new BattleState(java.util.Set.of(), Inventory.initial(
+            EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER));
+        battle.addPiece(new PieceState("knight", PieceType.KNIGHT, 1, 0, 0, 0), Position.fromNotation("d1"));
+        battle.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1,
+            rogueknight.battle.Direction.SOUTH), Position.fromNotation("c7"));
+        battle.addPiece(new PieceState("king-1", PieceType.KING, 5, 5, 5, 2), Position.fromNotation("h8"));
+        BattleController controller = new BattleController(battle, rogueknight.action.EnemyPhase.NONE);
         BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
 
         // Knight moves near pawn so Pawn attacks Knight to 0 HP
@@ -49,11 +48,9 @@ class BattleControllerAdapterEquipmentTest {
     }
 
     private BattleControllerAdapter createAdapter() throws IOException {
-        BattleState battle = new BattleFactory().createMap01(
-            EquipmentType.CANNON_MOVEMENT,
-            EquipmentType.DIAGONAL_SKEWER
-        );
-        return new BattleControllerAdapter(new BattleController(battle));
+        return new BattleControllerAdapter(new BattleFactory().createMap01Controller(
+            EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER,
+            rogueknight.action.EnemyPhase.NONE));
     }
 
     @Test
