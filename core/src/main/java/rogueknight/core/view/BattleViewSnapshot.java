@@ -16,7 +16,8 @@ public record BattleViewSnapshot(
     Map<BoardPosition, String> enemyPieces,
     Set<BoardPosition> legalMoves,
     String statusMessage,
-    boolean isFixtureDemo
+    boolean isFixtureDemo,
+    Map<String, PresentationPiece> piecesById
 ) {
     public BattleViewSnapshot {
         Objects.requireNonNull(knightPosition, "knightPosition must not be null");
@@ -24,9 +25,25 @@ public record BattleViewSnapshot(
         enemyPieces = Map.copyOf(enemyPieces != null ? enemyPieces : Map.of());
         legalMoves = Set.copyOf(legalMoves != null ? legalMoves : Set.of());
         statusMessage = statusMessage != null ? statusMessage : "";
+        piecesById = Map.copyOf(piecesById != null ? piecesById : Map.of());
     }
 
-    /** Creates a copy with updated display text while preserving battle state. */
+    /** Compatibility constructor for fixture/test snapshots without identity-aware presentation data. */
+    public BattleViewSnapshot(
+        int globalTurn,
+        BoardPosition knightPosition,
+        boolean knightAlive,
+        Set<BoardPosition> rocks,
+        Map<BoardPosition, String> enemyPieces,
+        Set<BoardPosition> legalMoves,
+        String statusMessage,
+        boolean isFixtureDemo
+    ) {
+        this(globalTurn, knightPosition, knightAlive, rocks, enemyPieces, legalMoves,
+            statusMessage, isFixtureDemo, Map.of());
+    }
+
+    /** Creates a copy with updated display text while preserving battle state and piece identities. */
     public BattleViewSnapshot withMessage(String newMessage) {
         return new BattleViewSnapshot(
             globalTurn,
@@ -36,7 +53,8 @@ public record BattleViewSnapshot(
             enemyPieces,
             legalMoves,
             newMessage,
-            isFixtureDemo
+            isFixtureDemo,
+            piecesById
         );
     }
 }
