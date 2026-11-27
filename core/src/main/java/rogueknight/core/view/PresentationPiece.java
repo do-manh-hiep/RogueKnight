@@ -9,7 +9,7 @@ public record PresentationPiece(String id, PieceType type, int hp, BoardPosition
         if (id == null || id.isBlank()) throw new IllegalArgumentException("piece id must not be blank");
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(position, "position");
-        if (hp <= 0) throw new IllegalArgumentException("presentation pieces must have positive HP");
+        if (hp < 0) throw new IllegalArgumentException("presentation piece HP must not be negative");
     }
 
     public PresentationPiece at(BoardPosition newPosition) {
@@ -17,7 +17,7 @@ public record PresentationPiece(String id, PieceType type, int hp, BoardPosition
     }
 
     public PresentationPiece withHp(int newHp) {
-        if (newHp <= 0) throw new IllegalArgumentException("live piece HP must remain positive");
+        if (newHp < 0) throw new IllegalArgumentException("presentation piece HP must not be negative");
         return new PresentationPiece(id, type, newHp, position);
     }
 
