@@ -8,10 +8,8 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import rogueknight.action.BattleController;
 import rogueknight.action.EnemyTurnRunner;
 import rogueknight.ai.EnemyAI;
-import rogueknight.battle.BattleState;
 import rogueknight.battle.EquipmentType;
 import rogueknight.core.input.BoardInputHandler;
 import rogueknight.core.input.BattleControllerAdapter;
@@ -52,12 +50,12 @@ public class Main extends ApplicationAdapter {
 
         projection = new BoardProjection(BOARD_ORIGIN_X, BOARD_ORIGIN_Y, TILE_SIZE);
         try {
-            BattleState battle = new BattleFactory().createMap01(
-                EquipmentType.CANNON_MOVEMENT,
-                EquipmentType.DIAGONAL_SKEWER
-            );
             controller = new BattleControllerAdapter(
-                new BattleController(battle, new EnemyTurnRunner(new EnemyAI()))
+                new BattleFactory().createMap01Controller(
+                    EquipmentType.CANNON_MOVEMENT,
+                    EquipmentType.DIAGONAL_SKEWER,
+                    new EnemyTurnRunner(new EnemyAI())
+                )
             );
         } catch (IOException | IllegalArgumentException exception) {
             throw new IllegalStateException("Không thể khởi tạo trận Map01", exception);
