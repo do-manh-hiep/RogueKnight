@@ -1,7 +1,9 @@
 package rogueknight.core.input;
 
+import rogueknight.battle.PieceType;
 import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
+import rogueknight.core.view.PresentationPiece;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,6 +53,15 @@ public final class FixtureBattleController implements BattleControllerPort {
 
     @Override
     public BattleViewSnapshot snapshot() {
+        Map<String, PresentationPiece> piecesById = new HashMap<>();
+        piecesById.put("knight", new PresentationPiece("knight", PieceType.KNIGHT, 5, knightPosition));
+        piecesById.put("fixture-pawn", new PresentationPiece(
+            "fixture-pawn", PieceType.PAWN, 1, BoardPosition.fromNotation("d7")));
+        piecesById.put("fixture-king", new PresentationPiece(
+            "fixture-king", PieceType.KING, 5, BoardPosition.fromNotation("d8")));
+        piecesById.put("fixture-rook", new PresentationPiece(
+            "fixture-rook", PieceType.ROOK, 3, BoardPosition.fromNotation("h8")));
+
         return new BattleViewSnapshot(
             globalTurn,
             knightPosition,
@@ -59,7 +70,8 @@ public final class FixtureBattleController implements BattleControllerPort {
             enemyPieces,
             legalMoves("knight"),
             "Turn " + globalTurn + " | Knight tại " + knightPosition.notation(),
-            true
+            true,
+            piecesById
         );
     }
 
