@@ -114,7 +114,7 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         if (!result.accepted()) return MoveResult.rejected(result.error().toString(), before);
 
         rememberRemovedKnight(result.events());
-        return MoveResult.success(before, toViewSnapshot(result.after()));
+        return MoveResult.success(before, toViewSnapshot(result.after()), result.events());
     }
 
     private void rememberRemovedKnight(List<BattleEvent> events) {
