@@ -26,7 +26,7 @@ class BattleFactoryTest {
     void createsMap01WithInitialState() throws IOException {
         BattleFactory factory = new BattleFactory();
 
-        BattleState battle = factory.createMap01(
+        BattleState battle = factory.createMap01State(
             EquipmentType.CANNON_MOVEMENT,
             EquipmentType.DIAGONAL_SKEWER
         );
@@ -115,7 +115,7 @@ class BattleFactoryTest {
 
     @Test
     void createsRocksAtCorrectPositions() throws IOException {
-        BattleState battle = new BattleFactory().createMap01(
+        BattleState battle = new BattleFactory().createMap01State(
             EquipmentType.CANNON_MOVEMENT,
             EquipmentType.DIAGONAL_SKEWER
         );
@@ -134,7 +134,7 @@ class BattleFactoryTest {
 
     @Test
     void preservesSpawnOrderFromMap01() throws IOException {
-        BattleState battle = new BattleFactory().createMap01(
+        BattleState battle = new BattleFactory().createMap01State(
             EquipmentType.CANNON_MOVEMENT,
             EquipmentType.DIAGONAL_SKEWER
         );
@@ -151,7 +151,7 @@ class BattleFactoryTest {
 
     @Test
     void createsBattleWithAnotherEquipmentSelection() throws IOException {
-        BattleState battle = new BattleFactory().createMap01(
+        BattleState battle = new BattleFactory().createMap01State(
             EquipmentType.CANNON_ATTACK,
             EquipmentType.DIAGONAL_SKEWER
         );
@@ -175,7 +175,7 @@ class BattleFactoryTest {
 
         assertThrows(
             IllegalArgumentException.class,
-            () -> factory.createMap01(
+            () -> factory.createMap01State(
                 EquipmentType.CANNON_MOVEMENT,
                 EquipmentType.CANNON_MOVEMENT
             )
@@ -186,12 +186,12 @@ class BattleFactoryTest {
     void createsIndependentBattles() throws IOException {
         BattleFactory factory = new BattleFactory();
 
-        BattleState first = factory.createMap01(
+        BattleState first = factory.createMap01State(
             EquipmentType.CANNON_MOVEMENT,
             EquipmentType.DIAGONAL_SKEWER
         );
 
-        BattleState second = factory.createMap01(
+        BattleState second = factory.createMap01State(
             EquipmentType.CANNON_MOVEMENT,
             EquipmentType.DIAGONAL_SKEWER
         );
@@ -231,7 +231,7 @@ class BattleFactoryTest {
 
     @Test
     void keepsOldSnapshotUnchanged() throws IOException {
-        BattleState battle = new BattleFactory().createMap01(
+        BattleState battle = new BattleFactory().createMap01State(
             EquipmentType.CANNON_MOVEMENT,
             EquipmentType.DIAGONAL_SKEWER
         );
@@ -277,7 +277,7 @@ class BattleFactoryTest {
 
     @Test
     void createdBattleWorksWithController() throws IOException {
-        BattleState battle = new BattleFactory().createMap01(
+        BattleState battle = new BattleFactory().createMap01State(
             EquipmentType.CANNON_MOVEMENT,
             EquipmentType.DIAGONAL_SKEWER
         );
@@ -309,7 +309,7 @@ class BattleFactoryTest {
 
     @Test
     void initializesPawnDirectionsFromCompleteMap() throws IOException {
-        BattleState battle = new BattleFactory().createMap01(
+        BattleState battle = new BattleFactory().createMap01State(
             EquipmentType.CANNON_MOVEMENT,
             EquipmentType.DIAGONAL_SKEWER
         );
