@@ -100,11 +100,12 @@ class BoardInputHandlerTest {
 
     @Test
     void selectingByCurrentIndexUsesCompactedEquipmentList() throws Exception {
-        var battle = new rogueknight.data.BattleFactory().createMap01(
+        var controller = new rogueknight.data.BattleFactory().createMap01Controller(
             rogueknight.battle.EquipmentType.CANNON_MOVEMENT,
-            rogueknight.battle.EquipmentType.DIAGONAL_SKEWER
+            rogueknight.battle.EquipmentType.DIAGONAL_SKEWER,
+            rogueknight.action.EnemyPhase.NONE
         );
-        var adapter = new BattleControllerAdapter(new rogueknight.action.BattleController(battle));
+        var adapter = new BattleControllerAdapter(controller);
         var handler = new BoardInputHandler(projection, adapter);
 
         assertEquals(List.of(
