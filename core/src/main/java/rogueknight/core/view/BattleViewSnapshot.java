@@ -12,6 +12,7 @@ import java.util.Set;
 public record BattleViewSnapshot(
     int globalTurn,
     BoardPosition knightPosition,
+    boolean knightAlive,
     Set<BoardPosition> rocks,
     Map<BoardPosition, String> enemyPieces,
     Set<BoardPosition> legalMoves,
@@ -26,13 +27,12 @@ public record BattleViewSnapshot(
         statusMessage = statusMessage != null ? statusMessage : "";
     }
 
-    /**
-     * Helper to create a new snapshot with an updated status message.
-     */
+    /** Creates a copy with updated display text while preserving battle state. */
     public BattleViewSnapshot withMessage(String newMessage) {
         return new BattleViewSnapshot(
             globalTurn,
             knightPosition,
+            knightAlive,
             rocks,
             enemyPieces,
             legalMoves,
