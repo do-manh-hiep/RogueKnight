@@ -30,11 +30,13 @@ class BattleControllerAdapterEquipmentTest {
         battle.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1,
             rogueknight.battle.Direction.SOUTH), Position.fromNotation("c7"));
         battle.addPiece(new PieceState("king-1", PieceType.KING, 5, 5, 5, 2), Position.fromNotation("h8"));
-        // Construct a terminal fixture before handing it to the controller.
-        battle.removePiece("knight");
-        battle.finish(rogueknight.battle.BattleResult.DEFEAT);
         BattleController controller = new BattleController(battle, rogueknight.action.EnemyPhase.NONE);
         BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
+
+        // Prime the adapter's last-known Knight position before the terminal state removes it.
+        adapter.snapshot();
+        battle.removePiece("knight");
+        battle.finish(rogueknight.battle.BattleResult.DEFEAT);
 
         BattleViewSnapshot snapshot = adapter.snapshot();
         assertTrue(snapshot.statusMessage().contains("DEAD"));
