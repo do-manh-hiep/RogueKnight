@@ -54,8 +54,9 @@ public final class FixtureBattleController implements BattleControllerPort {
         return new BattleViewSnapshot(
             globalTurn,
             knightPosition,
-            Collections.unmodifiableSet(new HashSet<>(rocks)),
-            Collections.unmodifiableMap(new HashMap<>(enemyPieces)),
+            true,
+            rocks,
+            enemyPieces,
             legalMoves("knight"),
             "Turn " + globalTurn + " | Knight tại " + knightPosition.notation(),
             true
@@ -64,16 +65,13 @@ public final class FixtureBattleController implements BattleControllerPort {
 
     @Override
     public Set<BoardPosition> legalMoves(String actorId) {
-        if (!"knight".equals(actorId)) {
-            return Set.of();
-        }
+        if (!"knight".equals(actorId)) return Set.of();
+
         Set<BoardPosition> legals = new HashSet<>();
         for (int col = 0; col < BoardPosition.BOARD_SIZE; col++) {
             for (int row = 0; row < BoardPosition.BOARD_SIZE; row++) {
                 BoardPosition candidate = new BoardPosition(col, row);
-                if (isValidKnightMove(knightPosition, candidate) == null) {
-                    legals.add(candidate);
-                }
+                if (isValidKnightMove(knightPosition, candidate) == null) legals.add(candidate);
             }
         }
         return Collections.unmodifiableSet(legals);
@@ -82,26 +80,19 @@ public final class FixtureBattleController implements BattleControllerPort {
     @Override
     public MoveResult submitMove(String actorId, BoardPosition target) {
         var before = snapshot();
-
         if (actorId == null || !"knight".equals(actorId)) {
             return MoveResult.rejected("UNKNOWN_ACTOR", before);
         }
-
         if (target == null || !target.isValid()) {
             return MoveResult.rejected("OUT_OF_BOUNDS", before);
         }
 
         String errorReason = isValidKnightMove(knightPosition, target);
-        if (errorReason != null) {
-            return MoveResult.rejected(errorReason, before);
-        }
+        if (errorReason != null) return MoveResult.rejected(errorReason, before);
 
-        // Apply mutation
-        this.knightPosition = target;
-        this.globalTurn++;
-
-        var after = snapshot();
-        return MoveResult.success(before, after);
+        knightPosition = target;
+        globalTurn++;
+        return MoveResult.success(before, snapshot());
     }
 
     @Override
@@ -117,34 +108,17 @@ public final class FixtureBattleController implements BattleControllerPort {
         return MoveResult.success(before, snapshot());
     }
 
-    /**
-     * Validates whether moving from `from` to `to` is a valid Knight move.
-     * Returns null if valid, or an error reason string if invalid.
-     */
+    /** Returns null for a valid move, or an error reason for an invalid target. */
     private String isValidKnightMove(BoardPosition from, BoardPosition to) {
-        if (!to.isValid()) {
-            return "OUT_OF_BOUNDS";
-        }
-        if (from.equals(to)) {
-            return "SAME_SQUARE";
-        }
-        if (rocks.contains(to)) {
-            return "OCCUPIED_BY_ROCK";
-        }
-        if (enemyPieces.containsKey(to)) {
-            return "OCCUPIED_BY_PIECE";
-        }
+        if (!to.isValid()) return "OUT_OF_BOUNDS";
+        if (from.equals(to)) return "SAME_SQUARE";
+        if (rocks.contains(to)) return "OCCUPIED_BY_ROCK";
+        if (enemyPieces.containsKey(to)) return "OCCUPIED_BY_PIECE";
 
         int dx = Math.abs(to.column() - from.column());
         int dy = Math.abs(to.row() - from.row());
-
         boolean isLMove = (dx == 1 && dy == 2) || (dx == 2 && dy == 1);
         boolean isAdjacent = (dx <= 1 && dy <= 1) && (dx != 0 || dy != 0);
-
-        if (!isLMove && !isAdjacent) {
-            return "INVALID_GEOMETRY";
-        }
-
-        return null;
+        return isLMove || isAdjacent ? null : "INVALID_GEOMETRY";
     }
 }
