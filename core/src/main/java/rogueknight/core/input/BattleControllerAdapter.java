@@ -61,12 +61,8 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         modes.add(ActionMode.WAIT);
         modes.add(ActionMode.MOVE);
         for (EquipmentState item : snapshot.inventory().equipment()) {
-            if (item.charges() > 0) {
-                modes.add(toMode(item.type()));
-            }
+            if (item.charges() > 0) modes.add(toMode(item.type()));
         }
-
-        // List position is the keyboard number; exhausted equipment is omitted.
         return List.copyOf(modes);
     }
 
@@ -93,25 +89,19 @@ public final class BattleControllerAdapter implements BattleControllerPort {
     @Override
     public MoveResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
         BattleViewSnapshot before = snapshot();
-
-        if (mode == null) {
-            return MoveResult.rejected("UNSUPPORTED_ACTION", before);
-        }
+        if (mode == null) return MoveResult.rejected("UNSUPPORTED_ACTION", before);
         if (mode == ActionMode.WAIT) return submitWait(actorId);
-        if (target == null) {
-            return MoveResult.rejected("OUT_OF_BOUNDS", before);
-        }
+        if (target == null) return MoveResult.rejected("OUT_OF_BOUNDS", before);
 
         // Default Move/Attack mode interprets an occupied enemy square as a Sword Attack.
         ActionKind kind = mode == ActionMode.MOVE && before.enemyPieces().containsKey(target)
             ? ActionKind.SWORD
             : toKind(mode);
-        ActionRequest request = new ActionRequest(actorId, kind, target.column(), target.row());
-        ActionResult result = controller.submit(request);
+        ActionResult result = controller.submit(
+            new ActionRequest(actorId, kind, target.column(), target.row())
+        );
 
-        if (!result.accepted()) {
-            return MoveResult.rejected(result.error().toString(), before);
-        }
+        if (!result.accepted()) return MoveResult.rejected(result.error().toString(), before);
 
         rememberRemovedKnight(result.events());
         return MoveResult.success(before, toViewSnapshot(result.after()));
@@ -121,9 +111,7 @@ public final class BattleControllerAdapter implements BattleControllerPort {
     public MoveResult submitWait(String actorId) {
         BattleViewSnapshot before = snapshot();
         ActionResult result = controller.submit(ActionRequest.waitAction(actorId));
-        if (!result.accepted()) {
-            return MoveResult.rejected(result.error().toString(), before);
-        }
+        if (!result.accepted()) return MoveResult.rejected(result.error().toString(), before);
 
         rememberRemovedKnight(result.events());
         return MoveResult.success(before, toViewSnapshot(result.after()));
@@ -176,9 +164,7 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         }
 
         Set<BoardPosition> rocks = new HashSet<>();
-        for (Position rock : snapshot.rocks()) {
-            rocks.add(toBoardPosition(rock));
-        }
+        for (Position rock : snapshot.rocks()) rocks.add(toBoardPosition(rock));
 
         Map<BoardPosition, String> enemies = new HashMap<>();
         for (BattleSnapshot.PieceView piece : snapshot.pieces()) {
@@ -197,6 +183,7 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         return new BattleViewSnapshot(
             snapshot.globalTurn(),
             knightPosition,
+            knightHp > 0,
             rocks,
             enemies,
             moves,
