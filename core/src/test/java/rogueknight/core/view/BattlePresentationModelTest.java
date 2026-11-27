@@ -44,6 +44,9 @@ class BattlePresentationModelTest {
         BattlePresentationModel model = BattlePresentationModel.from(snapshot());
 
         model.apply(new BattleEvent.PieceDamaged("rook-17", 2, 0));
+        assertEquals(0, model.piece("rook-17").orElseThrow().hp(),
+            "zero-HP piece remains present until PieceRemoved is consumed");
+
         model.apply(new BattleEvent.PieceRemoved("rook-17", Position.fromNotation("e4")));
 
         assertTrue(model.piece("rook-17").isEmpty());
