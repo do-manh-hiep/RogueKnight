@@ -187,4 +187,37 @@ class BoardInputHandlerTest {
             return delegate.submitWait(actorId);
         }
     }
+
+    @Test
+    void waitEventsCanBeDrainedOnceInDomainOrder() {
+        var battle = new rogueknight.battle.BattleState(
+            java.util.Set.of(),
+            rogueknight.battle.Inventory.initial(
+                rogueknight.battle.EquipmentType.CANNON_MOVEMENT,
+                rogueknight.battle.EquipmentType.DIAGONAL_SKEWER
+            )
+        );
+        battle.addPiece(new rogueknight.battle.PieceState(
+            "knight", rogueknight.battle.PieceType.KNIGHT, 5, 0, 0, 0
+        ), rogueknight.board.Position.fromNotation("d4"));
+        battle.addPiece(new rogueknight.battle.PieceState(
+            "rook", rogueknight.battle.PieceType.ROOK, 3, 3, 3, 1
+        ), rogueknight.board.Position.fromNotation("e4"));
+        var adapter = new BattleControllerAdapter(new rogueknight.action.BattleController(
+            battle, new rogueknight.action.EnemyTurnRunner(new rogueknight.ai.EnemyAI())
+        ));
+        var handler = new BoardInputHandler(projection, adapter);
+
+        handler.selectMode(ActionMode.WAIT);
+
+        var events = handler.drainEvents();
+        assertTrue(events.stream().anyMatch(event ->
+            event instanceof rogueknight.action.BattleEvent.ActorActivated activated
+                && activated.actorId().equals("rook")));
+        assertTrue(events.stream().anyMatch(event ->
+            event instanceof rogueknight.action.BattleEvent.PieceDamaged damaged
+                && damaged.pieceId().equals("knight")));
+        assertTrue(handler.drainEvents().isEmpty());
+    }
+
 }
