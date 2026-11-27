@@ -40,15 +40,18 @@ public final class BoardRenderer {
     public void render(
         OrthographicCamera camera,
         BoardInputHandler inputHandler,
-        BattlePresentationModel presentation
+        BattlePlayback playback
     ) {
         Objects.requireNonNull(camera, "camera must not be null");
         Objects.requireNonNull(inputHandler, "inputHandler must not be null");
-        Objects.requireNonNull(presentation, "presentation must not be null");
+        Objects.requireNonNull(playback, "playback must not be null");
+        BattlePresentationModel presentation = playback.model();
 
         BoardProjection projection = inputHandler.getProjection();
         BattleViewSnapshot snapshot = inputHandler.getCurrentSnapshot();
-        Set<BoardPosition> legalMoves = inputHandler.getHighlightTargets();
+        Set<BoardPosition> legalMoves = playback.isPlaying()
+            ? Set.of()
+            : inputHandler.getHighlightTargets();
         PresentationPiece knight = presentation.piece("knight").orElse(null);
         BoardPosition knightPos = knight != null ? knight.position() : snapshot.knightPosition();
         boolean knightAlive = knight != null && knight.hp() > 0;
