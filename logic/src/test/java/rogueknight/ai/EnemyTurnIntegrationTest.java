@@ -97,8 +97,9 @@ class EnemyTurnIntegrationTest {
     void map01CannonAttackOpeningMatchesTdWalkthrough() throws IOException {
         // TD 5.12A / IT-02: Pawn2 dies, Turn 1 -> 2, the queue holds only Pawn1, which steps c7 -> c6 (DEC-01:
         // b6, c6, d6 are all 5 steps from row 1; straight SOUTH wins) and does not attack after moving.
-        BattleState state = new BattleFactory().createMap01(EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK);
-        BattleController controller = realController(state);
+        BattleController controller = new BattleFactory().createMap01Controller(
+                EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK,
+                new EnemyTurnRunner(new EnemyAI()));
 
         ActionResult result = controller.submit(ActionRequest.cannonAttack("knight", at("d7")));
 
@@ -141,8 +142,9 @@ class EnemyTurnIntegrationTest {
     }
 
     private static List<BattleEvent> playTwoWaitsOnMap01() throws IOException {
-        BattleState state = new BattleFactory().createMap01(EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER);
-        BattleController controller = realController(state);
+        BattleController controller = new BattleFactory().createMap01Controller(
+                EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER,
+                new EnemyTurnRunner(new EnemyAI()));
 
         ActionResult turn2 = controller.submit(ActionRequest.waitAction("knight"));
         assertEquals(List.of(
