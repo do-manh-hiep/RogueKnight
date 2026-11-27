@@ -21,7 +21,7 @@ flowchart TB
 ```
 
 | Module | Trách nhiệm | Boundary cần giữ |
-|---|---|---|
+| --- | --- | --- |
 | logic | Domain state, Board, rules/validation, Action resolution, turn lifecycle, Enemy AI/policies, data | Pure Java; không import libGDX; không biết pixel/input/render |
 | core | Desktop game flow, input adapter, snapshots/events, presentation playback, renderer | Gửi request và hiển thị kết quả từ logic; không tự định nghĩa luật |
 | lwjgl3 | Desktop launcher và backend/window configuration | Chỉ khởi chạy core |
@@ -32,7 +32,7 @@ flowchart TB
 ### logic
 
 | Package / class | Vai trò |
-|---|---|
+| --- | --- |
 | board/Board, board/Position | Board sở hữu occupancy và map pieceId → Position; Rock bất biến; không sở hữu HP/type/turn |
 | battle/BattleState | Aggregate mutable của một trận; sở hữu Board, PieceState, Inventory, globalTurn, phase, result |
 | battle/PieceState, PieceType, Inventory, EquipmentState | Runtime state của quân và trang bị |
@@ -47,7 +47,7 @@ flowchart TB
 ### core
 
 | Package / class | Vai trò |
-|---|---|
+| --- | --- |
 | Main | Khởi tạo trận desktop, poll input, điều phối playback và render frame |
 | input/BoardInputHandler | Chuyển click/key selection thành action call; giữ feedback/snapshot UI và pending events |
 | input/BattleControllerAdapter | Chuyển đổi giữa API domain và UI-facing API; ánh xạ tọa độ, snapshot và event |
@@ -123,6 +123,7 @@ sequenceDiagram
 ```
 
 Key observations:
+
 1. Invalid request returns rejected result before Resolver; it must not mutate gameplay state or emit events.
 2. A valid Player Action begins with ActionPerformed; resolver emits effect events.
 3. If the Player Action itself ends the battle, no Turn+1 and no Enemy phase.
@@ -165,6 +166,7 @@ flowchart TD
 ```
 
 Rules observed in implementation:
+
 - Queue được chụp một lần đầu Enemy phase; Queen mới được tạo do promotion không chen vào queue đang chạy.
 - Queue order: PAWN → ROOK → BISHOP → KING → QUEEN, sau đó spawnOrder, rồi id.
 - Trước mỗi activation, runner đọc lại state theo ID; Enemy đã bị loại bởi action trước thì bị skip.
