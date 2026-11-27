@@ -194,4 +194,31 @@ class BattleControllerAdapterEquipmentTest {
         handler.selectMode(ActionMode.CANNON_MOVEMENT);
         assertEquals(ActionMode.MOVE, handler.getMode());
     }
+
+    @Test
+    void waitResultExposesOrderedEnemyEventsToPresentationLayer() {
+        BattleState state = new BattleState(java.util.Set.of(), Inventory.initial(
+            EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER));
+        state.addPiece(new PieceState("knight", PieceType.KNIGHT, 5, 0, 0, 0), Position.fromNotation("d4"));
+        state.addPiece(new PieceState("rook", PieceType.ROOK, 3, 3, 3, 1), Position.fromNotation("e4"));
+        BattleControllerAdapter adapter = new BattleControllerAdapter(new BattleController(
+            state, new rogueknight.action.EnemyTurnRunner(new rogueknight.ai.EnemyAI())
+        ));
+
+        MoveResult result = adapter.submitWait("knight");
+
+        assertTrue(result.accepted());
+        assertEquals(
+            java.util.List.of(
+                new rogueknight.action.BattleEvent.ActionPerformed(
+                    rogueknight.action.ActionKind.WAIT, "knight"),
+                new rogueknight.action.BattleEvent.TurnAdvanced(1, 2),
+                new rogueknight.action.BattleEvent.ActorActivated("rook", Position.fromNotation("e4"), 2),
+                new rogueknight.action.BattleEvent.ActionPerformed(
+                    rogueknight.action.ActionKind.ATTACK, "rook"),
+                new rogueknight.action.BattleEvent.PieceDamaged("knight", 1, 4)
+            ),
+            result.events()
+        );
+    }
 }
