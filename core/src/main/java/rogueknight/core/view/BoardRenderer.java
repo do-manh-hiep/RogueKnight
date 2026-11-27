@@ -167,7 +167,7 @@ public final class BoardRenderer {
         font.setColor(Color.WHITE);
         String headerInfo = "Turn " + presentation.globalTurn()
             + " | Knight: " + (knightAlive ? knightPos.notation() : "DEAD")
-            + " | " + presentation.result().map(Enum::name).orElse("ONGOING");
+            + " | " + presentation.result().map(result -> result.name()).orElse("ONGOING");
         font.draw(batch, headerInfo, 20, 425);
 
         font.setColor(Color.CYAN);
