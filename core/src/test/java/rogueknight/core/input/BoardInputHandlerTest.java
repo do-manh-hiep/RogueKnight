@@ -1,8 +1,12 @@
 package rogueknight.core.input;
 
 import org.junit.jupiter.api.Test;
+import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
 import rogueknight.core.view.BoardProjection;
+
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,11 +16,9 @@ class BoardInputHandlerTest {
     private final BoardProjection projection = new BoardProjection(128f, 48f, 48f);
 
     @Test
-    void clickInsideValidSquareInvokesSubmitExactlyOnceAndUpdatesState() {
-        var controller = new FixtureBattleController(new BoardPosition(3, 3)); // d4
+    void clickInsideValidSquareSubmitsExactlyOnceAndUpdatesState() {
+        var controller = new CountingController(new FixtureBattleController(new BoardPosition(3, 3)));
         var handler = new BoardInputHandler(projection, controller);
-
-        assertEquals(0, handler.getSubmitInvocationCount());
 
         // Click center of c6 (col 2, row 5):
         float c6CenterX = projection.getCellCenterX(2);
@@ -25,30 +27,29 @@ class BoardInputHandlerTest {
         boolean handled = handler.handleWorldClick(c6CenterX, c6CenterY);
 
         assertTrue(handled);
-        assertEquals(1, handler.getSubmitInvocationCount());
+        assertEquals(1, controller.submissionCount());
         assertEquals(2, handler.getCurrentSnapshot().globalTurn());
         assertEquals(BoardPosition.fromNotation("c6"), handler.getCurrentSnapshot().knightPosition());
         assertTrue(handler.getFeedbackMessage().contains("Di chuyển Knight"));
     }
 
     @Test
-    void clickOutsideBoardDoesNotInvokeSubmitAndUpdatesMessage() {
-        var controller = new FixtureBattleController(new BoardPosition(3, 3));
+    void clickOutsideBoardDoesNotSubmitAndUpdatesMessage() {
+        var controller = new CountingController(new FixtureBattleController(new BoardPosition(3, 3)));
         var handler = new BoardInputHandler(projection, controller);
         var initialSnapshot = handler.getCurrentSnapshot();
 
-        // Click out of bounds (10, 10)
         boolean handled = handler.handleWorldClick(10f, 10f);
 
         assertFalse(handled);
-        assertEquals(0, handler.getSubmitInvocationCount());
+        assertEquals(0, controller.submissionCount());
         assertEquals(initialSnapshot, handler.getCurrentSnapshot());
         assertEquals("Click ngoài bàn cờ", handler.getFeedbackMessage());
     }
 
     @Test
     void rejectedMovePreservesSnapshotAndDoesNotCreateFakeState() {
-        var controller = new FixtureBattleController(new BoardPosition(3, 3)); // d4
+        var controller = new CountingController(new FixtureBattleController(new BoardPosition(3, 3)));
         var handler = new BoardInputHandler(projection, controller);
         var initialSnapshot = handler.getCurrentSnapshot();
 
@@ -59,8 +60,7 @@ class BoardInputHandlerTest {
         boolean handled = handler.handleWorldClick(e6CenterX, e6CenterY);
 
         assertTrue(handled);
-        assertEquals(1, handler.getSubmitInvocationCount());
-        // Verify snapshot is strictly identical to initialSnapshot
+        assertEquals(1, controller.submissionCount());
         assertEquals(initialSnapshot, handler.getCurrentSnapshot());
         assertEquals(1, handler.getCurrentSnapshot().globalTurn());
         assertEquals(new BoardPosition(3, 3), handler.getCurrentSnapshot().knightPosition());
@@ -70,34 +70,34 @@ class BoardInputHandlerTest {
 
     @Test
     void waitActionIsFirstAndExecutesImmediatelyWithoutBoardClick() {
-        var controller = new FixtureBattleController(new BoardPosition(3, 3));
+        var controller = new CountingController(new FixtureBattleController(new BoardPosition(3, 3)));
         var handler = new BoardInputHandler(projection, controller);
         int beforeTurn = handler.getCurrentSnapshot().globalTurn();
 
-        assertEquals(java.util.List.of(ActionMode.WAIT, ActionMode.MOVE), handler.getAvailableModes());
+        assertEquals(List.of(ActionMode.WAIT, ActionMode.MOVE), handler.getAvailableModes());
         handler.selectMode(ActionMode.WAIT);
 
         assertEquals(beforeTurn + 1, handler.getCurrentSnapshot().globalTurn());
         assertEquals(ActionMode.MOVE, handler.getMode());
-        assertEquals(1, handler.getSubmitInvocationCount());
+        assertEquals(1, controller.submissionCount());
     }
 
     @Test
     void clickingKnightItselfSelectsWithoutSubmittingMove() {
-        var controller = new FixtureBattleController(new BoardPosition(3, 3)); // d4
+        var controller = new CountingController(new FixtureBattleController(new BoardPosition(3, 3)));
         var handler = new BoardInputHandler(projection, controller);
 
-        // Click center of d4 (where Knight is)
         float d4CenterX = projection.getCellCenterX(3);
         float d4CenterY = projection.getCellCenterY(3);
 
         boolean handled = handler.handleWorldClick(d4CenterX, d4CenterY);
 
         assertTrue(handled);
-        assertEquals(0, handler.getSubmitInvocationCount());
-        assertEquals(new BoardPosition(3, 3), handler.getSelectedPosition());
+        assertEquals(0, controller.submissionCount());
+        assertEquals(new BoardPosition(3, 3), handler.getCurrentSnapshot().knightPosition());
         assertTrue(handler.getFeedbackMessage().contains("Đã chọn Knight"));
     }
+
     @Test
     void selectingByCurrentIndexUsesCompactedEquipmentList() throws Exception {
         var battle = new rogueknight.data.BattleFactory().createMap01(
@@ -107,14 +107,14 @@ class BoardInputHandlerTest {
         var adapter = new BattleControllerAdapter(new rogueknight.action.BattleController(battle));
         var handler = new BoardInputHandler(projection, adapter);
 
-        assertEquals(java.util.List.of(
+        assertEquals(List.of(
             ActionMode.WAIT, ActionMode.MOVE, ActionMode.CANNON_MOVEMENT, ActionMode.DIAGONAL_SKEWER
         ), handler.getAvailableModes());
 
         var cannonResult = adapter.submitAction(
             "knight", ActionMode.CANNON_MOVEMENT, BoardPosition.fromNotation("d4"));
         assertTrue(cannonResult.accepted());
-        assertEquals(java.util.List.of(
+        assertEquals(List.of(
             ActionMode.WAIT, ActionMode.MOVE, ActionMode.DIAGONAL_SKEWER
         ), handler.getAvailableModes());
 
@@ -126,8 +126,10 @@ class BoardInputHandlerTest {
 
     @Test
     void selectingOutOfRangeActionIndexDoesNotChangeSelectedMode() {
-        var controller = new FixtureBattleController(new BoardPosition(3, 3));
-        var handler = new BoardInputHandler(projection, controller);
+        var handler = new BoardInputHandler(
+            projection,
+            new FixtureBattleController(new BoardPosition(3, 3))
+        );
 
         handler.selectAction(2);
 
@@ -135,4 +137,54 @@ class BoardInputHandlerTest {
         assertTrue(handler.getFeedbackMessage().contains("không khả dụng"));
     }
 
+    private static final class CountingController implements BattleControllerPort {
+        private final BattleControllerPort delegate;
+        private int submissions;
+
+        private CountingController(BattleControllerPort delegate) {
+            this.delegate = delegate;
+        }
+
+        int submissionCount() {
+            return submissions;
+        }
+
+        @Override
+        public BattleViewSnapshot snapshot() {
+            return delegate.snapshot();
+        }
+
+        @Override
+        public Set<BoardPosition> legalMoves(String actorId) {
+            return delegate.legalMoves(actorId);
+        }
+
+        @Override
+        public MoveResult submitMove(String actorId, BoardPosition target) {
+            submissions++;
+            return delegate.submitMove(actorId, target);
+        }
+
+        @Override
+        public List<ActionMode> availableModes() {
+            return delegate.availableModes();
+        }
+
+        @Override
+        public Set<BoardPosition> legalTargets(String actorId, ActionMode mode) {
+            return delegate.legalTargets(actorId, mode);
+        }
+
+        @Override
+        public MoveResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
+            submissions++;
+            return delegate.submitAction(actorId, mode, target);
+        }
+
+        @Override
+        public MoveResult submitWait(String actorId) {
+            submissions++;
+            return delegate.submitWait(actorId);
+        }
+    }
 }
