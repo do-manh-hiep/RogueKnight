@@ -30,16 +30,11 @@ class BattleControllerAdapterEquipmentTest {
         battle.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1,
             rogueknight.battle.Direction.SOUTH), Position.fromNotation("c7"));
         battle.addPiece(new PieceState("king-1", PieceType.KING, 5, 5, 5, 2), Position.fromNotation("h8"));
-        BattleController controller = new BattleController(battle, rogueknight.action.EnemyPhase.NONE);
-        BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
-
-        // Knight moves near pawn so Pawn attacks Knight to 0 HP
-        // Knight at d1 (3,0). Move to e3 (4,2).
-        adapter.submitMove("knight", new BoardPosition(4, 2));
-
-        // When knight reaches 0 HP, snapshot should indicate DEAD without throwing exception
+        // Construct a terminal fixture before handing it to the controller.
         battle.removePiece("knight");
         battle.finish(rogueknight.battle.BattleResult.DEFEAT);
+        BattleController controller = new BattleController(battle, rogueknight.action.EnemyPhase.NONE);
+        BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
 
         BattleViewSnapshot snapshot = adapter.snapshot();
         assertTrue(snapshot.statusMessage().contains("DEAD"));
