@@ -22,17 +22,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+/** Adapts the domain battle controller to the UI-facing controller port. */
 public final class BattleControllerAdapter implements BattleControllerPort {
 
     private final BattleController controller;
-    // A Knight at 0 HP is removed from the Board (Defeat); the view keeps showing its last square.
+    // A defeated Knight is removed from the board; the view retains its last square.
     private BoardPosition lastKnownKnightPosition;
 
     public BattleControllerAdapter(BattleController controller) {
-        this.controller = Objects.requireNonNull(
-            controller,
-            "controller must not be null"
-        );
+        this.controller = Objects.requireNonNull(controller, "controller must not be null");
     }
 
     @Override
@@ -43,11 +41,9 @@ public final class BattleControllerAdapter implements BattleControllerPort {
     @Override
     public Set<BoardPosition> legalMoves(String actorId) {
         Set<BoardPosition> positions = new HashSet<>();
-
         for (Position position : controller.legalMoves(actorId)) {
             positions.add(toBoardPosition(position));
         }
-
         return Set.copyOf(positions);
     }
 
@@ -58,26 +54,27 @@ public final class BattleControllerAdapter implements BattleControllerPort {
 
     @Override
     public List<ActionMode> availableModes() {
-        List<ActionMode> modes = new ArrayList<>();
+        BattleSnapshot snapshot = controller.snapshot();
         if (!controller.canWait("knight")) return List.of();
+
+        List<ActionMode> modes = new ArrayList<>();
         modes.add(ActionMode.WAIT);
         modes.add(ActionMode.MOVE);
-
-        for (EquipmentState item : controller.snapshot().inventory().equipment()) {
+        for (EquipmentState item : snapshot.inventory().equipment()) {
             if (item.charges() > 0) {
                 modes.add(toMode(item.type()));
             }
         }
 
-        // The current list position is the keyboard number. Filtering exhausted
-        // equipment therefore compacts the remaining actions automatically.
+        // List position is the keyboard number; exhausted equipment is omitted.
         return List.copyOf(modes);
     }
 
     @Override
     public Set<BoardPosition> legalTargets(String actorId, ActionMode mode) {
-        Set<BoardPosition> positions = new HashSet<>();
+        if (mode == null || mode == ActionMode.WAIT) return Set.of();
 
+        Set<BoardPosition> positions = new HashSet<>();
         if (mode == ActionMode.MOVE) {
             for (Position position : controller.legalMoves(actorId)) {
                 positions.add(toBoardPosition(position));
@@ -85,56 +82,39 @@ public final class BattleControllerAdapter implements BattleControllerPort {
             for (Position position : controller.legalTargets(actorId, ActionKind.SWORD)) {
                 positions.add(toBoardPosition(position));
             }
-            return Set.copyOf(positions);
-        }
-        if (mode == ActionMode.WAIT) return Set.of();
-        for (Position position : controller.legalTargets(actorId, toKind(mode))) {
-            positions.add(toBoardPosition(position));
+        } else {
+            for (Position position : controller.legalTargets(actorId, toKind(mode))) {
+                positions.add(toBoardPosition(position));
+            }
         }
         return Set.copyOf(positions);
     }
 
     @Override
     public MoveResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
-        // Chụp dữ liệu UI trước khi gửi yêu cầu.
         BattleViewSnapshot before = snapshot();
 
+        if (mode == null) {
+            return MoveResult.rejected("UNSUPPORTED_ACTION", before);
+        }
         if (mode == ActionMode.WAIT) return submitWait(actorId);
-        if (target == null || mode == null) {
+        if (target == null) {
             return MoveResult.rejected("OUT_OF_BOUNDS", before);
         }
 
-        // Gửi tọa độ thô để logic kiểm tra cả trường hợp ngoài biên.
-        ActionKind kind = toKind(mode);
-        // Default [1] is contextual: clicking an occupied enemy square means Sword Attack.
-        if (mode == ActionMode.MOVE && before.enemyPieces().containsKey(target)) {
-            kind = ActionKind.SWORD;
-        }
-        ActionRequest request = new ActionRequest(
-            actorId,
-            kind,
-            target.column(),
-            target.row()
-        );
-
+        // Default Move/Attack mode interprets an occupied enemy square as a Sword Attack.
+        ActionKind kind = mode == ActionMode.MOVE && before.enemyPieces().containsKey(target)
+            ? ActionKind.SWORD
+            : toKind(mode);
+        ActionRequest request = new ActionRequest(actorId, kind, target.column(), target.row());
         ActionResult result = controller.submit(request);
 
         if (!result.accepted()) {
-            return MoveResult.rejected(
-                result.error().toString(),
-                before
-            );
+            return MoveResult.rejected(result.error().toString(), before);
         }
 
-        // The Knight may move and then die in the same submit: its last square comes from the events.
-        for (BattleEvent event : result.events()) {
-            if (event instanceof BattleEvent.PieceRemoved removed && removed.pieceId().equals("knight")) {
-                lastKnownKnightPosition = toBoardPosition(removed.at());
-            }
-        }
-        BattleViewSnapshot after = toViewSnapshot(result.after());
-
-        return MoveResult.success(before, after);
+        rememberRemovedKnight(result.events());
+        return MoveResult.success(before, toViewSnapshot(result.after()));
     }
 
     @Override
@@ -144,12 +124,17 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         if (!result.accepted()) {
             return MoveResult.rejected(result.error().toString(), before);
         }
-        for (BattleEvent event : result.events()) {
+
+        rememberRemovedKnight(result.events());
+        return MoveResult.success(before, toViewSnapshot(result.after()));
+    }
+
+    private void rememberRemovedKnight(List<BattleEvent> events) {
+        for (BattleEvent event : events) {
             if (event instanceof BattleEvent.PieceRemoved removed && removed.pieceId().equals("knight")) {
                 lastKnownKnightPosition = toBoardPosition(removed.at());
             }
         }
-        return MoveResult.success(before, toViewSnapshot(result.after()));
     }
 
     private static ActionMode toMode(EquipmentType type) {
@@ -177,10 +162,11 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         Set<BoardPosition> moves;
 
         if (knight.isPresent()) {
-            knightPosition = toBoardPosition(knight.get().position());
+            BattleSnapshot.PieceView piece = knight.get();
+            knightPosition = toBoardPosition(piece.position());
             lastKnownKnightPosition = knightPosition;
-            knightHp = knight.get().hp();
-            moves = legalMoves(knight.get().id());
+            knightHp = piece.hp();
+            moves = legalMoves(piece.id());
         } else if (lastKnownKnightPosition != null) {
             knightPosition = lastKnownKnightPosition;
             knightHp = 0;
@@ -190,19 +176,14 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         }
 
         Set<BoardPosition> rocks = new HashSet<>();
-
         for (Position rock : snapshot.rocks()) {
             rocks.add(toBoardPosition(rock));
         }
 
         Map<BoardPosition, String> enemies = new HashMap<>();
-
         for (BattleSnapshot.PieceView piece : snapshot.pieces()) {
             if (piece.type() != PieceType.KNIGHT) {
-                enemies.put(
-                    toBoardPosition(piece.position()),
-                    piece.type().name()
-                );
+                enemies.put(toBoardPosition(piece.position()), piece.type().name());
             }
         }
 
@@ -224,10 +205,7 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         );
     }
 
-    private BoardPosition toBoardPosition(Position position) {
-        return new BoardPosition(
-            position.column(),
-            position.row()
-        );
+    private static BoardPosition toBoardPosition(Position position) {
+        return new BoardPosition(position.column(), position.row());
     }
 }
