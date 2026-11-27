@@ -1,9 +1,11 @@
 package rogueknight.core.input;
 
+import rogueknight.action.BattleEvent;
 import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
 import rogueknight.core.view.BoardProjection;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,6 +22,7 @@ public final class BoardInputHandler {
 
     private BattleViewSnapshot currentSnapshot;
     private String feedbackMessage;
+    private final List<BattleEvent> pendingEvents = new ArrayList<>();
     private ActionMode mode = ActionMode.MOVE;
 
     public BoardInputHandler(BoardProjection projection, BattleControllerPort controller) {
@@ -57,6 +60,7 @@ public final class BoardInputHandler {
 
         if (result.accepted()) {
             this.currentSnapshot = result.after();
+            pendingEvents.addAll(result.events());
             String label = mode == ActionMode.MOVE
                 ? (attackTarget ? "Sword Attack" : "Di chuyển Knight")
                 : "Dùng " + mode.label();
@@ -92,6 +96,7 @@ public final class BoardInputHandler {
             MoveResult result = controller.submitWait("knight");
             if (result.accepted()) {
                 currentSnapshot = result.after();
+                pendingEvents.addAll(result.events());
                 feedbackMessage = "Wait: Turn " + currentSnapshot.globalTurn();
             } else {
                 currentSnapshot = result.before();
@@ -139,6 +144,17 @@ public final class BoardInputHandler {
 
     public BattleViewSnapshot getCurrentSnapshot() {
         return currentSnapshot;
+    }
+
+
+    /**
+     * Returns and clears ordered domain events accumulated since the previous drain.
+     * The presentation layer can enqueue these events for sequential animation.
+     */
+    public List<BattleEvent> drainEvents() {
+        List<BattleEvent> events = List.copyOf(pendingEvents);
+        pendingEvents.clear();
+        return events;
     }
 
     public String getFeedbackMessage() {
