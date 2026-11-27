@@ -4,12 +4,14 @@ import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
 import rogueknight.core.view.BoardProjection;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Handles user clicks in world coordinates, translates them into board actions,
- * submits move requests to the controller port, and updates the local UI feedback state.
+ * submits requests to the controller port, and maintains UI feedback state.
  * Fully decoupled from graphics/rendering to enable headless JUnit tests.
  */
 public final class BoardInputHandler {
@@ -17,17 +19,13 @@ public final class BoardInputHandler {
     private final BattleControllerPort controller;
 
     private BattleViewSnapshot currentSnapshot;
-    private BoardPosition selectedPosition;
-    private BoardPosition lastClickedPosition;
     private String feedbackMessage;
-    private int submitInvocationCount = 0;
     private ActionMode mode = ActionMode.MOVE;
 
     public BoardInputHandler(BoardProjection projection, BattleControllerPort controller) {
         this.projection = Objects.requireNonNull(projection, "projection must not be null");
         this.controller = Objects.requireNonNull(controller, "controller must not be null");
         this.currentSnapshot = controller.snapshot();
-        this.selectedPosition = currentSnapshot.knightPosition();
         this.feedbackMessage = "[1] Move / Attack | [0] Wait";
     }
 
@@ -42,29 +40,23 @@ public final class BoardInputHandler {
         Optional<BoardPosition> clickedPosOpt = projection.worldToBoard(worldX, worldY);
 
         if (clickedPosOpt.isEmpty()) {
-            this.lastClickedPosition = null;
             this.feedbackMessage = "Click ngoài bàn cờ";
             return false;
         }
 
         BoardPosition target = clickedPosOpt.get();
-        this.lastClickedPosition = target;
 
-        // If clicking on the Knight itself, re-select
+        // Clicking the Knight only refreshes the selection feedback; its position is in the snapshot.
         if (target.equals(currentSnapshot.knightPosition())) {
-            this.selectedPosition = target;
             this.feedbackMessage = "Đã chọn Knight tại " + target.notation();
             return true;
         }
 
-        // Submit move request to controller
-        submitInvocationCount++;
         boolean attackTarget = mode == ActionMode.MOVE && currentSnapshot.enemyPieces().containsKey(target);
         MoveResult result = controller.submitAction("knight", mode, target);
 
         if (result.accepted()) {
             this.currentSnapshot = result.after();
-            this.selectedPosition = currentSnapshot.knightPosition();
             String label = mode == ActionMode.MOVE
                 ? (attackTarget ? "Sword Attack" : "Di chuyển Knight")
                 : "Dùng " + mode.label();
@@ -72,7 +64,7 @@ public final class BoardInputHandler {
                 + " -> " + target.notation() + " (Turn " + currentSnapshot.globalTurn() + ")";
             this.mode = ActionMode.MOVE;
         } else {
-            // Rejected: DO NOT update snapshot, preserve previous state
+            // Rejected: DO NOT update to a potentially fabricated state.
             this.currentSnapshot = result.before();
             this.feedbackMessage = "Nước đi không hợp lệ tới " + target.notation()
                 + " [" + result.errorReason() + "]";
@@ -91,17 +83,15 @@ public final class BoardInputHandler {
             this.feedbackMessage = "Chế độ: " + this.mode.label();
             return;
         }
-        java.util.List<ActionMode> availableModes = getAvailableModes();
+        List<ActionMode> availableModes = getAvailableModes();
         if (!availableModes.contains(newMode)) {
             this.feedbackMessage = "Action không khả dụng: " + newMode.label();
             return;
         }
         if (newMode == ActionMode.WAIT) {
-            submitInvocationCount++;
             MoveResult result = controller.submitWait("knight");
             if (result.accepted()) {
                 currentSnapshot = result.after();
-                selectedPosition = currentSnapshot.knightPosition();
                 feedbackMessage = "Wait: Turn " + currentSnapshot.globalTurn();
             } else {
                 currentSnapshot = result.before();
@@ -119,7 +109,7 @@ public final class BoardInputHandler {
      * rebuilt from available actions, so exhausted equipment never leaves a gap.
      */
     public void selectAction(int index) {
-        java.util.List<ActionMode> availableModes = getAvailableModes();
+        List<ActionMode> availableModes = getAvailableModes();
         if (index < 0 || index >= availableModes.size()) {
             feedbackMessage = "Action [" + index + "] không khả dụng";
             return;
@@ -128,7 +118,7 @@ public final class BoardInputHandler {
     }
 
     /** Modes usable now; used-up equipment is absent. */
-    public java.util.List<ActionMode> getAvailableModes() {
+    public List<ActionMode> getAvailableModes() {
         return controller.availableModes();
     }
 
@@ -142,8 +132,8 @@ public final class BoardInputHandler {
     }
 
     /** Tiles to highlight for the active mode; MOVE uses the snapshot, others query the controller. */
-    public java.util.Set<BoardPosition> getHighlightTargets() {
-        if (mode == ActionMode.WAIT) return java.util.Set.of();
+    public Set<BoardPosition> getHighlightTargets() {
+        if (mode == ActionMode.WAIT) return Set.of();
         return controller.legalTargets("knight", mode);
     }
 
@@ -151,27 +141,11 @@ public final class BoardInputHandler {
         return currentSnapshot;
     }
 
-    public BoardPosition getSelectedPosition() {
-        return selectedPosition;
-    }
-
-    public BoardPosition getLastClickedPosition() {
-        return lastClickedPosition;
-    }
-
     public String getFeedbackMessage() {
         return feedbackMessage;
     }
 
-    public int getSubmitInvocationCount() {
-        return submitInvocationCount;
-    }
-
     public BoardProjection getProjection() {
         return projection;
-    }
-
-    public BattleControllerPort getController() {
-        return controller;
     }
 }
