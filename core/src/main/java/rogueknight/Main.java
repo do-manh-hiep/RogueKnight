@@ -86,7 +86,7 @@ public class Main extends ApplicationAdapter {
         ScreenUtils.clear(0.12f, 0.12f, 0.16f, 1f);
         viewport.apply();
         camera.update();
-        renderer.render(camera, inputHandler, playback.model());
+        renderer.render(camera, inputHandler, playback);
     }
 
     private void processKeyboardInput() {
