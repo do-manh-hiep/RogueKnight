@@ -105,7 +105,7 @@ public final class FixtureBattleController implements BattleControllerPort {
         var before = snapshot();
         if (!"knight".equals(actorId)) return MoveResult.rejected("UNKNOWN_ACTOR", before);
         globalTurn++;
-        return MoveResult.success(before, snapshot());
+        return MoveResult.success(before, snapshot(), java.util.List.of());
     }
 
     /** Returns null for a valid move, or an error reason for an invalid target. */
