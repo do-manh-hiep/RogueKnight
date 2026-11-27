@@ -59,6 +59,30 @@ class BattlePlaybackTest {
     }
 
     @Test
+    void playsKnightDeathAndTerminalEventInSequence() {
+        BattlePlayback playback = new BattlePlayback(
+            BattlePresentationModel.from(snapshot()), 0.1f);
+        playback.enqueue(List.of(
+            new BattleEvent.PieceDamaged("knight", 5, 0),
+            new BattleEvent.PieceRemoved("knight", Position.fromNotation("d4")),
+            new BattleEvent.BattleEnded(rogueknight.battle.BattleResult.DEFEAT)
+        ));
+
+        assertEquals(1, playback.update(0.1f));
+        assertEquals(0, playback.model().piece("knight").orElseThrow().hp());
+        assertTrue(playback.model().result().isEmpty());
+
+        assertEquals(1, playback.update(0.1f));
+        assertTrue(playback.model().piece("knight").isEmpty());
+        assertTrue(playback.model().result().isEmpty());
+
+        assertEquals(1, playback.update(0.1f));
+        assertEquals(rogueknight.battle.BattleResult.DEFEAT,
+            playback.model().result().orElseThrow());
+        assertFalse(playback.isPlaying());
+    }
+
+    @Test
     void rejectsInvalidDeltaAndInvalidInterval() {
         assertThrows(IllegalArgumentException.class,
             () -> new BattlePlayback(BattlePresentationModel.from(snapshot()), 0f));
