@@ -92,7 +92,7 @@ public final class FixtureBattleController implements BattleControllerPort {
 
         knightPosition = target;
         globalTurn++;
-        return MoveResult.success(before, snapshot());
+        return MoveResult.success(before, snapshot(), java.util.List.of());
     }
 
     @Override
