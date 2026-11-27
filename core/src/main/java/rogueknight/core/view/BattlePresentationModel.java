@@ -79,8 +79,8 @@ public final class BattlePresentationModel {
                 throw new IllegalStateException("Invalid PieceDamaged event: " + damaged);
             }
             if (damaged.remainingHp() == 0) {
-                // PieceRemoved is a separate following event; keep the piece until that event is consumed.
-                piecesById.remove(piece.id());
+                // Keep a zero-HP piece until the following PieceRemoved event is consumed.
+                piecesById.put(piece.id(), piece.withHp(0));
             } else {
                 piecesById.put(piece.id(), piece.withHp(damaged.remainingHp()));
             }
