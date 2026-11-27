@@ -15,7 +15,7 @@ import rogueknight.core.input.FixtureBattleController;
 import java.util.Objects;
 import java.util.Set;
 
-/** Renders the board, pieces, highlights, coordinate labels and battle HUD. */
+/** Renders the board, the playback projection, highlights, coordinates and HUD. */
 public final class BoardRenderer {
     private final ShapeRenderer shapeRenderer = new ShapeRenderer();
     private final SpriteBatch batch = new SpriteBatch();
@@ -37,14 +37,21 @@ public final class BoardRenderer {
         font.getData().setScale(1.0f);
     }
 
-    public void render(OrthographicCamera camera, BoardInputHandler inputHandler) {
+    public void render(
+        OrthographicCamera camera,
+        BoardInputHandler inputHandler,
+        BattlePresentationModel presentation
+    ) {
         Objects.requireNonNull(camera, "camera must not be null");
         Objects.requireNonNull(inputHandler, "inputHandler must not be null");
+        Objects.requireNonNull(presentation, "presentation must not be null");
 
         BoardProjection projection = inputHandler.getProjection();
         BattleViewSnapshot snapshot = inputHandler.getCurrentSnapshot();
         Set<BoardPosition> legalMoves = inputHandler.getHighlightTargets();
-        BoardPosition knightPos = snapshot.knightPosition();
+        PresentationPiece knight = presentation.piece("knight").orElse(null);
+        BoardPosition knightPos = knight != null ? knight.position() : snapshot.knightPosition();
+        boolean knightAlive = knight != null && knight.hp() > 0;
         float tileSize = projection.getTileSize();
 
         shapeRenderer.setProjectionMatrix(camera.combined);
@@ -72,12 +79,14 @@ public final class BoardRenderer {
             );
         }
         shapeRenderer.setColor(selectedKnightColor);
-        shapeRenderer.rect(
-            projection.getCellLeft(knightPos.column()),
-            projection.getCellBottom(knightPos.row()),
-            tileSize,
-            tileSize
-        );
+        if (knightAlive) {
+            shapeRenderer.rect(
+                projection.getCellLeft(knightPos.column()),
+                projection.getCellBottom(knightPos.row()),
+                tileSize,
+                tileSize
+            );
+        }
         shapeRenderer.end();
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
@@ -120,18 +129,28 @@ public final class BoardRenderer {
             drawCenteredText("[ROCK]", projection.getCellCenterX(rockPos.column()), projection.getCellCenterY(rockPos.row()));
         }
 
-        font.setColor(enemyColor);
-        snapshot.enemyPieces().forEach((pos, name) ->
-            drawCenteredText("[" + name.toUpperCase() + "]", projection.getCellCenterX(pos.column()), projection.getCellCenterY(pos.row()))
-        );
-
-        if (!snapshot.knightAlive()) {
+        for (PresentationPiece piece : presentation.piecesById().values()) {
+            BoardPosition position = piece.position();
+            float centerX = projection.getCellCenterX(position.column());
+            float centerY = projection.getCellCenterY(position.row());
+            if ("knight".equals(piece.id())) {
+                if (piece.hp() > 0) {
+                    font.setColor(knightColor);
+                    drawCenteredText(">>> KNIGHT <<<", centerX, centerY + 8);
+                    drawCenteredText("(" + position.notation() + ")", centerX, centerY - 8);
+                } else {
+                    font.setColor(fallenKnightColor);
+                    drawCenteredText("[FALLEN]", centerX, centerY);
+                }
+            } else {
+                font.setColor(enemyColor);
+                String label = "[" + piece.type().name() + " " + piece.hp() + "HP]";
+                drawCenteredText(label, centerX, centerY);
+            }
+        }
+        if (!knightAlive && knight == null) {
             font.setColor(fallenKnightColor);
-            drawCenteredText("[FALLEN]", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) + 8);
-            drawCenteredText("(" + knightPos.notation() + ")", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) - 8);
-        } else {
-            font.setColor(knightColor);
-            drawCenteredText(">>> KNIGHT <<<", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) + 8);
+            drawCenteredText("[FALLEN]", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()));
             drawCenteredText("(" + knightPos.notation() + ")", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) - 8);
         }
 
@@ -143,9 +162,9 @@ public final class BoardRenderer {
         }
 
         font.setColor(Color.WHITE);
-        String headerInfo = !snapshot.statusMessage().isBlank()
-            ? snapshot.statusMessage()
-            : "Turn: " + snapshot.globalTurn() + "  |  Vị trí Knight: " + knightPos.notation();
+        String headerInfo = "Turn " + presentation.globalTurn()
+            + " | Knight: " + (knightAlive ? knightPos.notation() : "DEAD")
+            + " | " + presentation.result().map(Enum::name).orElse("ONGOING");
         font.draw(batch, headerInfo, 20, 425);
 
         font.setColor(Color.CYAN);
