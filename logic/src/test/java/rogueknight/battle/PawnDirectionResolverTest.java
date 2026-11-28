@@ -43,7 +43,7 @@ class PawnDirectionResolverTest {
         // Ưu tiên SOUTH.
         assertEquals(
             Direction.SOUTH,
-            resolver.initialDirection(battle.snapshot(), "pawn-1")
+            PawnPathfinder.initialDirection(battle.snapshot(), "pawn-1")
         );
     }
 

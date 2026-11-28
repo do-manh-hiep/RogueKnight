@@ -29,8 +29,6 @@ public final class KnightRules {
     }
 
     public static boolean isMoveGeometry(Position from, Position to) {
-        int dx = Math.abs(to.column() - from.column());
-        int dy = Math.abs(to.row() - from.row());
         return isCaptureGeometry(from, to) || isSwordGeometry(from, to);
     }
 
