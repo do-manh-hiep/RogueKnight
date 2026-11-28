@@ -15,6 +15,55 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class MapValidatorTest {
 
     @Test
+    void rejectsNullMapAndMissingDimensions() {
+        MapValidator validator = new MapValidator();
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> validator.validate(null))
+                .getMessage().contains("MapData is null"));
+        assertTrue(assertThrows(IllegalArgumentException.class,
+                () -> validator.validate(new MapData(null, 8, List.of(), List.of())))
+                .getMessage().contains("width/height is null"));
+    }
+
+    @Test
+    void rejectsMissingCollectionsAndNullEntries() {
+        MapValidator validator = new MapValidator();
+        assertTrue(assertThrows(IllegalArgumentException.class,
+                () -> validator.validate(new MapData(8, 8, null, List.of())))
+                .getMessage().contains("rocks, pieces"));
+        assertTrue(assertThrows(IllegalArgumentException.class,
+                () -> validator.validate(new MapData(8, 8, java.util.Collections.singletonList(null), List.of())))
+                .getMessage().contains("rocks[0] is null"));
+        assertTrue(assertThrows(IllegalArgumentException.class,
+                () -> validator.validate(new MapData(8, 8, List.of(),
+                        java.util.Collections.singletonList(null))))
+                .getMessage().contains("pieces[0] is null"));
+    }
+
+    @Test
+    void rejectsNullCoordinatesAndBlankIds() {
+        MapValidator validator = new MapValidator();
+        MapData missingCoordinate = new MapData(8, 8, List.of(new PositionData(null, 2)), List.of());
+        assertTrue(assertThrows(IllegalArgumentException.class,
+                () -> validator.validate(missingCoordinate))
+                .getMessage().contains("thieu column, row"));
+
+        MapData blankId = new MapData(8, 8, List.of(),
+                List.of(new PieceData(" ", "PAWN", 2, 3, 1)));
+        assertTrue(assertThrows(IllegalArgumentException.class,
+                () -> validator.validate(blankId))
+                .getMessage().contains("id không rỗng"));
+    }
+
+    @Test
+    void rejectsNullPieceType() {
+        MapData map = new MapData(8, 8, List.of(),
+                List.of(new PieceData("pawn-1", null, 2, 3, 1)));
+        assertTrue(assertThrows(IllegalArgumentException.class,
+                () -> new MapValidator().validate(map))
+                .getMessage().contains("type không hợp lệ: null"));
+    }
+
+    @Test
     void acceptsEightByEightBoard() {
         MapData map = new MapData(8, 8, List.of(), List.of(                       
                 new PieceData("knight", "KNIGHT", 3, 0, 0),

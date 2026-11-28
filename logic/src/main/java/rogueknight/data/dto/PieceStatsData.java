@@ -1,25 +1,9 @@
 package rogueknight.data.dto;
 
-public class PieceStatsData {
-    private final Integer hp, damage, cycle, swordDamage, captureDamage;
-
-    public PieceStatsData(
+/** Optional balance values for one piece type. Nullable values represent absent JSON properties. */
+public record PieceStatsData(
         Integer hp,
         Integer damage,
         Integer cycle,
         Integer swordDamage,
-        Integer captureDamage 
-    ){
-        this.hp = hp;
-        this.damage = damage;
-        this.cycle = cycle;
-        this.swordDamage = swordDamage;
-        this.captureDamage = captureDamage;
-    }
-
-    public Integer hp() { return hp; }
-    public Integer damage() { return damage; }
-    public Integer cycle() { return cycle; }
-    public Integer swordDamage() { return swordDamage; }
-    public Integer captureDamage() { return captureDamage; }
-}
+        Integer captureDamage) { }

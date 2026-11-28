@@ -3,15 +3,14 @@ package rogueknight.core.input;
 import rogueknight.action.ActionKind;
 import rogueknight.action.ActionRequest;
 import rogueknight.action.ActionResult;
-import rogueknight.action.BattleController;
+import rogueknight.battle.BattleController;
 import rogueknight.action.BattleEvent;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.EquipmentState;
 import rogueknight.battle.EquipmentType;
-import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 import rogueknight.core.view.BattleViewSnapshot;
-import rogueknight.core.view.BoardPosition;
+import rogueknight.core.view.PresentationPiece;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,17 +21,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+/** Adapts the domain battle controller to the UI-facing controller port. */
 public final class BattleControllerAdapter implements BattleControllerPort {
 
     private final BattleController controller;
-    // A Knight at 0 HP is removed from the Board (Defeat); the view keeps showing its last square.
-    private BoardPosition lastKnownKnightPosition;
+    // A defeated Knight is removed from the board; the view retains its last square.
+    private Position lastKnownKnightPosition;
 
     public BattleControllerAdapter(BattleController controller) {
-        this.controller = Objects.requireNonNull(
-            controller,
-            "controller must not be null"
-        );
+        this.controller = Objects.requireNonNull(controller, "controller must not be null");
     }
 
     @Override
@@ -41,115 +38,79 @@ public final class BattleControllerAdapter implements BattleControllerPort {
     }
 
     @Override
-    public Set<BoardPosition> legalMoves(String actorId) {
-        Set<BoardPosition> positions = new HashSet<>();
-
-        for (Position position : controller.legalMoves(actorId)) {
-            positions.add(toBoardPosition(position));
-        }
-
-        return Set.copyOf(positions);
-    }
-
-    @Override
-    public MoveResult submitMove(String actorId, BoardPosition target) {
-        return submitAction(actorId, ActionMode.MOVE, target);
+    public Set<Position> legalMoves(String actorId) {
+        return controller.legalTargets(actorId, ActionKind.MOVE);
     }
 
     @Override
     public List<ActionMode> availableModes() {
-        List<ActionMode> modes = new ArrayList<>();
+        BattleSnapshot snapshot = controller.snapshot();
         if (!controller.canWait("knight")) return List.of();
+
+        List<ActionMode> modes = new ArrayList<>();
         modes.add(ActionMode.WAIT);
         modes.add(ActionMode.MOVE);
-
-        for (EquipmentState item : controller.snapshot().inventory().equipment()) {
-            if (item.charges() > 0) {
-                modes.add(toMode(item.type()));
-            }
+        for (EquipmentState item : snapshot.inventory().equipment()) {
+            if (item.charges() > 0) modes.add(toMode(item.type()));
         }
-
-        // The current list position is the keyboard number. Filtering exhausted
-        // equipment therefore compacts the remaining actions automatically.
         return List.copyOf(modes);
     }
 
     @Override
-    public Set<BoardPosition> legalTargets(String actorId, ActionMode mode) {
-        Set<BoardPosition> positions = new HashSet<>();
+    public Set<Position> legalTargets(String actorId, ActionMode mode) {
+        if (mode == null || mode == ActionMode.WAIT) return Set.of();
 
+        Set<Position> positions = new HashSet<>();
         if (mode == ActionMode.MOVE) {
-            for (Position position : controller.legalMoves(actorId)) {
-                positions.add(toBoardPosition(position));
-            }
+            positions.addAll(legalMoves(actorId));
             for (Position position : controller.legalTargets(actorId, ActionKind.SWORD)) {
-                positions.add(toBoardPosition(position));
+                positions.add(position);
             }
-            return Set.copyOf(positions);
-        }
-        if (mode == ActionMode.WAIT) return Set.of();
-        for (Position position : controller.legalTargets(actorId, toKind(mode))) {
-            positions.add(toBoardPosition(position));
+        } else {
+            for (Position position : controller.legalTargets(actorId, toKind(mode))) {
+                positions.add(position);
+            }
         }
         return Set.copyOf(positions);
     }
 
     @Override
-    public MoveResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
-        // Chụp dữ liệu UI trước khi gửi yêu cầu.
+    public UiActionResult submitAction(String actorId, ActionMode mode, Position target) {
         BattleViewSnapshot before = snapshot();
-
+        if (mode == null) return UiActionResult.rejected("UNSUPPORTED_ACTION", before);
         if (mode == ActionMode.WAIT) return submitWait(actorId);
-        if (target == null || mode == null) {
-            return MoveResult.rejected("OUT_OF_BOUNDS", before);
-        }
+        if (target == null) return UiActionResult.rejected("OUT_OF_BOUNDS", before);
 
-        // Gửi tọa độ thô để logic kiểm tra cả trường hợp ngoài biên.
-        ActionKind kind = toKind(mode);
-        // Default [1] is contextual: clicking an occupied enemy square means Sword Attack.
-        if (mode == ActionMode.MOVE && before.enemyPieces().containsKey(target)) {
-            kind = ActionKind.SWORD;
-        }
-        ActionRequest request = new ActionRequest(
-            actorId,
-            kind,
-            target.column(),
-            target.row()
+        // Default Move/Attack mode interprets an occupied enemy square as a Sword Attack.
+        ActionKind kind = mode == ActionMode.MOVE && before.hasEnemyAt(target)
+            ? ActionKind.SWORD
+            : toKind(mode);
+        ActionResult result = controller.submit(
+            new ActionRequest(actorId, kind, target.column(), target.row())
         );
 
-        ActionResult result = controller.submit(request);
-
-        if (!result.accepted()) {
-            return MoveResult.rejected(
-                result.error().toString(),
-                before
-            );
-        }
-
-        // The Knight may move and then die in the same submit: its last square comes from the events.
-        for (BattleEvent event : result.events()) {
-            if (event instanceof BattleEvent.PieceRemoved removed && removed.pieceId().equals("knight")) {
-                lastKnownKnightPosition = toBoardPosition(removed.at());
-            }
-        }
-        BattleViewSnapshot after = toViewSnapshot(result.after());
-
-        return MoveResult.success(before, after);
+        return toUiResult(result, before);
     }
 
     @Override
-    public MoveResult submitWait(String actorId) {
+    public UiActionResult submitWait(String actorId) {
         BattleViewSnapshot before = snapshot();
         ActionResult result = controller.submit(ActionRequest.waitAction(actorId));
-        if (!result.accepted()) {
-            return MoveResult.rejected(result.error().toString(), before);
-        }
-        for (BattleEvent event : result.events()) {
+        return toUiResult(result, before);
+    }
+
+    private UiActionResult toUiResult(ActionResult result, BattleViewSnapshot before) {
+        if (!result.accepted()) return UiActionResult.rejected(result.error().toString(), before);
+        rememberRemovedKnight(result.events());
+        return UiActionResult.success(before, toViewSnapshot(result.after()), result.events());
+    }
+
+    private void rememberRemovedKnight(List<BattleEvent> events) {
+        for (BattleEvent event : events) {
             if (event instanceof BattleEvent.PieceRemoved removed && removed.pieceId().equals("knight")) {
-                lastKnownKnightPosition = toBoardPosition(removed.at());
+                lastKnownKnightPosition = removed.at();
             }
         }
-        return MoveResult.success(before, toViewSnapshot(result.after()));
     }
 
     private static ActionMode toMode(EquipmentType type) {
@@ -172,62 +133,39 @@ public final class BattleControllerAdapter implements BattleControllerPort {
 
     private BattleViewSnapshot toViewSnapshot(BattleSnapshot snapshot) {
         Optional<BattleSnapshot.PieceView> knight = snapshot.pieceById("knight");
-        BoardPosition knightPosition;
-        int knightHp;
-        Set<BoardPosition> moves;
+        Position knightPosition;
+        Set<Position> moves;
 
         if (knight.isPresent()) {
-            knightPosition = toBoardPosition(knight.get().position());
+            BattleSnapshot.PieceView piece = knight.get();
+            knightPosition = piece.position();
             lastKnownKnightPosition = knightPosition;
-            knightHp = knight.get().hp();
-            moves = legalMoves(knight.get().id());
+            moves = legalMoves(piece.id());
         } else if (lastKnownKnightPosition != null) {
             knightPosition = lastKnownKnightPosition;
-            knightHp = 0;
             moves = Set.of();
         } else {
             throw new IllegalStateException("UI di chuyển hiện tại cần quân có ID knight");
         }
 
-        Set<BoardPosition> rocks = new HashSet<>();
+        Set<Position> rocks = new HashSet<>();
+        for (Position rock : snapshot.rocks()) rocks.add(rock);
 
-        for (Position rock : snapshot.rocks()) {
-            rocks.add(toBoardPosition(rock));
-        }
-
-        Map<BoardPosition, String> enemies = new HashMap<>();
-
+        Map<String, PresentationPiece> piecesById = new HashMap<>();
         for (BattleSnapshot.PieceView piece : snapshot.pieces()) {
-            if (piece.type() != PieceType.KNIGHT) {
-                enemies.put(
-                    toBoardPosition(piece.position()),
-                    piece.type().name()
-                );
-            }
+            Position position = piece.position();
+            piecesById.put(piece.id(), new PresentationPiece(
+                piece.id(), piece.type(), piece.hp(), position
+            ));
         }
-
-        String statusMessage =
-            "Turn " + snapshot.globalTurn()
-            + " | Knight: " + (knightHp > 0 ? knightPosition.notation() : "DEAD")
-            + " | HP: " + knightHp
-            + " | " + snapshot.phase()
-            + " | " + snapshot.result();
 
         return new BattleViewSnapshot(
             snapshot.globalTurn(),
             knightPosition,
             rocks,
-            enemies,
             moves,
-            statusMessage,
-            false
+            piecesById
         );
     }
 
-    private BoardPosition toBoardPosition(Position position) {
-        return new BoardPosition(
-            position.column(),
-            position.row()
-        );
-    }
 }

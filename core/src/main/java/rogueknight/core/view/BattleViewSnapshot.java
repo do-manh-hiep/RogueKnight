@@ -1,7 +1,8 @@
 package rogueknight.core.view;
 
-import java.util.Collections;
+import rogueknight.board.Position;
 import java.util.Map;
+import rogueknight.battle.PieceType;
 import java.util.Objects;
 import java.util.Set;
 
@@ -11,33 +12,21 @@ import java.util.Set;
  */
 public record BattleViewSnapshot(
     int globalTurn,
-    BoardPosition knightPosition,
-    Set<BoardPosition> rocks,
-    Map<BoardPosition, String> enemyPieces,
-    Set<BoardPosition> legalMoves,
-    String statusMessage,
-    boolean isFixtureDemo
+    Position knightPosition,
+    Set<Position> rocks,
+    Set<Position> legalMoves,
+    Map<String, PresentationPiece> piecesById
 ) {
     public BattleViewSnapshot {
         Objects.requireNonNull(knightPosition, "knightPosition must not be null");
-        rocks = Collections.unmodifiableSet(Set.copyOf(rocks != null ? rocks : Set.of()));
-        enemyPieces = Collections.unmodifiableMap(Map.copyOf(enemyPieces != null ? enemyPieces : Map.of()));
-        legalMoves = Collections.unmodifiableSet(Set.copyOf(legalMoves != null ? legalMoves : Set.of()));
-        statusMessage = statusMessage != null ? statusMessage : "";
+        rocks = Set.copyOf(rocks != null ? rocks : Set.of());
+        legalMoves = Set.copyOf(legalMoves != null ? legalMoves : Set.of());
+        piecesById = Map.copyOf(piecesById != null ? piecesById : Map.of());
     }
 
-    /**
-     * Helper to create a new snapshot with an updated status message.
-     */
-    public BattleViewSnapshot withMessage(String newMessage) {
-        return new BattleViewSnapshot(
-            globalTurn,
-            knightPosition,
-            rocks,
-            enemyPieces,
-            legalMoves,
-            newMessage,
-            isFixtureDemo
-        );
+    /** Returns whether an enemy occupies the given tile, using the canonical piece map. */
+    public boolean hasEnemyAt(Position position) {
+        return position != null && piecesById.values().stream()
+            .anyMatch(piece -> piece.type() != PieceType.KNIGHT && piece.position().equals(position));
     }
 }

@@ -1,41 +1,19 @@
 package rogueknight.data;
 
-import com.google.gson.Gson;
-import rogueknight.data.dto.MapData;
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
+import rogueknight.data.dto.MapData;
 
-public class MapLoader {
-    private final Gson gson;
-    private final MapValidator validator;
-
-    public MapLoader() {
-        this.gson = new Gson();
-        this.validator = new MapValidator();
-    }
+public final class MapLoader {
+    private final MapValidator validator = new MapValidator();
 
     public MapData loadMap01() throws IOException {
-        InputStream input =
-                MapLoader.class.getResourceAsStream("/data/map01.json");    
-                //tìm và mở tài nguyên JSON
+        InputStream input = MapLoader.class.getResourceAsStream("/data/map01.json");
+        if (input == null) throw new IOException("Không tìm thấy resource: /data/map01.json");
+        return loadMap(input, "/data/map01.json");
+    }
 
-        if (input == null) {
-            throw new IOException(
-                    "Không tìm thấy resource: /data/map01.json"
-            );
-        }
-
-        try (Reader reader = new InputStreamReader(
-                input,
-                StandardCharsets.UTF_8
-        )) {
-            MapData map = gson.fromJson(reader, MapData.class);
-            validator.validate(map);
-            return map;
-        }
+    MapData loadMap(InputStream input, String resourceName) throws IOException {
+        return JsonResourceLoader.read(input, resourceName, MapData.class, validator::validate);
     }
 }

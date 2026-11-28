@@ -1,29 +1,19 @@
 package rogueknight.data;
 
-import com.google.gson.Gson;
-import rogueknight.data.dto.BalanceData;
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
+import rogueknight.data.dto.BalanceData;
 
-public class BalanceLoader {
-    private final Gson gson = new Gson();
+public final class BalanceLoader {
     private final BalanceValidator validator = new BalanceValidator();
 
     public BalanceData load() throws IOException {
         InputStream input = BalanceLoader.class.getResourceAsStream("/data/balance.json");
+        if (input == null) throw new IOException("Không tìm thấy resource: /data/balance.json");
+        return load(input, "/data/balance.json");
+    }
 
-        if (input == null){
-            throw new IOException("Không tìm thấy resource: /data/balance.json");
-        }
-
-        try (Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)){
-            BalanceData balance = gson.fromJson(reader, BalanceData.class);
-            validator.validate(balance);
-            return balance;
-        }
+    BalanceData load(InputStream input, String resourceName) throws IOException {
+        return JsonResourceLoader.read(input, resourceName, BalanceData.class, validator::validate);
     }
 }

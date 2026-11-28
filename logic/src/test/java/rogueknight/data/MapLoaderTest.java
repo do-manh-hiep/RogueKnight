@@ -6,13 +6,35 @@ import rogueknight.data.dto.PieceData;
 import rogueknight.data.dto.PositionData;
 
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MapLoaderTest {
+
+    @Test
+    void malformedJsonIsReportedAsSetupIOException() {
+        byte[] json = "{not-json".getBytes(StandardCharsets.UTF_8);
+        IOException error = assertThrows(IOException.class, () ->
+            new MapLoader().loadMap(new ByteArrayInputStream(json), "/data/map01.json"));
+        assertTrue(error.getMessage().contains("/data/map01.json"));
+        assertTrue(error.getCause() instanceof com.google.gson.JsonParseException);
+    }
+
+    @Test
+    void invalidMapIsReportedAsSetupIOException() {
+        byte[] json = "{\"width\":8,\"height\":8,\"rocks\":[],\"pieces\":[]}".getBytes(StandardCharsets.UTF_8);
+        IOException error = assertThrows(IOException.class, () ->
+            new MapLoader().loadMap(new ByteArrayInputStream(json), "/data/map01.json"));
+        assertTrue(error.getCause() instanceof IllegalArgumentException);
+        assertTrue(error.getMessage().contains("Map thiếu KNIGHT"));
+    }
 
     @Test
     void loadsMap01FromResources() throws IOException {

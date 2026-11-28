@@ -23,11 +23,11 @@ public record ActionResult(boolean accepted, ActionError error, BattleSnapshot b
         }
     }
 
-    static ActionResult accepted(BattleSnapshot before, BattleSnapshot after, List<BattleEvent> events) {
+    public static ActionResult accepted(BattleSnapshot before, BattleSnapshot after, List<BattleEvent> events) {
         return new ActionResult(true, null, before, after, events);
     }
 
-    static ActionResult rejected(ActionError error, BattleSnapshot before) {
+    public static ActionResult rejected(ActionError error, BattleSnapshot before) {
         return new ActionResult(false, Objects.requireNonNull(error, "error"), before, before, List.of());
     }
 }
