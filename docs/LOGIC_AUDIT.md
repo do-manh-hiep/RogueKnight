@@ -2,7 +2,7 @@
 
 - **Repository:** do-manh-hiep/RogueKnight
 - **Branch:** refactor/architecture-cleanup-7119
-- **Audited head:** 5e4bc78b1a10336e7ef4b5657f04a776e1efc618
+- **Audited source head:** 42e1e7f7d9869f05a748be0f93922bf3718dd72d
 - **TD baseline:** RogueKnight TD v0.1 (unchanged)
 - **Scope:** logic source/tests and direct core/Main integration relevant to battle lifecycle and DEC-12.
 - **Method:** static source review at the audited head, mapped to TD requirement register and available test suites. Test execution status is reported separately.
@@ -183,4 +183,4 @@ At the simplification head following `1bfb3a7`:
 
 This keeps one canonical piece collection at the UI boundary and avoids storing a second enemy-position index or preformatted HUD string in every snapshot. `knightPosition` remains because the UI must retain the Knight's last square after its removal.
 
-**Verification status:** source changes were committed to the PR branch. They have not yet been run through Gradle on the user's machine. Re-run `.`gradlew.bat :logic:test`, `.`gradlew.bat test`, `.`gradlew.bat clean build`, and `git diff --check` against the updated branch head before treating the pass as verified.
+**Verification status:** source changes were committed to the PR branch. They have not yet been run through Gradle on the user's machine. Re-run ` .\\gradlew.bat :logic:test`, ` .\\gradlew.bat test`, ` .\\gradlew.bat clean build`, and `git diff --check` against the updated branch head before treating the pass as verified.
