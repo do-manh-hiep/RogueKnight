@@ -67,9 +67,7 @@ public final class BattleControllerAdapter implements BattleControllerPort {
 
         Set<BoardPosition> positions = new HashSet<>();
         if (mode == ActionMode.MOVE) {
-            for (Position position : controller.legalMoves(actorId)) {
-                positions.add(toBoardPosition(position));
-            }
+            positions.addAll(legalMoves(actorId));
             for (Position position : controller.legalTargets(actorId, ActionKind.SWORD)) {
                 positions.add(toBoardPosition(position));
             }
@@ -96,18 +94,18 @@ public final class BattleControllerAdapter implements BattleControllerPort {
             new ActionRequest(actorId, kind, target.column(), target.row())
         );
 
-        if (!result.accepted()) return UiActionResult.rejected(result.error().toString(), before);
-
-        rememberRemovedKnight(result.events());
-        return UiActionResult.success(before, toViewSnapshot(result.after()), result.events());
+        return toUiResult(result, before);
     }
 
     @Override
     public UiActionResult submitWait(String actorId) {
         BattleViewSnapshot before = snapshot();
         ActionResult result = controller.submit(ActionRequest.waitAction(actorId));
-        if (!result.accepted()) return UiActionResult.rejected(result.error().toString(), before);
+        return toUiResult(result, before);
+    }
 
+    private UiActionResult toUiResult(ActionResult result, BattleViewSnapshot before) {
+        if (!result.accepted()) return UiActionResult.rejected(result.error().toString(), before);
         rememberRemovedKnight(result.events());
         return UiActionResult.success(before, toViewSnapshot(result.after()), result.events());
     }

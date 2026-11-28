@@ -262,3 +262,14 @@ At head `33afa65`:
 - Retained distinct controller, adapter, policy, decision, plan, validation outcome, scheduler and runner responsibilities. No subsystem merge met the evidence threshold.
 
 **Verification boundary:** the branch contains the full source/test migration; local Gradle verification is required against the latest batch head.
+
+## 14. Simplification pass — consolidate adapter result conversion and target mapping
+
+At head `89145cf`:
+- `BattleControllerAdapter.submitAction` and `submitWait` duplicated the same accepted/rejected `ActionResult` conversion, Knight-removal bookkeeping, and snapshot conversion. Both now delegate to one private `toUiResult` method.
+- `legalTargets(..., MOVE)` repeated the domain Move-target conversion already implemented by `legalMoves`. It now reuses `legalMoves(actorId)` and adds the separately validated Sword targets.
+- Removed `BoardProjection.isInsideBoard`, an unused boolean wrapper around `worldToBoard(...).isPresent()`. No production or test caller existed; `worldToBoard` remains the single coordinate-hit-test API.
+
+No action validation, event order, snapshot content, or board coordinate behavior is intentionally changed.
+
+**Verification boundary:** committed to the PR branch; run local Gradle checks against the new head.

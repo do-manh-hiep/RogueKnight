@@ -86,8 +86,4 @@ public final class BoardProjection {
         return originY + (row + 0.5f) * tileSize;
     }
 
-    /** Checks whether the given world coordinates lie within the 8x8 board boundary. */
-    public boolean isInsideBoard(float worldX, float worldY) {
-        return worldToBoard(worldX, worldY).isPresent();
-    }
 }
