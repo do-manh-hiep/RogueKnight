@@ -13,8 +13,8 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Fixture implementation of BattleControllerPort used for UI development (T-02.02).
- * Labeled clearly as [FIXTURE UI DEMO - T-02.02] awaiting T-01.02 and T-02.01 integration.
+ * Test fixture for isolating BoardInputHandler behavior from the production battle controller.
+ * Simulates a small fixed board and the subset of Knight actions needed by input tests.
  * <p>
  * Simulates Knight's movement rules:
  * - L-shape jump: (|dx|==1 && |dy|==2) || (|dx|==2 && |dy|==1)
