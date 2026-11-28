@@ -93,8 +93,8 @@ class BattlePresentationModelTest {
             "rook-17", PieceType.ROOK, 3, BoardPosition.fromNotation("e4"));
 
         return new BattleViewSnapshot(
-            1, knightPosition, true, Set.of(), Map.of(BoardPosition.fromNotation("e4"), "ROOK"),
-            Set.of(), "Turn 1", Map.of("knight", knight, "rook-17", rook)
+            1, knightPosition, Set.of(), Set.of(),
+            Map.of("knight", knight, "rook-17", rook)
         );
     }
 }
