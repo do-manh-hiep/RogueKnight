@@ -1,5 +1,7 @@
 package rogueknight.data;
 
+import rogueknight.battle.PieceType;
+import rogueknight.board.Position;
 import rogueknight.data.dto.MapData;
 import rogueknight.data.dto.PositionData;
 import rogueknight.data.dto.PieceData;
@@ -8,9 +10,6 @@ import java.util.Set;
 import java.util.HashSet;
 
 public class MapValidator {
-    private static final Set<String> KNOWN_PIECE_TYPES = Set.of(
-        "KNIGHT", "PAWN", "ROOK", "BISHOP", "KING", "QUEEN"
-    );
     public void validate(MapData map){
         if(map == null){
             throw new IllegalArgumentException("MapData is null");
@@ -23,14 +22,14 @@ public class MapValidator {
             throw new IllegalArgumentException("width/height is null");
         }
 
-        if(width != 8 || height != 8){
+        if(width != Position.BOARD_SIZE || height != Position.BOARD_SIZE){
             throw new IllegalArgumentException("Sai kich thuoc: " + width +"x"+height);
         }
         if(map.rocks() == null || map.pieces() == null){
             throw new IllegalArgumentException("Map phai co danh sach rocks, pieces");
         }
 
-        Set<String> occupiedCells = new HashSet<>();
+        Set<Position> occupiedCells = new HashSet<>();
 
         for(int i = 0; i < map.rocks().size(); i++){
             PositionData rock = map.rocks().get(i);
@@ -39,7 +38,7 @@ public class MapValidator {
             if(rock == null){
                 throw new IllegalArgumentException(location + " is null");
             }
-            validatePosition(rock.column(), rock.row(), width, height, location);
+            validatePosition(rock.column(), rock.row(), location);
             registerCell(occupiedCells, rock.column(), rock.row(), location);
         }
         
@@ -54,7 +53,7 @@ public class MapValidator {
             if(piece == null){
                 throw new IllegalArgumentException(location + " is null");
             }
-            validatePosition(piece.column(), piece.row(), width, height, location);
+            validatePosition(piece.column(), piece.row(), location);
             registerCell(occupiedCells, piece.column(), piece.row(), location);
 
             String id = piece.id();
@@ -71,7 +70,14 @@ public class MapValidator {
 
             String type = piece.type();
 
-            if(type == null || !KNOWN_PIECE_TYPES.contains(type)){
+            if (type == null) {
+                throw new IllegalArgumentException(
+                    location + " có type không hợp lệ: null."
+                );
+            }
+            try {
+                PieceType.valueOf(type);
+            } catch (IllegalArgumentException exception) {
                 throw new IllegalArgumentException(
                     location + " có type không hợp lệ: " + type + "."
                 );
@@ -109,22 +115,20 @@ public class MapValidator {
         }
     }    
 
-    private void validatePosition(
-        Integer column, Integer row, int width, int height, String location
-    ) {
+    private void validatePosition(Integer column, Integer row, String location) {
         if(column == null || row == null){
             throw new IllegalArgumentException(location +" thieu column, row");
         }
 
-        if(column < 0 || column >= width || row < 0 || row>= height){
+        if (!Position.isInBounds(column, row)) {
             throw new IllegalArgumentException(location +" co row hoac column khong nam trong board: "+ column +" "+ row  );
         }
     }
 
     private void registerCell(
-        Set<String> occupiedCells, int column, int row, String location
+        Set<Position> occupiedCells, int column, int row, String location
     ) {
-        String cell = column + "," + row;
+        Position cell = new Position(column, row);
 
         if(!occupiedCells.add(cell)){
             throw new IllegalArgumentException(

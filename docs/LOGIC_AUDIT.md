@@ -209,3 +209,16 @@ At head `4ac9544`, `PawnDirectionResolver` duplicated two existing domain utilit
 The resolver now calls those canonical methods and removes both private helpers. BFS traversal, goal selection, shortest-path comparison, tie-breaking order (straight SOUTH first, then column/row scan order), and fallback to SOUTH are unchanged. This is a mechanical deduplication; no gameplay rule or data contract changes.
 
 **Verification boundary:** this source/doc change is committed to the PR branch. Run the local Gradle checks listed in the handoff message against the new head before treating this pass as verified.
+
+## 9. Simplification pass — canonical map validation types and coordinates
+
+At head `17f6d61`, `MapValidator` duplicated two existing domain definitions:
+
+- The accepted piece-type string set repeated the constants in `PieceType`.
+- The coordinate bounds check and string-encoded occupied-cell key repeated the semantics already represented by `Position`.
+
+The validator now checks type names with `PieceType.valueOf`, uses `Position.BOARD_SIZE` / `Position.isInBounds`, and tracks occupied cells as `Set<Position>`. Existing resource validation remains in place: null fields, invalid dimensions, duplicate occupancy, duplicate IDs, Knight identity, required Knight/King, and spawn order are still rejected with the existing contextual messages. The invalid-type error text is preserved.
+
+This removes parallel representations without moving validation out of the loader boundary or changing the JSON DTO shape.
+
+**Verification boundary:** committed to the PR branch; local Gradle verification is required against the new head.
