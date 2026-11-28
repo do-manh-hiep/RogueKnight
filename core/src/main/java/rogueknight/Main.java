@@ -30,7 +30,6 @@ public class Main extends ApplicationAdapter {
     public static final float TILE_SIZE = 48f;
     public static final float BOARD_ORIGIN_X = 128f;
     public static final float BOARD_ORIGIN_Y = 48f;
-    private static final float EVENT_PLAYBACK_SECONDS = 0.18f;
 
     private OrthographicCamera camera;
     private Viewport viewport;
@@ -64,13 +63,16 @@ public class Main extends ApplicationAdapter {
         inputHandler = new BoardInputHandler(projection, controller);
         playback = new BattlePlayback(
             BattlePresentationModel.from(inputHandler.getCurrentSnapshot()),
-            EVENT_PLAYBACK_SECONDS
+            0.18f
         );
         renderer = new BoardRenderer();
     }
 
     @Override
     public void render() {
+        // Playback controls remain available while the event queue is being played.
+        processPlaybackSpeedInput();
+
         // Do not accept another player action while the previous event stream is playing.
         if (!playback.isPlaying()) {
             processKeyboardInput();
@@ -85,6 +87,16 @@ public class Main extends ApplicationAdapter {
         viewport.apply();
         camera.update();
         renderer.render(camera, inputHandler, playback);
+    }
+
+    private void processPlaybackSpeedInput() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.PLUS)
+            || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_ADD)) {
+            playback.faster();
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.MINUS)
+            || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_SUBTRACT)) {
+            playback.slower();
+        }
     }
 
     private void processKeyboardInput() {
