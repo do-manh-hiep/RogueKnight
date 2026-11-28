@@ -48,11 +48,6 @@ public final class BattleControllerAdapter implements BattleControllerPort {
     }
 
     @Override
-    public MoveResult submitMove(String actorId, BoardPosition target) {
-        return submitAction(actorId, ActionMode.MOVE, target);
-    }
-
-    @Override
     public List<ActionMode> availableModes() {
         BattleSnapshot snapshot = controller.snapshot();
         if (!controller.canWait("knight")) return List.of();
@@ -87,11 +82,11 @@ public final class BattleControllerAdapter implements BattleControllerPort {
     }
 
     @Override
-    public MoveResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
+    public UiActionResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
         BattleViewSnapshot before = snapshot();
-        if (mode == null) return MoveResult.rejected("UNSUPPORTED_ACTION", before);
+        if (mode == null) return UiActionResult.rejected("UNSUPPORTED_ACTION", before);
         if (mode == ActionMode.WAIT) return submitWait(actorId);
-        if (target == null) return MoveResult.rejected("OUT_OF_BOUNDS", before);
+        if (target == null) return UiActionResult.rejected("OUT_OF_BOUNDS", before);
 
         // Default Move/Attack mode interprets an occupied enemy square as a Sword Attack.
         ActionKind kind = mode == ActionMode.MOVE && before.hasEnemyAt(target)
@@ -101,20 +96,20 @@ public final class BattleControllerAdapter implements BattleControllerPort {
             new ActionRequest(actorId, kind, target.column(), target.row())
         );
 
-        if (!result.accepted()) return MoveResult.rejected(result.error().toString(), before);
+        if (!result.accepted()) return UiActionResult.rejected(result.error().toString(), before);
 
         rememberRemovedKnight(result.events());
-        return MoveResult.success(before, toViewSnapshot(result.after()), result.events());
+        return UiActionResult.success(before, toViewSnapshot(result.after()), result.events());
     }
 
     @Override
-    public MoveResult submitWait(String actorId) {
+    public UiActionResult submitWait(String actorId) {
         BattleViewSnapshot before = snapshot();
         ActionResult result = controller.submit(ActionRequest.waitAction(actorId));
-        if (!result.accepted()) return MoveResult.rejected(result.error().toString(), before);
+        if (!result.accepted()) return UiActionResult.rejected(result.error().toString(), before);
 
         rememberRemovedKnight(result.events());
-        return MoveResult.success(before, toViewSnapshot(result.after()), result.events());
+        return UiActionResult.success(before, toViewSnapshot(result.after()), result.events());
     }
 
     private void rememberRemovedKnight(List<BattleEvent> events) {

@@ -14,14 +14,14 @@ import rogueknight.core.view.BattleViewSnapshot;
  * @param after state snapshot after the action was executed (or unchanged before state if rejected)
  * @param events ordered domain events emitted by the action and its Enemy phase
  */
-public record MoveResult(
+public record UiActionResult(
     boolean accepted,
     String errorReason,
     BattleViewSnapshot before,
     BattleViewSnapshot after,
     List<BattleEvent> events
 ) {
-    public MoveResult {
+    public UiActionResult {
         Objects.requireNonNull(before, "before");
         Objects.requireNonNull(after, "after");
         events = List.copyOf(events);
@@ -33,15 +33,15 @@ public record MoveResult(
         }
     }
 
-    public static MoveResult success(
+    public static UiActionResult success(
         BattleViewSnapshot before,
         BattleViewSnapshot after,
         List<BattleEvent> events
     ) {
-        return new MoveResult(true, null, before, after, events);
+        return new UiActionResult(true, null, before, after, events);
     }
 
-    public static MoveResult rejected(String errorReason, BattleViewSnapshot before) {
-        return new MoveResult(false, errorReason, before, before, List.of());
+    public static UiActionResult rejected(String errorReason, BattleViewSnapshot before) {
+        return new UiActionResult(false, errorReason, before, before, List.of());
     }
 }
