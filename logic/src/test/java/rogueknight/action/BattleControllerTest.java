@@ -93,6 +93,21 @@ class BattleControllerTest {
     }
 
     @Test
+    void controllerTakesAnOwnedSnapshotAndDoesNotRetainCallerMutableAlias() {
+        BattleState initial = fixture();
+        BattleController controller = new BattleController(initial);
+
+        initial.movePiece(KNIGHT, at("e6"));
+        initial.replacePiece(initial.pieceState(KNIGHT).orElseThrow().withHp(1));
+        initial.consumeEquipment(EquipmentType.CANNON_MOVEMENT);
+
+        BattleSnapshot owned = controller.snapshot();
+        assertEquals(at("d4"), owned.pieceById(KNIGHT).orElseThrow().position());
+        assertEquals(3, owned.pieceById(KNIGHT).orElseThrow().hp());
+        assertEquals(0, owned.inventory().chargesOf(EquipmentType.CANNON_MOVEMENT));
+    }
+
+    @Test
     void submitAfterBattleFinishedIsRejected() {
         BattleState state = fixture();
         state.finish(BattleResult.VICTORY);
