@@ -1,5 +1,6 @@
 package rogueknight.core.input;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List; import java.util.Set;
@@ -18,7 +19,8 @@ class BattleControllerAdapterEnemyTurnTest {
   BattleControllerAdapter adapter=new BattleControllerAdapter(BattleController.fromSnapshot(setup,new EnemyAI()));
   MoveResult result=adapter.submitAction("knight",ActionMode.MOVE,BoardPosition.fromNotation("d3"));
   assertTrue(result.accepted()); assertEquals(BoardPosition.fromNotation("d3"),result.after().knightPosition());
-  assertTrue(!result.after().piecesById().containsKey("knight"));
+  assertFalse(result.after().piecesById().containsKey("knight"));
+  assertTrue(result.events().stream().anyMatch(event -> event instanceof rogueknight.action.BattleEvent.BattleEnded ended && ended.result() == BattleResult.DEFEAT));
   assertTrue(result.after().legalMoves().isEmpty()); assertDoesNotThrow(adapter::snapshot);
  }
 }
