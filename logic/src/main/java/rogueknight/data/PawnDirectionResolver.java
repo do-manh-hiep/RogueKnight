@@ -115,7 +115,7 @@ public final class PawnDirectionResolver {
                 int column = start.column() + dc;
                 int row = start.row() + dr;
 
-                if (!isInside(column, row)) {
+                if (!Position.isInBounds(column, row)) {
                     continue;
                 }
 
