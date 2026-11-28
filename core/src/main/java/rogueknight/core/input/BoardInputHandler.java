@@ -41,7 +41,7 @@ public final class BoardInputHandler {
         }
 
         boolean attackTarget = mode == ActionMode.MOVE && currentSnapshot.hasEnemyAt(target);
-        MoveResult result = controller.submitAction("knight", mode, target);
+        UiActionResult result = controller.submitAction("knight", mode, target);
         if (result.accepted()) {
             currentSnapshot = result.after();
             pendingEvents.addAll(result.events());
@@ -72,7 +72,7 @@ public final class BoardInputHandler {
             return;
         }
         if (newMode == ActionMode.WAIT) {
-            MoveResult result = controller.submitWait("knight");
+            UiActionResult result = controller.submitWait("knight");
             if (result.accepted()) {
                 currentSnapshot = result.after();
                 pendingEvents.addAll(result.events());
