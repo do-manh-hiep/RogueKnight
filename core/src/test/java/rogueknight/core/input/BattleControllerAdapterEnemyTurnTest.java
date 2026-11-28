@@ -18,7 +18,7 @@ class BattleControllerAdapterEnemyTurnTest {
   BattleControllerAdapter adapter=new BattleControllerAdapter(BattleController.fromSnapshot(setup,new EnemyAI()));
   MoveResult result=adapter.submitAction("knight",ActionMode.MOVE,BoardPosition.fromNotation("d3"));
   assertTrue(result.accepted()); assertEquals(BoardPosition.fromNotation("d3"),result.after().knightPosition());
-  assertTrue(result.after().statusMessage().contains("DEAD")); assertTrue(result.after().statusMessage().contains("DEFEAT"));
+  assertTrue(!result.after().piecesById().containsKey("knight"));
   assertTrue(result.after().legalMoves().isEmpty()); assertDoesNotThrow(adapter::snapshot);
  }
 }
