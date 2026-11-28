@@ -1,5 +1,6 @@
 package rogueknight.core.view;
 
+import rogueknight.board.Position;
 import java.util.Map;
 import rogueknight.battle.PieceType;
 import java.util.Objects;
@@ -11,9 +12,9 @@ import java.util.Set;
  */
 public record BattleViewSnapshot(
     int globalTurn,
-    BoardPosition knightPosition,
-    Set<BoardPosition> rocks,
-    Set<BoardPosition> legalMoves,
+    Position knightPosition,
+    Set<Position> rocks,
+    Set<Position> legalMoves,
     Map<String, PresentationPiece> piecesById
 ) {
     public BattleViewSnapshot {
@@ -24,7 +25,7 @@ public record BattleViewSnapshot(
     }
 
     /** Returns whether an enemy occupies the given tile, using the canonical piece map. */
-    public boolean hasEnemyAt(BoardPosition position) {
+    public boolean hasEnemyAt(Position position) {
         return position != null && piecesById.values().stream()
             .anyMatch(piece -> piece.type() != PieceType.KNIGHT && piece.position().equals(position));
     }

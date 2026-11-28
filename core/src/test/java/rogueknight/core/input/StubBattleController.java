@@ -1,8 +1,8 @@
 package rogueknight.core.input;
 
+import rogueknight.board.Position;
 import rogueknight.battle.PieceType;
 import rogueknight.core.view.BattleViewSnapshot;
-import rogueknight.core.view.BoardPosition;
 import rogueknight.core.view.PresentationPiece;
 
 import java.util.Collections;
@@ -24,29 +24,29 @@ import java.util.Set;
  */
 public final class StubBattleController implements BattleControllerPort {
     private int globalTurn = 1;
-    private BoardPosition knightPosition;
-    private final Set<BoardPosition> rocks = new HashSet<>();
-    private final Map<BoardPosition, String> enemyPieces = new HashMap<>();
+    private Position knightPosition;
+    private final Set<Position> rocks = new HashSet<>();
+    private final Map<Position, String> enemyPieces = new HashMap<>();
 
     public StubBattleController() {
-        this(new BoardPosition(3, 3)); // Default d4
+        this(new Position(3, 3)); // Default d4
     }
 
-    public StubBattleController(BoardPosition initialKnightPos) {
+    public StubBattleController(Position initialKnightPos) {
         this.knightPosition = Objects.requireNonNull(initialKnightPos, "initialKnightPos must not be null");
 
         // Map01 rock obstacles: c4, c5, d3, e6, f4, f5
-        rocks.add(BoardPosition.fromNotation("c4"));
-        rocks.add(BoardPosition.fromNotation("c5"));
-        rocks.add(BoardPosition.fromNotation("d3"));
-        rocks.add(BoardPosition.fromNotation("e6"));
-        rocks.add(BoardPosition.fromNotation("f4"));
-        rocks.add(BoardPosition.fromNotation("f5"));
+        rocks.add(Position.fromNotation("c4"));
+        rocks.add(Position.fromNotation("c5"));
+        rocks.add(Position.fromNotation("d3"));
+        rocks.add(Position.fromNotation("e6"));
+        rocks.add(Position.fromNotation("f4"));
+        rocks.add(Position.fromNotation("f5"));
 
         // Sample enemy pieces: Pawn at d7, King at d8, Rook at h8
-        enemyPieces.put(BoardPosition.fromNotation("d7"), "Pawn");
-        enemyPieces.put(BoardPosition.fromNotation("d8"), "King");
-        enemyPieces.put(BoardPosition.fromNotation("h8"), "Rook");
+        enemyPieces.put(Position.fromNotation("d7"), "Pawn");
+        enemyPieces.put(Position.fromNotation("d8"), "King");
+        enemyPieces.put(Position.fromNotation("h8"), "Rook");
     }
 
     @Override
@@ -54,11 +54,11 @@ public final class StubBattleController implements BattleControllerPort {
         Map<String, PresentationPiece> piecesById = new HashMap<>();
         piecesById.put("knight", new PresentationPiece("knight", PieceType.KNIGHT, 5, knightPosition));
         piecesById.put("fixture-pawn", new PresentationPiece(
-            "fixture-pawn", PieceType.PAWN, 1, BoardPosition.fromNotation("d7")));
+            "fixture-pawn", PieceType.PAWN, 1, Position.fromNotation("d7")));
         piecesById.put("fixture-king", new PresentationPiece(
-            "fixture-king", PieceType.KING, 5, BoardPosition.fromNotation("d8")));
+            "fixture-king", PieceType.KING, 5, Position.fromNotation("d8")));
         piecesById.put("fixture-rook", new PresentationPiece(
-            "fixture-rook", PieceType.ROOK, 3, BoardPosition.fromNotation("h8")));
+            "fixture-rook", PieceType.ROOK, 3, Position.fromNotation("h8")));
 
         return new BattleViewSnapshot(
             globalTurn,
@@ -70,13 +70,13 @@ public final class StubBattleController implements BattleControllerPort {
     }
 
     @Override
-    public Set<BoardPosition> legalMoves(String actorId) {
+    public Set<Position> legalMoves(String actorId) {
         if (!"knight".equals(actorId)) return Set.of();
 
-        Set<BoardPosition> legals = new HashSet<>();
-        for (int col = 0; col < BoardPosition.BOARD_SIZE; col++) {
-            for (int row = 0; row < BoardPosition.BOARD_SIZE; row++) {
-                BoardPosition candidate = new BoardPosition(col, row);
+        Set<Position> legals = new HashSet<>();
+        for (int col = 0; col < Position.BOARD_SIZE; col++) {
+            for (int row = 0; row < Position.BOARD_SIZE; row++) {
+                Position candidate = new Position(col, row);
                 if (isValidKnightMove(knightPosition, candidate) == null) legals.add(candidate);
             }
         }
@@ -84,19 +84,19 @@ public final class StubBattleController implements BattleControllerPort {
     }
 
     @Override
-    public Set<BoardPosition> legalTargets(String actorId, ActionMode mode) {
+    public Set<Position> legalTargets(String actorId, ActionMode mode) {
         return mode == ActionMode.MOVE ? legalMoves(actorId) : Set.of();
     }
 
     @Override
-    public UiActionResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
+    public UiActionResult submitAction(String actorId, ActionMode mode, Position target) {
         if (mode == ActionMode.WAIT) return submitWait(actorId);
         if (mode != ActionMode.MOVE) return UiActionResult.rejected("UNSUPPORTED_ACTION", snapshot());
         var before = snapshot();
         if (actorId == null || !"knight".equals(actorId)) {
             return UiActionResult.rejected("UNKNOWN_ACTOR", before);
         }
-        if (target == null || !target.isValid()) {
+        if (target == null) {
             return UiActionResult.rejected("OUT_OF_BOUNDS", before);
         }
         String errorReason = isValidKnightMove(knightPosition, target);
@@ -120,8 +120,8 @@ public final class StubBattleController implements BattleControllerPort {
     }
 
     /** Returns null for a valid move, or an error reason for an invalid target. */
-    private String isValidKnightMove(BoardPosition from, BoardPosition to) {
-        if (!to.isValid()) return "OUT_OF_BOUNDS";
+    private String isValidKnightMove(Position from, Position to) {
+        if (to == null) return "OUT_OF_BOUNDS";
         if (from.equals(to)) return "SAME_SQUARE";
         if (rocks.contains(to)) return "OCCUPIED_BY_ROCK";
         if (enemyPieces.containsKey(to)) return "OCCUPIED_BY_PIECE";

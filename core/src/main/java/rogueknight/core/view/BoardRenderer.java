@@ -1,5 +1,6 @@
 package rogueknight.core.view;
 
+import rogueknight.board.Position;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -47,19 +48,19 @@ public final class BoardRenderer {
 
         BoardProjection projection = inputHandler.getProjection();
         BattleViewSnapshot snapshot = inputHandler.getCurrentSnapshot();
-        Set<BoardPosition> legalMoves = playback.isPlaying()
+        Set<Position> legalMoves = playback.isPlaying()
             ? Set.of()
             : inputHandler.getHighlightTargets();
         PresentationPiece knight = presentation.piece("knight").orElse(null);
-        BoardPosition knightPos = knight != null ? knight.position() : snapshot.knightPosition();
+        Position knightPos = knight != null ? knight.position() : snapshot.knightPosition();
         boolean knightAlive = knight != null && knight.hp() > 0;
         int knightHp = knight != null ? knight.hp() : 0;
         float tileSize = projection.getTileSize();
 
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        for (int col = 0; col < BoardPosition.BOARD_SIZE; col++) {
-            for (int row = 0; row < BoardPosition.BOARD_SIZE; row++) {
+        for (int col = 0; col < Position.BOARD_SIZE; col++) {
+            for (int row = 0; row < Position.BOARD_SIZE; row++) {
                 shapeRenderer.setColor((col + row) % 2 != 0 ? lightSquareColor : darkSquareColor);
                 shapeRenderer.rect(
                     projection.getCellLeft(col), projection.getCellBottom(row), tileSize, tileSize
@@ -72,7 +73,7 @@ public final class BoardRenderer {
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(legalHighlightColor);
-        for (BoardPosition legalPos : legalMoves) {
+        for (Position legalPos : legalMoves) {
             shapeRenderer.rect(
                 projection.getCellLeft(legalPos.column()),
                 projection.getCellBottom(legalPos.row()),
@@ -93,7 +94,7 @@ public final class BoardRenderer {
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(legalBorderColor);
-        for (BoardPosition legalPos : legalMoves) {
+        for (Position legalPos : legalMoves) {
             shapeRenderer.rect(
                 projection.getCellLeft(legalPos.column()) + 1,
                 projection.getCellBottom(legalPos.row()) + 1,
@@ -113,13 +114,13 @@ public final class BoardRenderer {
         batch.begin();
 
         font.setColor(Color.WHITE);
-        for (int col = 0; col < BoardPosition.BOARD_SIZE; col++) {
+        for (int col = 0; col < Position.BOARD_SIZE; col++) {
             String label = String.valueOf((char) ('a' + col));
             float x = projection.getCellCenterX(col) - 4;
             font.draw(batch, label, x, projection.getOriginY() - 8);
             font.draw(batch, label, x, projection.getOriginY() + projection.getBoardHeight() + 18);
         }
-        for (int row = 0; row < BoardPosition.BOARD_SIZE; row++) {
+        for (int row = 0; row < Position.BOARD_SIZE; row++) {
             String label = String.valueOf(row + 1);
             float y = projection.getCellCenterY(row) + 5;
             font.draw(batch, label, projection.getOriginX() - 18, y);
@@ -127,19 +128,19 @@ public final class BoardRenderer {
         }
 
         font.setColor(rockTextColor);
-        for (BoardPosition rockPos : snapshot.rocks()) {
+        for (Position rockPos : snapshot.rocks()) {
             drawCenteredText("[ROCK]", projection.getCellCenterX(rockPos.column()), projection.getCellCenterY(rockPos.row()));
         }
 
         for (PresentationPiece piece : presentation.piecesById().values()) {
-            BoardPosition position = piece.position();
+            Position position = piece.position();
             float centerX = projection.getCellCenterX(position.column());
             float centerY = projection.getCellCenterY(position.row());
             if ("knight".equals(piece.id())) {
                 if (piece.hp() > 0) {
                     font.setColor(knightColor);
                     drawCenteredText(">>> KNIGHT <<<", centerX, centerY + 8);
-                    drawCenteredText("(" + position.notation() + ")", centerX, centerY - 8);
+                    drawCenteredText("(" + position.toNotation() + ")", centerX, centerY - 8);
                 } else {
                     font.setColor(fallenKnightColor);
                     drawCenteredText("[FALLEN]", centerX, centerY);
@@ -153,7 +154,7 @@ public final class BoardRenderer {
         if (!knightAlive && knight == null) {
             font.setColor(fallenKnightColor);
             drawCenteredText("[FALLEN]", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()));
-            drawCenteredText("(" + knightPos.notation() + ")", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) - 8);
+            drawCenteredText("(" + knightPos.toNotation() + ")", projection.getCellCenterX(knightPos.column()), projection.getCellCenterY(knightPos.row()) - 8);
         }
 
         font.setColor(Color.YELLOW);
@@ -161,7 +162,7 @@ public final class BoardRenderer {
 
         font.setColor(Color.WHITE);
         String headerInfo = "Turn " + presentation.globalTurn()
-            + " | Knight: " + (knightAlive ? knightPos.notation() : "DEAD")
+            + " | Knight: " + (knightAlive ? knightPos.toNotation() : "DEAD")
             + " | Knight HP: " + knightHp
             + " | " + presentation.result().map(result -> result.name()).orElse("ONGOING")
             + " | Playback: " + playback.speedLabel() + " (- / +)";

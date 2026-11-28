@@ -1,10 +1,11 @@
 package rogueknight.core.view;
 
+import rogueknight.board.Position;
 import java.util.Objects;
 import rogueknight.battle.PieceType;
 
 /** Stable-identity presentation data for one live piece. */
-public record PresentationPiece(String id, PieceType type, int hp, BoardPosition position) {
+public record PresentationPiece(String id, PieceType type, int hp, Position position) {
     public PresentationPiece {
         if (id == null || id.isBlank()) throw new IllegalArgumentException("piece id must not be blank");
         Objects.requireNonNull(type, "type");
@@ -12,7 +13,7 @@ public record PresentationPiece(String id, PieceType type, int hp, BoardPosition
         if (hp < 0) throw new IllegalArgumentException("presentation piece HP must not be negative");
     }
 
-    public PresentationPiece at(BoardPosition newPosition) {
+    public PresentationPiece at(Position newPosition) {
         return new PresentationPiece(id, type, hp, newPosition);
     }
 

@@ -1,5 +1,6 @@
 package rogueknight.core.view;
 
+import rogueknight.board.Position;
 import java.util.Optional;
 
 /**
@@ -36,18 +37,18 @@ public final class BoardProjection {
     }
 
     public float getBoardWidth() {
-        return tileSize * BoardPosition.BOARD_SIZE;
+        return tileSize * Position.BOARD_SIZE;
     }
 
     public float getBoardHeight() {
-        return tileSize * BoardPosition.BOARD_SIZE;
+        return tileSize * Position.BOARD_SIZE;
     }
 
     /**
-     * Converts world (x, y) coordinates to a BoardPosition if it falls inside the 8x8 board.
+     * Converts world (x, y) coordinates to a Position if it falls inside the 8x8 board.
      * Returns Optional.empty() if coordinates fall outside the board.
      */
-    public Optional<BoardPosition> worldToBoard(float worldX, float worldY) {
+    public Optional<Position> worldToBoard(float worldX, float worldY) {
         float dx = worldX - originX;
         float dy = worldY - originY;
 
@@ -58,12 +59,11 @@ public final class BoardProjection {
         int col = (int) Math.floor(dx / tileSize);
         int row = (int) Math.floor(dy / tileSize);
 
-        BoardPosition pos = new BoardPosition(col, row);
-        if (!pos.isValid()) {
+        if (!Position.isInBounds(col, row)) {
             return Optional.empty();
         }
 
-        return Optional.of(pos);
+        return Optional.of(new Position(col, row));
     }
 
     /** Returns the world X coordinate of the left edge of a column. */
