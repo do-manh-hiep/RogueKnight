@@ -24,11 +24,10 @@ class PawnPathfinderTest {
         BattleState state = new BattleState(Set.of(), loadout());
         state.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Direction.SOUTH), new Position(3, 6)); // d7
 
-        Optional<PawnPathfinder.NextMove> move = PawnPathfinder.findNextMove(state, "pawn-1");
+        Optional<Position> move = PawnPathfinder.findNextMove(state, "pawn-1");
 
         assertTrue(move.isPresent());
-        assertEquals(new Position(3, 5), move.get().target()); // d6
-        assertEquals(Direction.SOUTH, move.get().direction());
+        assertEquals(new Position(3, 5), move.get()); // d6
     }
 
     @Test
@@ -39,12 +38,11 @@ class PawnPathfinderTest {
         BattleState state = new BattleState(rocks, loadout());
         state.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Direction.SOUTH), new Position(3, 6));
 
-        Optional<PawnPathfinder.NextMove> move = PawnPathfinder.findNextMove(state, "pawn-1");
+        Optional<Position> move = PawnPathfinder.findNextMove(state, "pawn-1");
 
         assertTrue(move.isPresent());
         // Can step diagonally down (c5: 2,5 or e5: 4,5). Tie-breaking column asc picks c5 (2, 5)
-        assertEquals(new Position(2, 5), move.get().target());
-        assertEquals(Direction.SOUTH_WEST, move.get().direction());
+        assertEquals(new Position(2, 5), move.get());
     }
 
     @Test
@@ -55,11 +53,10 @@ class PawnPathfinderTest {
         // Another enemy at d6 (3, 5)
         state.addPiece(new PieceState("rook-1", PieceType.ROOK, 2, 3, 3, 2), new Position(3, 5));
 
-        Optional<PawnPathfinder.NextMove> move = PawnPathfinder.findNextMove(state, "pawn-1");
+        Optional<Position> move = PawnPathfinder.findNextMove(state, "pawn-1");
 
         assertTrue(move.isPresent());
-        assertEquals(new Position(2, 5), move.get().target());
-        assertEquals(Direction.SOUTH_WEST, move.get().direction());
+        assertEquals(new Position(2, 5), move.get());
     }
 
     @Test
@@ -70,12 +67,11 @@ class PawnPathfinderTest {
         // Knight at d6 (3, 5)
         state.addPiece(new PieceState("knight", PieceType.KNIGHT, 5, 0, 0, 0), new Position(3, 5));
 
-        Optional<PawnPathfinder.NextMove> move = PawnPathfinder.findNextMove(state, "pawn-1");
+        Optional<Position> move = PawnPathfinder.findNextMove(state, "pawn-1");
 
         assertTrue(move.isPresent());
         // Cannot land on Knight at (3, 5), picks diagonal down (2, 5)
-        assertEquals(new Position(2, 5), move.get().target());
-        assertEquals(Direction.SOUTH_WEST, move.get().direction());
+        assertEquals(new Position(2, 5), move.get());
     }
 
     @Test
@@ -90,7 +86,7 @@ class PawnPathfinderTest {
         BattleState state = new BattleState(rocks, loadout());
         state.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Direction.SOUTH), new Position(0, 7));
 
-        Optional<PawnPathfinder.NextMove> move = PawnPathfinder.findNextMove(state, "pawn-1");
+        Optional<Position> move = PawnPathfinder.findNextMove(state, "pawn-1");
 
         assertTrue(move.isEmpty());
     }
@@ -101,7 +97,7 @@ class PawnPathfinderTest {
         BattleState state = new BattleState(Set.of(), loadout());
         state.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Direction.SOUTH), new Position(3, 0));
 
-        Optional<PawnPathfinder.NextMove> move = PawnPathfinder.findNextMove(state, "pawn-1");
+        Optional<Position> move = PawnPathfinder.findNextMove(state, "pawn-1");
 
         assertTrue(move.isEmpty());
     }

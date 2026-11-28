@@ -84,7 +84,7 @@ class BattleControllerTest {
 
         assertRejectedUnchanged(controller.submit(ActionRequest.move(KNIGHT, at("e6"))),
                 ActionError.WRONG_PHASE, before, controller);
-        assertTrue(controller.legalMoves(KNIGHT).isEmpty());
+        assertTrue(controller.legalTargets(KNIGHT, ActionKind.MOVE).isEmpty());
     }
 
     @Test
@@ -112,7 +112,7 @@ class BattleControllerTest {
         assertRejectedUnchanged(controller.submit(ActionRequest.move(KNIGHT, at("e6"))),
                 ActionError.BATTLE_FINISHED, before, controller);
         assertEquals(BattlePhase.FINISHED, controller.snapshot().phase());
-        assertTrue(controller.legalMoves(KNIGHT).isEmpty());
+        assertTrue(controller.legalTargets(KNIGHT, ActionKind.MOVE).isEmpty());
     }
 
     @Test

@@ -149,7 +149,7 @@ class KnightMoveTest {
             expected.add(at(n));
         }
 
-        assertEquals(expected, controller.legalMoves(KNIGHT));
+        assertEquals(expected, controller.legalTargets(KNIGHT, ActionKind.MOVE));
     }
 
     @Test
@@ -158,7 +158,7 @@ class KnightMoveTest {
         state.addPiece(new PieceState("P1", PieceType.PAWN, 1, 2, 2, 3), at("e5"));
         BattleController controller = new BattleController(state);
 
-        Set<Position> legal = controller.legalMoves(KNIGHT);
+        Set<Position> legal = controller.legalTargets(KNIGHT, ActionKind.MOVE);
 
         assertFalse(legal.contains(at("e6")));
         assertFalse(legal.contains(at("c4")));
@@ -169,7 +169,7 @@ class KnightMoveTest {
     @Test
     void everyHighlightedTargetIsAcceptedBySubmit() {
         BattleState probe = fixture(Set.of(at("e6"), at("c4")));
-        Set<Position> legal = new BattleController(probe).legalMoves(KNIGHT);
+        Set<Position> legal = new BattleController(probe).legalTargets(KNIGHT, ActionKind.MOVE);
 
         for (Position target : legal) {
             BattleController controller = new BattleController(fixture(Set.of(at("e6"), at("c4"))));

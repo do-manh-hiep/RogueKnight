@@ -285,3 +285,11 @@ At head `4d6c1b1`, the UI module's `BoardPosition` duplicated the immutable 8×8
 - Core retains the UI-facing adapter and presentation model; logic remains pure Java and has no dependency on core/libGDX.
 
 This is a substantive type/layer deletion, not a rename-only change. No gameplay rules or board coordinate conventions are changed.
+
+## 16. Remove redundant board/query and AI result wrappers
+
+- `PawnPathfinder.findNextMove` returns `Optional<Position>` directly. Its `NextMove` record carried a direction that production never consumed; the resolver derives the step direction from the action's from/to positions.
+- Removed `Board.isEmpty`: production state queries use the canonical `StateView.isEmpty` default, composed from `isRock` and `pieceAt`. Board remains responsible for storage and occupancy invariants.
+- Removed `Board.positionsCopy`, which had no production caller and existed only to test a redundant copy accessor. Kept `pieceIds`, used by BattleState's aggregate consistency check.
+- Removed the backward-compatible `BattleController.legalMoves` forwarding method. Callers use `legalTargets(actorId, ActionKind.MOVE)`; the UI port retains its presentation-level move-highlight method.
+- These changes remove redundant API surface without combining the scheduler, activation runner, policy, rules, or resolver responsibilities.

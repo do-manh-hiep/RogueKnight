@@ -5,7 +5,6 @@ import rogueknight.action.ActionRequest;
 import rogueknight.action.EnemyDecision;
 import rogueknight.action.EnemyPolicy;
 import rogueknight.battle.EnemyRules;
-import rogueknight.ai.PawnPathfinder;
 import rogueknight.battle.PieceState;
 import rogueknight.battle.PieceType;
 import rogueknight.battle.StateView;
@@ -35,7 +34,7 @@ public final class PawnPolicy implements EnemyPolicy {
             return EnemyDecision.act(ActionRequest.attack(pawnId, knight.get()));
         }
         return PawnPathfinder.findNextMove(view, pawnId)
-                .map(next -> EnemyDecision.act(ActionRequest.move(pawnId, next.target())))
+                .map(target -> EnemyDecision.act(ActionRequest.move(pawnId, target)))
                 .orElseGet(() -> EnemyDecision.skip("NO_STEP_TOWARD_PROMOTION"));
     }
 }

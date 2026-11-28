@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
-import rogueknight.battle.Direction;
 import rogueknight.battle.PieceState;
 import rogueknight.battle.PieceType;
 import rogueknight.battle.StateView;
@@ -23,13 +22,6 @@ import rogueknight.board.Position;
  */
 public final class PawnPathfinder {
 
-    public record NextMove(Position target, Direction direction) {
-        public NextMove {
-            Objects.requireNonNull(target, "target must not be null");
-            Objects.requireNonNull(direction, "direction must not be null");
-        }
-    }
-
     private PawnPathfinder() { }
 
     /**
@@ -41,7 +33,7 @@ public final class PawnPathfinder {
      * @param pawnId ID of the Pawn
      * @return the chosen next move, or empty if already at row 0 or no valid path exists
      */
-    public static Optional<NextMove> findNextMove(StateView state, String pawnId) {
+    public static Optional<Position> findNextMove(StateView state, String pawnId) {
         Objects.requireNonNull(state, "state must not be null");
         Objects.requireNonNull(pawnId, "pawnId must not be null");
 
@@ -163,12 +155,7 @@ public final class PawnPathfinder {
             chosen = candidates.get(0);
         }
 
-        Direction dir = Direction.fromDelta(
-                chosen.column() - start.column(),
-                chosen.row() - start.row()
-        );
-
-        return Optional.of(new NextMove(chosen, dir));
+        return Optional.of(chosen);
     }
 
     private static boolean isObstacleForPath(StateView state, String pawnId, Position pos) {

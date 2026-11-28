@@ -12,8 +12,7 @@ class BoardTest {
         board.place("K1", d4);
         assertEquals(d4, board.positionOf("K1").orElseThrow());
         assertEquals("K1", board.pieceAt(d4).orElseThrow());
-        assertFalse(board.isEmpty(d4));
-        assertTrue(board.isEmpty(Position.fromNotation("e4")));
+        assertTrue(board.pieceAt(Position.fromNotation("e4")).isEmpty());
     }
     @Test void rejectsDuplicateIdsAndOccupiedTilesWithoutMutation() {
         Board board = new Board(Set.of());
@@ -28,7 +27,6 @@ class BoardTest {
         Position c4 = Position.fromNotation("c4");
         Board board = new Board(Set.of(c4));
         assertTrue(board.isRock(c4));
-        assertFalse(board.isEmpty(c4));
         assertThrows(IllegalArgumentException.class, () -> board.place("K1", c4));
         assertTrue(board.pieceIds().isEmpty());
     }
@@ -49,12 +47,6 @@ class BoardTest {
         board.place("K1", d4);
         assertThrows(IllegalArgumentException.class, () -> board.move("K1", rock));
         assertEquals(d4, board.positionOf("K1").orElseThrow());
-    }
-    @Test void exposedCollectionsAreImmutableCopies() {
-        Board board = new Board(Set.of());
-        board.place("K1", Position.fromNotation("d4"));
-        assertThrows(UnsupportedOperationException.class, () -> board.pieceIds().clear());
-        assertThrows(UnsupportedOperationException.class, () -> board.positionsCopy().clear());
     }
     @Test void pieceIdsReturnsDetachedImmutableSnapshot() {
         Board board = new Board(Set.of());

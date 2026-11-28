@@ -39,11 +39,7 @@ public final class BattleControllerAdapter implements BattleControllerPort {
 
     @Override
     public Set<Position> legalMoves(String actorId) {
-        Set<Position> positions = new HashSet<>();
-        for (Position position : controller.legalMoves(actorId)) {
-            positions.add(position);
-        }
-        return Set.copyOf(positions);
+        return controller.legalTargets(actorId, ActionKind.MOVE);
     }
 
     @Override

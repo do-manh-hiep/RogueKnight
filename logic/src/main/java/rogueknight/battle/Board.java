@@ -27,18 +27,12 @@ final class Board {
         return Optional.empty();
     }
 
-    boolean isEmpty(Position position) {
-        Objects.requireNonNull(position);
-        return !isRock(position) && pieceAt(position).isEmpty();
-    }
-
     Optional<Position> positionOf(String pieceId) {
         requireId(pieceId);
         return Optional.ofNullable(positions.get(pieceId));
     }
 
     Set<String> pieceIds() { return Set.copyOf(positions.keySet()); }
-    Map<String, Position> positionsCopy() { return Map.copyOf(positions); }
 
     void place(String pieceId, Position position) {
         requireId(pieceId);
