@@ -35,7 +35,7 @@ Status meanings:
 | R-E01–E07: Enemy stats/cycle, Move/Attack, geometry, deterministic policy and threat/capture evaluation | `EnemyRules`, `EnemyAI`, `GenericEnemyPolicy`, `EnemyTurnRunner`, `HypotheticalView` | `EnemyRulesTest`, `GenericEnemyPolicyTest`, `EnemyTurnRunnerTest`, integration/AI tests; TC-E01–E07 | **Pass — source/test present, policy semantics decision-sensitive.** AI consumes read-only `StateView`; generic Move→Attack is evaluated on post-Move state. No policy/balance change proposed. |
 | R-P01–P02: Pawn direction and Attack-before-BFS | `PawnPolicy`, `PawnPathfinder`, `PawnAttackRule` | `PawnPathfinderTest`, `PawnTurnTest`; TC-P01–P02 | **Pass — source/test present** for implemented direction/path behavior. |
 | R-P03–P06: Pawn BFS, fallback, movement and attack edge semantics | `PawnPathfinder`, `PawnPolicy`, `EnemyRules` | `PawnPathfinderTest`, `PawnTurnTest`; TC-P03–P06 | **Partial / decision-sensitive.** Core behavior is tested; no-path/fallback edge semantics must be checked against the approved DEC-01 wording before claiming every edge accepted. |
-| R-P07–P08: promotion identity and Queen activation schedule | `PawnPromotionApplier`, `ActionResolver`, `TurnScheduler` | `PawnPromotionApplierTest`, `TurnSchedulerTest`, `PawnTurnTest`; TC-P07–P08, IT-05 | **Pass — source/test present.** Promotion keeps identity/spawn order, sets Queen stats and schedules first activation at T+5. |
+| R-P07–P08: promotion identity and Queen activation schedule | `ActionResolver`, `TurnScheduler` | `TurnSchedulerTest`, `PawnTurnTest`; TC-P07–P08, IT-05 | **Pass — source/test present.** Promotion is part of the validated Pawn MOVE resolution; the integration test checks identity, spawnOrder, Queen stats, cleared direction and T+5 schedule. |
 | R-Q01–Q04: loadout, one charge, valid/invalid consumption, exhausted equipment | `Inventory`, `KnightRules`, `ActionResolver`, `BattleFactory` | `InventoryTest`, `EquipmentActionIntegrationTest`; TC-Q01–Q04 | **Pass — source/test present.** Invalid actions do not consume charge; valid equipment action consumes one charge; exhausted equipment remains in inventory but is unusable. |
 | R-Q05–Q08: Cannon Movement screen/landing/capture/blocker rules | `KnightRules`, `ActionResolver` | `EquipmentActionIntegrationTest`; TC-Q05–Q08, FX-04 | **Pass — source/test present.** Includes empty landing choices before terminal Enemy and capture as an additional option. |
 | R-Q09: Cannon Attack exactly one screen and first terminal Enemy | `KnightRules`, `ActionResolver` | `EquipmentActionIntegrationTest`; TC-Q09 | **Pass — source/test present.** |
@@ -145,7 +145,6 @@ GitHub `mergeable=true` means no merge conflict was detected; it is not review a
 - `logic/src/main/java/rogueknight/action/EnemyPolicy.java`
 - `logic/src/main/java/rogueknight/battle/KnightRules.java`
 - `logic/src/main/java/rogueknight/battle/EnemyRules.java`
-- `logic/src/main/java/rogueknight/battle/PawnPromotionApplier.java`
 - `logic/src/main/java/rogueknight/battle/TurnScheduler.java`
 - `logic/src/main/java/rogueknight/data/BalanceLoader.java`
 - `logic/src/main/java/rogueknight/data/MapLoader.java`
@@ -297,3 +296,16 @@ This is a substantive type/layer deletion, not a rename-only change. No gameplay
 ## 17. Collapse duplicate target data in ActionPlan
 
 `ActionPlan` previously stored overlapping target data in `targetId`, `landingPosition`, and `affectedTargetIds`. It now stores the action target coordinate and the ordered affected-ID list plus optional equipment type. Single-target actions populate a one-element affected-ID list; multi-target Skewer retains its ordered list; Cannon Movement uses the action target as its landing square. This removes duplicated state while preserving target ordering and action resolution semantics.
+
+
+## 18. Simplification — inline Pawn promotion into ActionResolver
+
+At head `2a2200e`, `PawnPromotionApplier` had exactly one production caller: `ActionResolver.applyPawnStepEffects`. It exposed no independent lifecycle, injection point or reusable behavior. Its eligibility/type/position checks repeated facts guaranteed by the validated MOVE plan and the resolver's just-completed move.
+
+- Moved the promotion mutation and `PiecePromoted` event creation into `ActionResolver`, where TD §4.1 and §6.4 assign action effects and promotion.
+- Avoided replacing the Pawn with an intermediate direction-updated state before immediately replacing it with the Queen.
+- Kept Queen HP/cycle baseline, original ID and spawnOrder, null direction, and first activation at current Turn + 5.
+- Removed `PawnPromotionApplier` and its helper-level test. Expanded `PawnTurnTest` to assert the preserved spawnOrder and cleared direction in the real Enemy-turn integration flow; it already checks the promotion event, Queen stats and T+5/T+9 schedule.
+- No package or domain terminology was renamed; no gameplay rule or TD decision was changed.
+
+**Verification boundary:** source/test/doc changes are committed together. Local Gradle verification is required against the new head.

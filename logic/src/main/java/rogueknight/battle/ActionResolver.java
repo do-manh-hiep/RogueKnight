@@ -11,6 +11,10 @@ import rogueknight.board.Position;
  * It never validates, advances the turn, touches the schedule or decides the battle result.
  */
 final class ActionResolver {
+    private static final int PROMOTED_QUEEN_HP = 2;
+    private static final int PROMOTED_QUEEN_CYCLE = 4;
+    private static final int PROMOTION_ACTIVATION_OFFSET = 5;
+
     private ActionResolver() { }
 
     static List<BattleEvent> resolve(BattleState state, ActionPlan plan) {
@@ -70,9 +74,21 @@ final class ActionResolver {
         Direction step = Direction.fromDelta(
                 plan.target().column() - plan.from().column(),
                 plan.target().row() - plan.from().row());
-        state.replacePiece(actor.withDirection(step));
-        if (PawnPromotionApplier.canPromote(plan.target())) {
-            events.add(PawnPromotionApplier.promote(state, plan.actorId(), state.globalTurn()));
+        if (plan.target().row() == 0) {
+            PieceState queen = new PieceState(
+                    actor.id(),
+                    PieceType.QUEEN,
+                    PROMOTED_QUEEN_HP,
+                    PROMOTED_QUEEN_CYCLE,
+                    state.globalTurn() + PROMOTION_ACTIVATION_OFFSET,
+                    actor.spawnOrder(),
+                    null
+            );
+            state.replacePiece(queen);
+            events.add(new BattleEvent.PiecePromoted(
+                    actor.id(), PieceType.PAWN, PieceType.QUEEN, plan.target()));
+        } else {
+            state.replacePiece(actor.withDirection(step));
         }
     }
 

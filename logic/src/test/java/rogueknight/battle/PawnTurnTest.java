@@ -138,6 +138,8 @@ class PawnTurnTest {
         assertEquals(2, queen.hp());
         assertEquals(4, queen.cycle());
         assertEquals(11, queen.nextActivationTurn());
+        assertEquals(1, queen.spawnOrder());
+        assertEquals(null, queen.currentDirection());
         assertEquals(5, turn6.after().pieceById("knight").orElseThrow().hp());
 
         List<Integer> activations = new ArrayList<>(activationTurns(turn6, "pawn-1"));
