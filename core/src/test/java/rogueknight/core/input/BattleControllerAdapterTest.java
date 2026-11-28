@@ -31,7 +31,7 @@ class BattleControllerAdapterEquipmentTest {
 
     @Test
     void handlesKnightDeathGracefullyWithoutCrashing() throws IOException {
-        BattleController controller = controller(new BattleSnapshot.PieceView("knight", PieceType.KNIGHT, 1, 0, 0, 0, Position.fromNotation("d1")),new BattleSnapshot.PieceView("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Position.fromNotation("c7"), Direction.SOUTH),new BattleSnapshot.PieceView("king-1", PieceType.KING, 5, 5, 5, 2, Position.fromNotation("h8")),new BattleSnapshot.PieceView("rook-1", PieceType.ROOK, 2, 3, 2, 3, Position.fromNotation("d6")));
+        BattleController controller = controller(new BattleSnapshot.PieceView("knight", PieceType.KNIGHT, 1, 0, 0, 0, Position.fromNotation("c1")),new BattleSnapshot.PieceView("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Position.fromNotation("c7"), Direction.SOUTH),new BattleSnapshot.PieceView("king-1", PieceType.KING, 5, 5, 5, 2, Position.fromNotation("h8")),new BattleSnapshot.PieceView("rook-1", PieceType.ROOK, 2, 3, 2, 3, Position.fromNotation("d6")));
         BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
         adapter.snapshot();
         MoveResult action = adapter.submitMove("knight", BoardPosition.fromNotation("d3"));
