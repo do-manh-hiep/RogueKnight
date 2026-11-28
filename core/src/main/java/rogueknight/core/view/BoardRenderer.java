@@ -55,6 +55,7 @@ public final class BoardRenderer {
         PresentationPiece knight = presentation.piece("knight").orElse(null);
         BoardPosition knightPos = knight != null ? knight.position() : snapshot.knightPosition();
         boolean knightAlive = knight != null && knight.hp() > 0;
+        int knightHp = knight != null ? knight.hp() : 0;
         float tileSize = projection.getTileSize();
 
         shapeRenderer.setProjectionMatrix(camera.combined);
@@ -167,8 +168,12 @@ public final class BoardRenderer {
         font.setColor(Color.WHITE);
         String headerInfo = "Turn " + presentation.globalTurn()
             + " | Knight: " + (knightAlive ? knightPos.notation() : "DEAD")
+            + " | Knight HP: " + knightHp
             + " | " + presentation.result().map(result -> result.name()).orElse("ONGOING");
         font.draw(batch, headerInfo, 20, 425);
+
+        font.setColor(Color.LIGHT_GRAY);
+        font.draw(batch, "Playback: " + playback.speedLabel() + " (- / +)", 20, 405);
 
         font.setColor(Color.CYAN);
         font.draw(batch, "Thông báo: " + inputHandler.getFeedbackMessage(), 20, 35);
