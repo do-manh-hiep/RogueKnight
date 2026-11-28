@@ -117,6 +117,12 @@ public final class BattlePlayback {
         return applied;
     }
 
+    /** Discards pending presentation events after a fatal runtime error. Domain state is untouched. */
+    public void stop() {
+        queue.clear();
+        elapsed = 0f;
+    }
+
     public boolean isPlaying() {
         return !queue.isEmpty();
     }

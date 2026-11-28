@@ -193,6 +193,21 @@ public final class BoardRenderer {
         batch.end();
     }
 
+    /** Displays a fail-stop runtime state; no further battle input or playback is accepted. */
+    public void renderRuntimeFailure(OrthographicCamera camera, String message) {
+        Objects.requireNonNull(camera, "camera must not be null");
+        Objects.requireNonNull(message, "message must not be null");
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        font.setColor(Color.RED);
+        font.draw(batch, "BATTLE STOPPED - RUNTIME ERROR", 20, 95);
+        font.setColor(Color.WHITE);
+        font.draw(batch, message, 20, 75, 600, 1, true);
+        font.setColor(Color.LIGHT_GRAY);
+        font.draw(batch, "Completed valid actions are retained. Restart or return to menu.", 20, 55);
+        batch.end();
+    }
+
     private void drawCenteredText(String text, float centerX, float centerY) {
         glyphLayout.setText(font, text);
         font.draw(batch, text, centerX - glyphLayout.width / 2f, centerY + glyphLayout.height / 2f);

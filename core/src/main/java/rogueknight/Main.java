@@ -41,6 +41,7 @@ public class Main extends ApplicationAdapter {
     private BoardInputHandler inputHandler;
     private BoardRenderer renderer;
     private BattlePlayback playback;
+    private String runtimeFailure;
 
     @Override
     public void create() {
@@ -90,20 +91,30 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void render() {
-        // Do not accept another player action while the previous event stream is playing.
-        if (!playback.isPlaying()) {
-            processKeyboardInput();
-            processMouseInput();
-            List<rogueknight.action.BattleEvent> events = inputHandler.drainEvents();
-            playback.enqueue(events);
+        if (runtimeFailure == null) {
+            try {
+                // Lock player input until the previous event stream has finished.
+                if (!playback.isPlaying()) {
+                    processKeyboardInput();
+                    processMouseInput();
+                    List<rogueknight.action.BattleEvent> events = inputHandler.drainEvents();
+                    playback.enqueue(events);
+                }
+                playback.update(Gdx.graphics.getDeltaTime());
+            } catch (RuntimeException failure) {
+                // DEC-12: stop the application battle loop without rolling back valid actions.
+                runtimeFailure = failure.getClass().getSimpleName() + ": "
+                    + (failure.getMessage() == null ? "Unexpected battle runtime failure" : failure.getMessage());
+                playback.stop();
+                Gdx.app.error("RogueKnight", "Battle stopped after runtime failure", failure);
+            }
         }
-
-        playback.update(Gdx.graphics.getDeltaTime());
 
         ScreenUtils.clear(0.12f, 0.12f, 0.16f, 1f);
         viewport.apply();
         camera.update();
         renderer.render(camera, inputHandler, playback);
+        if (runtimeFailure != null) renderer.renderRuntimeFailure(camera, runtimeFailure);
     }
 
     private void processKeyboardInput() {

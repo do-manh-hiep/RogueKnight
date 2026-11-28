@@ -139,6 +139,23 @@ class BattlePlaybackTest {
     }
 
     @Test
+    void stopDiscardsPendingPresentationEventsWithoutChangingAppliedState() {
+        BattlePlayback playback = new BattlePlayback(
+            BattlePresentationModel.from(snapshot()), 0.1f);
+        playback.enqueue(List.of(
+            new BattleEvent.PieceMoved("rook-1", Position.fromNotation("e4"), Position.fromNotation("e5")),
+            new BattleEvent.PieceMoved("rook-1", Position.fromNotation("e5"), Position.fromNotation("e6"))
+        ));
+
+        playback.stop();
+
+        assertFalse(playback.isPlaying());
+        assertEquals(0, playback.pendingEventCount());
+        assertEquals(BoardPosition.fromNotation("e4"),
+            playback.model().piece("rook-1").orElseThrow().position());
+    }
+
+    @Test
     void rejectsInvalidDeltaAndInvalidInterval() {
         assertThrows(IllegalArgumentException.class,
             () -> new BattlePlayback(BattlePresentationModel.from(snapshot()), 0f));
