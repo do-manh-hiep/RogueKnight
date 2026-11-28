@@ -34,7 +34,7 @@ class BattleControllerAdapterEquipmentTest {
         BattleController controller = controller(new BattleSnapshot.PieceView("knight", PieceType.KNIGHT, 1, 0, 0, 0, Position.fromNotation("c1")),new BattleSnapshot.PieceView("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Position.fromNotation("c7"), Direction.SOUTH),new BattleSnapshot.PieceView("king-1", PieceType.KING, 5, 5, 5, 2, Position.fromNotation("h8")),new BattleSnapshot.PieceView("rook-1", PieceType.ROOK, 2, 3, 2, 3, Position.fromNotation("d6")));
         BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
         adapter.snapshot();
-        MoveResult action = adapter.submitMove("knight", BoardPosition.fromNotation("d3"));
+        UiActionResult action = adapter.submitAction("knight", ActionMode.MOVE, BoardPosition.fromNotation("d3"));
         assertTrue(action.accepted());
 
         BattleViewSnapshot snapshot = adapter.snapshot();
@@ -67,7 +67,7 @@ class BattleControllerAdapterEquipmentTest {
     void cannonCaptureOnD7_acceptedAndConsumesChargeOnce() throws IOException {
         BattleControllerAdapter adapter = createAdapter();
 
-        MoveResult result = adapter.submitAction(
+        UiActionResult result = adapter.submitAction(
             "knight", ActionMode.CANNON_MOVEMENT, BoardPosition.fromNotation("d7"));
 
         assertTrue(result.accepted());
@@ -80,7 +80,7 @@ class BattleControllerAdapterEquipmentTest {
         BattleControllerAdapter adapter = createAdapter();
         BattleViewSnapshot before = adapter.snapshot();
 
-        MoveResult result = adapter.submitAction(
+        UiActionResult result = adapter.submitAction(
             "knight", ActionMode.CANNON_MOVEMENT, BoardPosition.fromNotation("d8"));
 
         assertFalse(result.accepted());
@@ -91,7 +91,7 @@ class BattleControllerAdapterEquipmentTest {
     void unownedCannonAttack_rejectedWithEquipmentNotOwned() throws IOException {
         BattleControllerAdapter adapter = createAdapter();
 
-        MoveResult result = adapter.submitAction(
+        UiActionResult result = adapter.submitAction(
             "knight", ActionMode.CANNON_ATTACK, BoardPosition.fromNotation("d7"));
 
         assertFalse(result.accepted());
@@ -137,7 +137,7 @@ class BattleControllerAdapterEquipmentTest {
         BattleViewSnapshot before = adapter.snapshot();
 
         assertEquals(ActionMode.WAIT, adapter.availableModes().get(0));
-        MoveResult result = adapter.submitWait("knight");
+        UiActionResult result = adapter.submitWait("knight");
 
         assertTrue(result.accepted());
         assertEquals(before.globalTurn() + 1, result.after().globalTurn());
@@ -186,7 +186,7 @@ class BattleControllerAdapterEquipmentTest {
     void waitResultExposesOrderedEnemyEventsToPresentationLayer() {
         BattleControllerAdapter adapter = new BattleControllerAdapter(controller(new BattleSnapshot.PieceView("knight", PieceType.KNIGHT, 5, 0, 0, 0, Position.fromNotation("d4")),new BattleSnapshot.PieceView("king", PieceType.KING, 5, 5, 5, 2, Position.fromNotation("h8")),new BattleSnapshot.PieceView("rook", PieceType.ROOK, 3, 3, 2, 1, Position.fromNotation("e4"))));
 
-        MoveResult result = adapter.submitWait("knight");
+        UiActionResult result = adapter.submitWait("knight");
 
         assertTrue(result.accepted());
         assertEquals(

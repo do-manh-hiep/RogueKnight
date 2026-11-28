@@ -27,7 +27,7 @@ class BoardInputHandlerTest {
 
     @Test
     void clickInsideValidSquareSubmitsExactlyOnceAndUpdatesState() {
-        var controller = new CountingController(new FixtureBattleController(new BoardPosition(3, 3)));
+        var controller = new CountingController(new StubBattleController(new BoardPosition(3, 3)));
         var handler = new BoardInputHandler(projection, controller);
 
         // Click center of c6 (col 2, row 5):
@@ -45,7 +45,7 @@ class BoardInputHandlerTest {
 
     @Test
     void clickOutsideBoardDoesNotSubmitAndUpdatesMessage() {
-        var controller = new CountingController(new FixtureBattleController(new BoardPosition(3, 3)));
+        var controller = new CountingController(new StubBattleController(new BoardPosition(3, 3)));
         var handler = new BoardInputHandler(projection, controller);
         var initialSnapshot = handler.getCurrentSnapshot();
 
@@ -59,7 +59,7 @@ class BoardInputHandlerTest {
 
     @Test
     void rejectedMovePreservesSnapshotAndDoesNotCreateFakeState() {
-        var controller = new CountingController(new FixtureBattleController(new BoardPosition(3, 3)));
+        var controller = new CountingController(new StubBattleController(new BoardPosition(3, 3)));
         var handler = new BoardInputHandler(projection, controller);
         var initialSnapshot = handler.getCurrentSnapshot();
 
@@ -80,7 +80,7 @@ class BoardInputHandlerTest {
 
     @Test
     void waitActionIsFirstAndExecutesImmediatelyWithoutBoardClick() {
-        var controller = new CountingController(new FixtureBattleController(new BoardPosition(3, 3)));
+        var controller = new CountingController(new StubBattleController(new BoardPosition(3, 3)));
         var handler = new BoardInputHandler(projection, controller);
         int beforeTurn = handler.getCurrentSnapshot().globalTurn();
 
@@ -94,7 +94,7 @@ class BoardInputHandlerTest {
 
     @Test
     void clickingKnightItselfSelectsWithoutSubmittingMove() {
-        var controller = new CountingController(new FixtureBattleController(new BoardPosition(3, 3)));
+        var controller = new CountingController(new StubBattleController(new BoardPosition(3, 3)));
         var handler = new BoardInputHandler(projection, controller);
 
         float d4CenterX = projection.getCellCenterX(3);
@@ -139,7 +139,7 @@ class BoardInputHandlerTest {
     void selectingOutOfRangeActionIndexDoesNotChangeSelectedMode() {
         var handler = new BoardInputHandler(
             projection,
-            new FixtureBattleController(new BoardPosition(3, 3))
+            new StubBattleController(new BoardPosition(3, 3))
         );
 
         handler.selectAction(2);
@@ -171,12 +171,6 @@ class BoardInputHandlerTest {
         }
 
         @Override
-        public MoveResult submitMove(String actorId, BoardPosition target) {
-            submissions++;
-            return delegate.submitMove(actorId, target);
-        }
-
-        @Override
         public List<ActionMode> availableModes() {
             return delegate.availableModes();
         }
@@ -187,13 +181,13 @@ class BoardInputHandlerTest {
         }
 
         @Override
-        public MoveResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
+        public UiActionResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
             submissions++;
             return delegate.submitAction(actorId, mode, target);
         }
 
         @Override
-        public MoveResult submitWait(String actorId) {
+        public UiActionResult submitWait(String actorId) {
             submissions++;
             return delegate.submitWait(actorId);
         }

@@ -17,7 +17,7 @@ class BattleControllerAdapterEnemyTurnTest {
    new BattleSnapshot.PieceView("king-1",PieceType.KING,5,5,5,2,Position.fromNotation("h8"))
   ),Inventory.initial(EquipmentType.CANNON_MOVEMENT,EquipmentType.CANNON_ATTACK));
   BattleControllerAdapter adapter=new BattleControllerAdapter(BattleController.fromSnapshot(setup,new EnemyAI()));
-  MoveResult result=adapter.submitAction("knight",ActionMode.MOVE,BoardPosition.fromNotation("d3"));
+  UiActionResult result=adapter.submitAction("knight",ActionMode.MOVE,BoardPosition.fromNotation("d3"));
   assertTrue(result.accepted()); assertEquals(BoardPosition.fromNotation("d3"),result.after().knightPosition());
   assertFalse(result.after().piecesById().containsKey("knight"));
   assertTrue(result.events().stream().anyMatch(event -> event instanceof rogueknight.action.BattleEvent.BattleEnded ended && ended.result() == BattleResult.DEFEAT));
