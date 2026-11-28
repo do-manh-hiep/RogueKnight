@@ -38,8 +38,7 @@ class BattleControllerAdapterEquipmentTest {
         assertTrue(action.accepted());
 
         BattleViewSnapshot snapshot = adapter.snapshot();
-        assertTrue(snapshot.statusMessage().contains("DEAD"));
-        assertTrue(snapshot.statusMessage().contains("DEFEAT"));
+        assertFalse(snapshot.piecesById().containsKey("knight"));
         assertTrue(snapshot.legalMoves().isEmpty());
     }
 
