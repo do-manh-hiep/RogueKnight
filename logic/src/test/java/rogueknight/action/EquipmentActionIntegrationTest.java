@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * T-04.01 / T-04.02 integration tests: Cannon Movement, Cannon Attack, Diagonal Skewer.
  * Rules: GDD s6, TD 4.9, R-Q05..R-Q11, FX-04..FX-07. DEC-03: Skewer must hit >= 1 Enemy.
- * Skewer never moves the Knight. Fixtures are built directly; no terminal check exists yet (T-03.01).
+ * Skewer never moves the Knight. Fixtures are built directly; BattleController performs the terminal check after each resolved Action (T-03.01).
  */
 class EquipmentActionIntegrationTest {
 
