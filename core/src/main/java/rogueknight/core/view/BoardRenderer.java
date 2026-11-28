@@ -169,11 +169,10 @@ public final class BoardRenderer {
         String headerInfo = "Turn " + presentation.globalTurn()
             + " | Knight: " + (knightAlive ? knightPos.notation() : "DEAD")
             + " | Knight HP: " + knightHp
-            + " | " + presentation.result().map(result -> result.name()).orElse("ONGOING");
+            + " | " + presentation.result().map(result -> result.name()).orElse("ONGOING")
+            + " | Playback: " + playback.speedLabel() + " (- / +)";
         font.draw(batch, headerInfo, 20, 425);
 
-        font.setColor(Color.LIGHT_GRAY);
-        font.draw(batch, "Playback: " + playback.speedLabel() + " (- / +)", 20, 405);
 
         font.setColor(Color.CYAN);
         font.draw(batch, "Thông báo: " + inputHandler.getFeedbackMessage(), 20, 35);
