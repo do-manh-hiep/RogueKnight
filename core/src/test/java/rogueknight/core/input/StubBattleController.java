@@ -22,17 +22,17 @@ import java.util.Set;
  * - Target must be empty (not occupied by Rock or another piece)
  * - Valid moves increment globalTurn by 1; invalid moves keep state unchanged.
  */
-public final class FixtureBattleController implements BattleControllerPort {
+public final class StubBattleController implements BattleControllerPort {
     private int globalTurn = 1;
     private BoardPosition knightPosition;
     private final Set<BoardPosition> rocks = new HashSet<>();
     private final Map<BoardPosition, String> enemyPieces = new HashMap<>();
 
-    public FixtureBattleController() {
+    public StubBattleController() {
         this(new BoardPosition(3, 3)); // Default d4
     }
 
-    public FixtureBattleController(BoardPosition initialKnightPos) {
+    public StubBattleController(BoardPosition initialKnightPos) {
         this.knightPosition = Objects.requireNonNull(initialKnightPos, "initialKnightPos must not be null");
 
         // Map01 rock obstacles: c4, c5, d3, e6, f4, f5
@@ -84,21 +84,26 @@ public final class FixtureBattleController implements BattleControllerPort {
     }
 
     @Override
-    public MoveResult submitMove(String actorId, BoardPosition target) {
+    public Set<BoardPosition> legalTargets(String actorId, ActionMode mode) {
+        return mode == ActionMode.MOVE ? legalMoves(actorId) : Set.of();
+    }
+
+    @Override
+    public UiActionResult submitAction(String actorId, ActionMode mode, BoardPosition target) {
+        if (mode == ActionMode.WAIT) return submitWait(actorId);
+        if (mode != ActionMode.MOVE) return UiActionResult.rejected("UNSUPPORTED_ACTION", snapshot());
         var before = snapshot();
         if (actorId == null || !"knight".equals(actorId)) {
-            return MoveResult.rejected("UNKNOWN_ACTOR", before);
+            return UiActionResult.rejected("UNKNOWN_ACTOR", before);
         }
         if (target == null || !target.isValid()) {
-            return MoveResult.rejected("OUT_OF_BOUNDS", before);
+            return UiActionResult.rejected("OUT_OF_BOUNDS", before);
         }
-
         String errorReason = isValidKnightMove(knightPosition, target);
-        if (errorReason != null) return MoveResult.rejected(errorReason, before);
-
+        if (errorReason != null) return UiActionResult.rejected(errorReason, before);
         knightPosition = target;
         globalTurn++;
-        return MoveResult.success(before, snapshot(), java.util.List.of());
+        return UiActionResult.success(before, snapshot(), java.util.List.of());
     }
 
     @Override
@@ -107,11 +112,11 @@ public final class FixtureBattleController implements BattleControllerPort {
     }
 
     @Override
-    public MoveResult submitWait(String actorId) {
+    public UiActionResult submitWait(String actorId) {
         var before = snapshot();
-        if (!"knight".equals(actorId)) return MoveResult.rejected("UNKNOWN_ACTOR", before);
+        if (!"knight".equals(actorId)) return UiActionResult.rejected("UNKNOWN_ACTOR", before);
         globalTurn++;
-        return MoveResult.success(before, snapshot(), java.util.List.of());
+        return UiActionResult.success(before, snapshot(), java.util.List.of());
     }
 
     /** Returns null for a valid move, or an error reason for an invalid target. */
