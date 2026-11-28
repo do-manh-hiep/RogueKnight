@@ -1,6 +1,8 @@
 package rogueknight.core.view;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import rogueknight.action.BattleEvent;
 
@@ -28,9 +30,10 @@ public final class BattlePlayback {
     }
 
     private final BattlePresentationModel model;
-    private final BattleEventQueue queue = new BattleEventQueue();
+    private final ArrayDeque<BattleEvent> events = new ArrayDeque<>();
     private Speed speed = Speed.NORMAL;
     private float elapsed;
+    private final float customNormalInterval;
 
     public BattlePlayback(BattlePresentationModel model, float secondsPerEvent) {
         this.model = Objects.requireNonNull(model, "model");
@@ -40,8 +43,6 @@ public final class BattlePlayback {
         // Keep the constructor useful for deterministic tests/custom playback intervals.
         this.customNormalInterval = secondsPerEvent;
     }
-
-    private final float customNormalInterval;
 
     public BattlePresentationModel model() {
         return model;
@@ -74,8 +75,9 @@ public final class BattlePlayback {
         elapsed = 0f;
     }
 
-    public void enqueue(Collection<? extends BattleEvent> events) {
-        queue.enqueueAll(events);
+    public void enqueue(Collection<? extends BattleEvent> orderedEvents) {
+        // Validate/copy the whole batch before mutation, so null cannot partially enqueue it.
+        events.addAll(List.copyOf(Objects.requireNonNull(orderedEvents, "orderedEvents")));
     }
 
     /**
@@ -89,15 +91,15 @@ public final class BattlePlayback {
         if (!Float.isFinite(deltaSeconds) || deltaSeconds < 0f) {
             throw new IllegalArgumentException("deltaSeconds must be finite and non-negative");
         }
-        if (queue.isEmpty()) {
+        if (events.isEmpty()) {
             elapsed = 0f;
             return 0;
         }
 
         if (speed == Speed.INSTANT) {
             int applied = 0;
-            while (!queue.isEmpty()) {
-                model.apply(queue.poll().orElseThrow());
+            while (!events.isEmpty()) {
+                model.apply(events.removeFirst());
                 applied++;
             }
             elapsed = 0f;
@@ -107,27 +109,26 @@ public final class BattlePlayback {
         elapsed += deltaSeconds;
         int applied = 0;
         float secondsPerEvent = speed == Speed.NORMAL ? customNormalInterval : Speed.FAST.secondsPerEvent;
-        while (!queue.isEmpty() && elapsed >= secondsPerEvent) {
-            BattleEvent event = queue.poll().orElseThrow();
-            model.apply(event);
+        while (!events.isEmpty() && elapsed >= secondsPerEvent) {
+            model.apply(events.removeFirst());
             elapsed -= secondsPerEvent;
             applied++;
         }
-        if (queue.isEmpty()) elapsed = 0f;
+        if (events.isEmpty()) elapsed = 0f;
         return applied;
     }
 
     /** Discards pending presentation events after a fatal runtime error. Domain state is untouched. */
     public void stop() {
-        queue.clear();
+        events.clear();
         elapsed = 0f;
     }
 
     public boolean isPlaying() {
-        return !queue.isEmpty();
+        return !events.isEmpty();
     }
 
     public int pendingEventCount() {
-        return queue.size();
+        return events.size();
     }
 }

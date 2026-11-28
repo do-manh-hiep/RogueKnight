@@ -10,8 +10,10 @@ import rogueknight.battle.EquipmentType;
 import rogueknight.battle.Inventory;
 import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
+import rogueknight.data.dto.BalanceData;
 import rogueknight.data.dto.MapData;
 import rogueknight.data.dto.PieceData;
+import rogueknight.data.dto.PieceStatsData;
 import rogueknight.data.dto.PositionData;
 
 import java.io.IOException;
@@ -29,7 +31,7 @@ public final class BattleFactory {
 
     private BattleSnapshot createMap01Setup(EquipmentType first, EquipmentType second) throws IOException {
         MapData map = new MapLoader().loadMap01();
-        PieceCatalog catalog = new PieceCatalog(new BalanceLoader().load());
+        BalanceData balance = new BalanceLoader().load();
         Inventory inventory = Inventory.initial(first, second);
         Set<Position> rocks = new HashSet<>();
         for (PositionData rock : map.rocks()) rocks.add(new Position(rock.column(), rock.row()));
@@ -37,10 +39,10 @@ public final class BattleFactory {
         List<BattleSnapshot.PieceView> pieces = new ArrayList<>();
         for (PieceData piece : map.pieces()) {
             PieceType type = PieceType.valueOf(piece.type());
-            PieceSpec spec = catalog.get(piece.type());
-            int cycle = type == PieceType.KNIGHT ? 0 : spec.cycle();
+            PieceStatsData stats = balance.pieces().get(piece.type());
+            int cycle = type == PieceType.KNIGHT ? 0 : stats.cycle();
             int nextActivationTurn = type == PieceType.KNIGHT ? 0 : cycle;
-            pieces.add(new BattleSnapshot.PieceView(piece.id(), type, spec.hp(), cycle,
+            pieces.add(new BattleSnapshot.PieceView(piece.id(), type, stats.hp(), cycle,
                 nextActivationTurn, piece.spawnOrder(), new Position(piece.column(), piece.row()),
                 type == PieceType.PAWN ? Direction.SOUTH : null));
         }

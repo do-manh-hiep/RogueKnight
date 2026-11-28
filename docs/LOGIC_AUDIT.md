@@ -2,7 +2,7 @@
 
 - **Repository:** do-manh-hiep/RogueKnight
 - **Branch:** refactor/architecture-cleanup-7119
-- **Audited source head:** 42e1e7f7d9869f05a748be0f93922bf3718dd72d
+- **Audited source head before this pass:** 6256062899ddb931a4abd2b114a17e341957f68a
 - **TD baseline:** RogueKnight TD v0.1 (unchanged)
 - **Scope:** logic source/tests and direct core/Main integration relevant to battle lifecycle and DEC-12.
 - **Method:** static source review at the audited head, mapped to TD requirement register and available test suites. Test execution status is reported separately.
@@ -184,3 +184,17 @@ At the simplification head following `1bfb3a7`:
 This keeps one canonical piece collection at the UI boundary and avoids storing a second enemy-position index or preformatted HUD string in every snapshot. `knightPosition` remains because the UI must retain the Knight's last square after its removal.
 
 **Verification status:** source changes were committed to the PR branch. They have not yet been run through Gradle on the user's machine. Re-run `.\gradlew.bat :logic:test`, `.\gradlew.bat test`, `.\gradlew.bat clean build`, and `git diff --check` against the updated branch head before treating the pass as verified.
+
+
+## 7. Simplification pass — validated data and playback queue
+
+At base head `6256062899ddb931a4abd2b114a17e341957f68a`, the following redundant layers were identified and removed:
+
+- Removed `PieceSpec`: it copied the five fields from `PieceStatsData` without adding validation, defaults, invariants, or behavior.
+- Removed `PieceCatalog`: the only production caller was `BattleFactory`, which loaded balance through `BalanceLoader`. That loader already runs `BalanceValidator`; the catalog repeated the same validation and copied each DTO into a second map. `BattleFactory` now reads the validated immutable `PieceStatsData` directly from `BalanceData`.
+- Removed `BattleEventQueue`: it had exactly one production consumer, `BattlePlayback`, and only wrapped `ArrayDeque` operations. `BattlePlayback` now owns the deque directly.
+- Preserved queue guarantees: `enqueue` copies the entire input with `List.copyOf` before appending, so a null-containing batch fails without partially mutating the pending event stream. FIFO order, playback timing, instant mode, stop/clear behavior and pending-count reporting remain unchanged.
+- Migrated the null-batch atomicity regression test into `BattlePlaybackTest`; the existing playback sequence tests continue to cover event order, skipped activations and terminal events.
+- `MapLoader` validates piece types and `BalanceLoader` validates required balance entries/stat ranges before `BattleFactory` consumes either DTO. No validation rule was removed.
+
+**Verification:** source and test changes are committed in this pass. The user should rerun `.\\gradlew.bat :logic:test`, `.\\gradlew.bat test`, `.\\gradlew.bat clean build`, and `git diff --check` against the resulting branch head. No new Gradle result is asserted here.

@@ -6,6 +6,7 @@ import rogueknight.action.BattleEvent;
 import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -162,6 +163,24 @@ class BattlePlaybackTest {
         BattlePlayback playback = new BattlePlayback(
             BattlePresentationModel.from(snapshot()), 0.1f);
         assertThrows(IllegalArgumentException.class, () -> playback.update(-0.1f));
+    }
+
+    @Test
+    void rejectsNullBatchWithoutPartiallyEnqueuingEvents() {
+        BattlePlayback playback = new BattlePlayback(
+            BattlePresentationModel.from(snapshot()), 0.1f);
+        playback.enqueue(List.of(
+            new BattleEvent.PieceMoved("rook-1", Position.fromNotation("e4"), Position.fromNotation("e5"))
+        ));
+
+        assertThrows(NullPointerException.class, () -> playback.enqueue(Arrays.asList(
+            new BattleEvent.PieceMoved("rook-1", Position.fromNotation("e5"), Position.fromNotation("e6")),
+            null
+        )));
+        assertEquals(1, playback.pendingEventCount());
+        assertEquals(1, playback.update(0.1f));
+        assertEquals(BoardPosition.fromNotation("e5"),
+            playback.model().piece("rook-1").orElseThrow().position());
     }
 
     private static BattleViewSnapshot snapshot() {
