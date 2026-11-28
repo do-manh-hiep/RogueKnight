@@ -30,7 +30,7 @@ public class MapLoader {
             );
         }
 
-        return load(input, "/data/map01.json");
+        return loadMap(input, "/data/map01.json");
     }
 
     MapData loadMap(InputStream input, String resourceName) throws IOException {

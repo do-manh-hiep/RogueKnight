@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import rogueknight.battle.Direction;
+import rogueknight.battle.EnemyRules;
 import rogueknight.battle.PieceState;
 import rogueknight.battle.PieceType;
 import rogueknight.battle.StateView;

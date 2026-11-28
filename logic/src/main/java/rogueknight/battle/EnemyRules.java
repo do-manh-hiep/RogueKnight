@@ -3,6 +3,7 @@ package rogueknight.battle;
 import rogueknight.action.ActionError;
 import rogueknight.action.ActionKind;
 import rogueknight.action.ActionRequest;
+import rogueknight.action.PawnAttackRule;
 
 import java.util.ArrayList;
 import java.util.Comparator;
