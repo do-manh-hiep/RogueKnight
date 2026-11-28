@@ -2,7 +2,7 @@ package rogueknight.data;
 
 import org.junit.jupiter.api.Test;
 import rogueknight.action.ActionRequest;
-import rogueknight.action.BattleController;
+import rogueknight.battle.BattleController;
 import rogueknight.action.EnemyPolicy;
 import rogueknight.battle.BattlePhase;
 import rogueknight.battle.BattleResult;

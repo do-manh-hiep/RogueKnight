@@ -3,7 +3,7 @@ package rogueknight.core.input;
 import rogueknight.action.ActionKind;
 import rogueknight.action.ActionRequest;
 import rogueknight.action.ActionResult;
-import rogueknight.action.BattleController;
+import rogueknight.battle.BattleController;
 import rogueknight.action.BattleEvent;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.EquipmentState;
@@ -194,7 +194,6 @@ public final class BattleControllerAdapter implements BattleControllerPort {
             enemies,
             moves,
             statusMessage,
-            false,
             piecesById
         );
     }

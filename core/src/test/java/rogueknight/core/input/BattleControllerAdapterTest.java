@@ -1,7 +1,7 @@
 package rogueknight.core.input;
 
 import org.junit.jupiter.api.Test;
-import rogueknight.action.BattleController;
+import rogueknight.battle.BattleController;
 import rogueknight.ai.EnemyAI;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.BattlePhase;
@@ -46,7 +46,7 @@ class BattleControllerAdapterEquipmentTest {
     private BattleControllerAdapter createAdapter() throws IOException {
         return new BattleControllerAdapter(new BattleFactory().createMap01Controller(
             EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER,
-            rogueknight.action.EnemyPhase.NONE));
+            rogueknight.action.EnemyPolicy.NONE));
     }
 
     @Test

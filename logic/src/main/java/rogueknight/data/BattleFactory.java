@@ -1,6 +1,6 @@
 package rogueknight.data;
 
-import rogueknight.action.BattleController;
+import rogueknight.battle.BattleController;
 import rogueknight.action.EnemyPolicy;
 import rogueknight.battle.BattlePhase;
 import rogueknight.battle.BattleResult;

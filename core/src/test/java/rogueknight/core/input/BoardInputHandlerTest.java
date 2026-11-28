@@ -1,7 +1,7 @@
 package rogueknight.core.input;
 
 import org.junit.jupiter.api.Test;
-import rogueknight.action.BattleController;
+import rogueknight.battle.BattleController;
 import rogueknight.ai.EnemyAI;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.BattlePhase;
@@ -113,7 +113,7 @@ class BoardInputHandlerTest {
         var controller = new rogueknight.data.BattleFactory().createMap01Controller(
             rogueknight.battle.EquipmentType.CANNON_MOVEMENT,
             rogueknight.battle.EquipmentType.DIAGONAL_SKEWER,
-            rogueknight.action.EnemyPhase.NONE
+            rogueknight.action.EnemyPolicy.NONE
         );
         var adapter = new BattleControllerAdapter(controller);
         var handler = new BoardInputHandler(projection, adapter);

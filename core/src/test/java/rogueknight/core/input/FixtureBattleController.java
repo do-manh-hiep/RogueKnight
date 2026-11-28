@@ -23,8 +23,6 @@ import java.util.Set;
  * - Valid moves increment globalTurn by 1; invalid moves keep state unchanged.
  */
 public final class FixtureBattleController implements BattleControllerPort {
-    public static final String DEMO_LABEL = "[FIXTURE UI DEMO - T-02.02]";
-
     private int globalTurn = 1;
     private BoardPosition knightPosition;
     private final Set<BoardPosition> rocks = new HashSet<>();
@@ -70,7 +68,6 @@ public final class FixtureBattleController implements BattleControllerPort {
             enemyPieces,
             legalMoves("knight"),
             "Turn " + globalTurn + " | Knight tại " + knightPosition.notation(),
-            true,
             piecesById
         );
     }

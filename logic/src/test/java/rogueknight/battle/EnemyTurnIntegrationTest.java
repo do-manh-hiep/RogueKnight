@@ -19,7 +19,7 @@ import rogueknight.data.BattleFactory;
 
 /*
  * EnemyTurnIntegrationTest  |  T-03.01 + T-03.02 + T-03.03 (G2)  |  IT-02, IT-04, TC-E02, TD 5.12A/B
- * rogueknight.action.BattleController thật + EnemyTurnRunner + EnemyAI thật (PawnPolicy + GenericEnemyPolicy), không stub.
+ * rogueknight.battle.BattleController thật + EnemyTurnRunner + EnemyAI thật (PawnPolicy + GenericEnemyPolicy), không stub.
  * Pawn-only scenarios (attack cone, BFS, promotion timeline) live in PawnTurnTest.
  */
 class EnemyTurnIntegrationTest {
@@ -89,7 +89,7 @@ class EnemyTurnIntegrationTest {
     void map01CannonAttackOpeningMatchesTdWalkthrough() throws IOException {
         // TD 5.12A / IT-02: Pawn2 dies, Turn 1 -> 2, the queue holds only Pawn1, which steps c7 -> c6 (DEC-01:
         // b6, c6, d6 are all 5 steps from row 1; straight SOUTH wins) and does not attack after moving.
-        rogueknight.action.BattleController controller = new BattleFactory().createMap01Controller(
+        rogueknight.battle.BattleController controller = new BattleFactory().createMap01Controller(
                 EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK,
                 new EnemyAI());
 
@@ -134,7 +134,7 @@ class EnemyTurnIntegrationTest {
     }
 
     private static List<BattleEvent> playTwoWaitsOnMap01() throws IOException {
-        rogueknight.action.BattleController controller = new BattleFactory().createMap01Controller(
+        rogueknight.battle.BattleController controller = new BattleFactory().createMap01Controller(
                 EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER,
                 new EnemyAI());
 

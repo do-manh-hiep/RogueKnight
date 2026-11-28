@@ -37,11 +37,11 @@ flowchart TB
 | battle/BattleState | Aggregate mutable của một trận; sở hữu Board, PieceState, Inventory, globalTurn, phase, result |
 | battle/PieceState, PieceType, Inventory, EquipmentState | Runtime state của quân và trang bị |
 | battle/BattleSnapshot, StateView | Snapshot/read-only view cho caller; StateView phục vụ rules/AI |
-| action/BattleController | Entry point cho Player Action; điều phối phase, turn, Enemy phase và terminal result |
-| action/KnightRules, EnemyRules | Sinh target/validate theo luật tương ứng; không tự áp dụng state mutation |
-| action/ActionResolver | Áp dụng một Valid ActionPlan lên state và phát ordered events; không tự validate/tăng turn/chạy queue |
-| action/EnemyTurnRunner, TurnScheduler | Chụp queue Enemy đến hạn, điều phối activation và lịch kế tiếp |
-| action/BattleEvent, ActionRequest, ActionResult, EnemyDecision | Contract request/result/event/decision giữa domain components |
+| battle/BattleController | Public entry point cho Player Action; sở hữu lifecycle và ủy quyền mutation cho rules/resolver nội bộ |
+| battle/KnightRules, EnemyRules | Sinh target/validate theo luật tương ứng; không tự áp dụng state mutation |
+| battle/ActionResolver, ActionPlan | Áp dụng plan đã validate lên state và phát ordered events; resolver không tự validate/tăng turn/chạy queue |
+| battle/EnemyTurnRunner, TurnScheduler | Chụp queue Enemy đến hạn, điều phối activation và lịch kế tiếp |
+| action/BattleEvent, ActionRequest, ActionResult, EnemyDecision, EnemyPolicy | Contract request/result/event/decision giữa domain components |
 | ai/EnemyAI, PawnPolicy, GenericEnemyPolicy | Chọn policy theo loại Enemy; chỉ quyết định, không sở hữu state |
 
 ### core
@@ -88,10 +88,10 @@ flowchart LR
 sequenceDiagram
     participant UI as BoardInputHandler
     participant Adapter as BattleControllerAdapter
-    participant C as BattleController
+    participant C as battle.BattleController
     participant R as KnightRules
     participant Resolver as ActionResolver
-    participant Enemy as EnemyTurnRunner
+    participant Enemy as battle.EnemyTurnRunner
     participant Playback as BattlePlayback
     participant View as BoardRenderer
     UI->>Adapter: submitAction / submitWait

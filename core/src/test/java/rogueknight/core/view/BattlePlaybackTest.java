@@ -170,7 +170,7 @@ class BattlePlaybackTest {
         PresentationPiece rook = new PresentationPiece(
             "rook-1", PieceType.ROOK, 3, BoardPosition.fromNotation("e4"));
         return new BattleViewSnapshot(
-            1, knightPos, true, Set.of(), Map.of(), Set.of(), "Turn 1", false,
+            1, knightPos, true, Set.of(), Map.of(), Set.of(), "Turn 1",
             Map.of("knight", knight, "rook-1", rook)
         );
     }

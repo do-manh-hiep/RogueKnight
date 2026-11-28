@@ -10,7 +10,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import rogueknight.core.input.ActionMode;
 import rogueknight.core.input.BoardInputHandler;
-import rogueknight.core.input.FixtureBattleController;
 
 import java.util.Objects;
 import java.util.Set;
@@ -31,7 +30,6 @@ public final class BoardRenderer {
     private final Color enemyColor = new Color(0.85f, 0.25f, 0.25f, 0.95f);
     private final Color fallenKnightColor = new Color(0.8f, 0.2f, 0.2f, 1f);
     private final Color knightColor = new Color(0.1f, 0.95f, 1.0f, 1f);
-    private final Color fixtureLabelColor = new Color(1f, 0.5f, 0.2f, 1f);
 
     public BoardRenderer() {
         font.getData().setScale(1.0f);
@@ -160,10 +158,6 @@ public final class BoardRenderer {
 
         font.setColor(Color.YELLOW);
         font.draw(batch, "RogueKnight", 20, 465);
-        if (snapshot.isFixtureDemo()) {
-            font.setColor(fixtureLabelColor);
-            font.draw(batch, FixtureBattleController.DEMO_LABEL, 20, 445);
-        }
 
         font.setColor(Color.WHITE);
         String headerInfo = "Turn " + presentation.globalTurn()

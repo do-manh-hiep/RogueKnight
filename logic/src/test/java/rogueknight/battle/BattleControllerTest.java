@@ -191,7 +191,7 @@ class BattleControllerTest {
     @Test
     void enemyPhaseRunsOnceAfterTurnAdvanceAndSeesNewPosition() {
         List<String> trace = new ArrayList<>();
-        EnemyPhase stub = (view, enemyId) -> {
+        EnemyPolicy stub = (view, enemyId) -> {
             trace.add(view.globalTurn() + ":" + view.positionOf(KNIGHT).orElseThrow());
             return EnemyDecision.skip("TEST");
         };
@@ -209,7 +209,7 @@ class BattleControllerTest {
     @Test
     void enemyPhaseEventsFollowPlayerEvents() {
         List<String> trace = new ArrayList<>();
-        EnemyPhase stub = (view, enemyId) -> {
+        EnemyPolicy stub = (view, enemyId) -> {
             trace.add(enemyId + "@" + view.globalTurn());
             return EnemyDecision.skip("READ_ONLY_TEST");
         };

@@ -11,7 +11,7 @@ import rogueknight.battle.StateView;
  * Chọn policy theo loại quân hiện tại rồi gọi choose; không tự sửa state.
  * Pawn -> PawnPolicy; Rook/Bishop/King/Queen -> GenericEnemyPolicy (Queen phong cấp dùng policy generic
  * từ activation sau, vì EnemyTurnRunner hỏi lại loại quân mỗi activation).
- * Dùng trong game: new EnemyTurnRunner(new EnemyAI()).
+ * BattleFactory inject policy này vào BattleController; runner nội bộ thực thi activation.
  */
 public final class EnemyAI implements EnemyPolicy {
 

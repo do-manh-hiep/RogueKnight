@@ -21,10 +21,10 @@ class BattleViewSnapshotTest {
         BoardPosition legalMove = BoardPosition.fromNotation("e6");
 
         BattleViewSnapshot alive = new BattleViewSnapshot(
-            1, position, true, Set.of(rock), Map.of(enemy, "ROOK"), Set.of(legalMove), "alive", false
+            1, position, true, Set.of(rock), Map.of(enemy, "ROOK"), Set.of(legalMove), "alive", Map.of()
         );
         BattleViewSnapshot dead = new BattleViewSnapshot(
-            2, position, false, Set.of(), Map.of(), Set.of(), "dead", false
+            2, position, false, Set.of(), Map.of(), Set.of(), "dead", Map.of()
         );
 
         BattleViewSnapshot updatedAlive = alive.withMessage("updated");
@@ -46,7 +46,7 @@ class BattleViewSnapshotTest {
         Set<BoardPosition> legalMoves = new HashSet<>(Set.of(legalMove));
 
         BattleViewSnapshot snapshot = new BattleViewSnapshot(
-            1, position, true, rocks, enemies, legalMoves, "", false
+            1, position, true, rocks, enemies, legalMoves, "", Map.of()
         );
 
         rocks.clear();

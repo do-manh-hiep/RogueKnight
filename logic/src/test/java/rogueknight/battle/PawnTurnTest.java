@@ -19,9 +19,9 @@ import rogueknight.board.Position;
 /*
  * PawnTurnTest  |  T-03.03 trong luồng T-03.01  |  R-P02..R-P08, FX-10..FX-12, IT-05, I09, DEC-01, DEC-05
  *
- * Pawn chạy qua đúng luồng của mọi Enemy: rogueknight.action.BattleController -> EnemyTurnRunner -> PawnPolicy ->
+ * Pawn chạy qua đúng luồng của mọi Enemy: rogueknight.battle.BattleController -> EnemyTurnRunner -> PawnPolicy ->
  * EnemyRules.validate -> ActionResolver (hướng, phong cấp) -> check terminal. Không stub.
- * Thay cho PawnEnemyPhaseTest và hai test executeAttack cũ; giữ nguyên ý nghĩa từng tình huống.
+ * Thay cho legacy PawnPhase test và hai test executeAttack cũ; giữ nguyên ý nghĩa từng tình huống.
  * Fixture: King h8 có nextActivationTurn = 99 để không bao giờ đến hạn, chỉ giữ trận ONGOING.
  */
 class PawnTurnTest {

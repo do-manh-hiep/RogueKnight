@@ -16,7 +16,7 @@ import rogueknight.board.Position;
 /*
  * KnightMoveTest  |  T-02.01  |  Bộ tình huống Knight Move trong hướng dẫn triển khai.
  * Fixture: Knight K1 ở d4; King KG ở h8 và Rook R1 ở a8 giữ trận ongoing,
- * không Enemy nào đến hạn (EnemyPhase.NONE).
+ * không Enemy nào đến hạn (EnemyPolicy.NONE).
  */
 class KnightMoveTest {
 

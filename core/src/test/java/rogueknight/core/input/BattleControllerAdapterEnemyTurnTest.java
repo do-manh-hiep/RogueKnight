@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List; import java.util.Set;
 import org.junit.jupiter.api.Test;
-import rogueknight.action.BattleController; import rogueknight.ai.EnemyAI;
+import rogueknight.battle.BattleController; import rogueknight.ai.EnemyAI;
 import rogueknight.battle.BattleSnapshot; import rogueknight.battle.BattlePhase; import rogueknight.battle.BattleResult;
 import rogueknight.battle.EquipmentType; import rogueknight.battle.Inventory; import rogueknight.battle.PieceType;
 import rogueknight.board.Position; import rogueknight.core.view.BoardPosition;
