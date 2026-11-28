@@ -27,10 +27,8 @@ final class ActionResolver {
                 applyDamage(state, events, plan.targetId(), 1);
             }
             case CAPTURE -> {
-                // CaptureDamage is 2; validation guarantees the target has at most 2 HP.
-                state.removePiece(plan.targetId());
-                events.add(new BattleEvent.PieceDamaged(plan.targetId(), 2, 0));
-                events.add(new BattleEvent.PieceRemoved(plan.targetId(), plan.target()));
+                // Validation guarantees CaptureDamage (2) removes this target.
+                applyDamage(state, events, plan.targetId(), 2);
                 state.movePiece(plan.actorId(), plan.target());
                 events.add(new BattleEvent.PieceMoved(plan.actorId(), plan.from(), plan.target()));
             }
@@ -38,9 +36,8 @@ final class ActionResolver {
             case CANNON_MOVEMENT -> {
                 state.consumeEquipment(plan.equipmentType());
                 if (plan.targetId() != null) {
-                    state.removePiece(plan.targetId());
-                    events.add(new BattleEvent.PieceDamaged(plan.targetId(), 2, 0));
-                    events.add(new BattleEvent.PieceRemoved(plan.targetId(), plan.target()));
+                    // Validation guarantees Cannon Movement capture deals lethal damage (2).
+                    applyDamage(state, events, plan.targetId(), 2);
                 }
                 state.movePiece(plan.actorId(), plan.landingPosition());
                 events.add(new BattleEvent.PieceMoved(plan.actorId(), plan.from(), plan.landingPosition()));

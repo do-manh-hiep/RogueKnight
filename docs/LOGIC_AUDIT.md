@@ -240,3 +240,14 @@ The validator now retains the parsed `PieceType` and uses enum comparisons for K
 No DTO, JSON, or gameplay behavior changes. Existing tests cover invalid type names, Knight ID/type mismatch, and missing required piece types.
 
 **Verification boundary:** committed to the PR branch; run the local Gradle checks against the new head.
+
+## 12. Simplification batch — remove redundant snapshot round-trip and unify lethal damage
+
+At head `6bb9b1b`, two independent simplification opportunities were confirmed:
+
+- `BattleController.fromSnapshot` first reconstructed a mutable `BattleState`, then passed it to the defensive-copy constructor, which immediately serialized it back to a snapshot and reconstructed it again. A dedicated private snapshot constructor now performs the single required snapshot-to-state conversion. The package-private constructor that accepts an existing mutable `BattleState` still takes a defensive copy, so callers cannot retain a mutable alias.
+- `ActionResolver` had two special-case implementations for lethal damage: `CAPTURE` and the capture branch of `CANNON_MOVEMENT` manually removed the target and emitted damage/removal events. Both now use the existing `applyDamage(..., 2)` path. Their validators guarantee the target has at most 2 HP, so the same target removal and event ordering are preserved.
+
+No rule, public API, phase/turn lifecycle, or snapshot immutability contract changes. Existing controller and equipment integration tests cover defensive ownership, capture, and Cannon Movement.
+
+**Verification boundary:** committed to the PR branch; local Gradle verification is required against this batch head.

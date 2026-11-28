@@ -32,7 +32,12 @@ public final class BattleController {
 
     /** Creates a controller from an immutable setup/restore snapshot; mutable state never crosses the boundary. */
     public static BattleController fromSnapshot(BattleSnapshot snapshot, EnemyPolicy enemyPolicy) {
-        return new BattleController(BattleState.fromSnapshot(Objects.requireNonNull(snapshot, "snapshot")), enemyPolicy);
+        return new BattleController(snapshot, enemyPolicy);
+    }
+
+    private BattleController(BattleSnapshot snapshot, EnemyPolicy enemyPolicy) {
+        this.state = BattleState.fromSnapshot(Objects.requireNonNull(snapshot, "snapshot"));
+        this.enemyTurnRunner = new EnemyTurnRunner(Objects.requireNonNull(enemyPolicy, "enemyPolicy"));
     }
 
     public BattleSnapshot snapshot() { return state.snapshot(); }
