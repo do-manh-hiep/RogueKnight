@@ -16,7 +16,7 @@ import rogueknight.board.Position;
  * - currentDirection = null (only Pawns have direction).
  * - Does not attack immediately in the turn of promotion.
  */
-public final class PawnPromotionApplier {
+final class PawnPromotionApplier {
 
     public static final int PROMOTED_QUEEN_HP = 2;
     public static final int PROMOTED_QUEEN_CYCLE = 4;
@@ -27,7 +27,7 @@ public final class PawnPromotionApplier {
     /**
      * Checks whether the Pawn at the given position is eligible for promotion.
      */
-    public static boolean canPromote(Position position) {
+    static boolean canPromote(Position position) {
         return position != null && position.row() == 0;
     }
 
@@ -39,7 +39,7 @@ public final class PawnPromotionApplier {
      * @param currentTurn current global turn
      * @return the PiecePromoted event
      */
-    public static BattleEvent.PiecePromoted promote(BattleState state, String pawnId, int currentTurn) {
+    static BattleEvent.PiecePromoted promote(BattleState state, String pawnId, int currentTurn) {
         Objects.requireNonNull(state, "state must not be null");
         Objects.requireNonNull(pawnId, "pawnId must not be null");
 
