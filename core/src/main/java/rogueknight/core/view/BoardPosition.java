@@ -56,17 +56,4 @@ public record BoardPosition(int column, int row) {
         return pos;
     }
 
-    /**
-     * Calculates Chebyshev distance (max(|dx|, |dy|)).
-     */
-    public int chebyshevDistance(BoardPosition other) {
-        return Math.max(Math.abs(this.column - other.column), Math.abs(this.row - other.row));
-    }
-
-    /**
-     * Calculates Manhattan distance (|dx| + |dy|).
-     */
-    public int manhattanDistance(BoardPosition other) {
-        return Math.abs(this.column - other.column) + Math.abs(this.row - other.row);
-    }
 }
