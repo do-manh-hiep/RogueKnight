@@ -1,4 +1,6 @@
-package rogueknight.ai;
+package rogueknight.battle;
+
+import rogueknight.ai.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

@@ -1,4 +1,6 @@
-package rogueknight.ai;
+package rogueknight.battle;
+
+import rogueknight.ai.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,9 +12,7 @@ import org.junit.jupiter.api.Test;
 import rogueknight.action.ActionKind;
 import rogueknight.action.ActionRequest;
 import rogueknight.action.ActionResult;
-import rogueknight.action.BattleController;
 import rogueknight.action.BattleEvent;
-import rogueknight.action.EnemyTurnRunner;
 import rogueknight.battle.BattlePhase;
 import rogueknight.battle.BattleResult;
 import rogueknight.battle.BattleSnapshot;
@@ -27,7 +27,7 @@ import rogueknight.data.BattleFactory;
 
 /*
  * EnemyTurnIntegrationTest  |  T-03.01 + T-03.02 + T-03.03 (G2)  |  IT-02, IT-04, TC-E02, TD 5.12A/B
- * BattleController thật + EnemyTurnRunner + EnemyAI thật (PawnPolicy + GenericEnemyPolicy), không stub.
+ * rogueknight.action.BattleController thật + EnemyTurnRunner + EnemyAI thật (PawnPolicy + GenericEnemyPolicy), không stub.
  * Pawn-only scenarios (attack cone, BFS, promotion timeline) live in PawnTurnTest.
  */
 class EnemyTurnIntegrationTest {
@@ -36,8 +36,8 @@ class EnemyTurnIntegrationTest {
         return Position.fromNotation(notation);
     }
 
-    private static BattleController realController(BattleState state) {
-        return new BattleController(state, new EnemyTurnRunner(new EnemyAI()));
+    private static rogueknight.action.BattleController realController(BattleState state) {
+        return new rogueknight.action.BattleController(state, new EnemyTurnRunner(new EnemyAI()));
     }
 
     @Test
@@ -50,7 +50,7 @@ class EnemyTurnIntegrationTest {
         state.addPiece(new PieceState("bishop-1", PieceType.BISHOP, 2, 3, 3, 2), at("f6"));
         state.addPiece(new PieceState("king-1", PieceType.KING, 5, 5, 5, 3), at("h8"));
         state.advanceTurn(); // fixture starts at Turn 2
-        BattleController controller = realController(state);
+        rogueknight.action.BattleController controller = realController(state);
 
         ActionResult result = controller.submit(ActionRequest.waitAction("knight"));
 
@@ -79,7 +79,7 @@ class EnemyTurnIntegrationTest {
         state.addPiece(new PieceState("knight", PieceType.KNIGHT, 5, 0, 0, 0), at("d3"));
         state.addPiece(new PieceState("rook-1", PieceType.ROOK, 2, 3, 2, 1), at("d4"));
         state.addPiece(new PieceState("king-1", PieceType.KING, 5, 5, 5, 2), at("h8"));
-        BattleController controller = realController(state);
+        rogueknight.action.BattleController controller = realController(state);
 
         ActionResult result = controller.submit(ActionRequest.waitAction("knight"));
 
@@ -97,7 +97,7 @@ class EnemyTurnIntegrationTest {
     void map01CannonAttackOpeningMatchesTdWalkthrough() throws IOException {
         // TD 5.12A / IT-02: Pawn2 dies, Turn 1 -> 2, the queue holds only Pawn1, which steps c7 -> c6 (DEC-01:
         // b6, c6, d6 are all 5 steps from row 1; straight SOUTH wins) and does not attack after moving.
-        BattleController controller = new BattleFactory().createMap01Controller(
+        rogueknight.action.BattleController controller = new BattleFactory().createMap01Controller(
                 EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK,
                 new EnemyTurnRunner(new EnemyAI()));
 
@@ -142,7 +142,7 @@ class EnemyTurnIntegrationTest {
     }
 
     private static List<BattleEvent> playTwoWaitsOnMap01() throws IOException {
-        BattleController controller = new BattleFactory().createMap01Controller(
+        rogueknight.action.BattleController controller = new BattleFactory().createMap01Controller(
                 EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER,
                 new EnemyTurnRunner(new EnemyAI()));
 

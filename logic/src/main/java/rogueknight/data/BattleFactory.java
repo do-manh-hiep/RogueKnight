@@ -5,7 +5,6 @@ import rogueknight.action.EnemyPolicy;
 import rogueknight.battle.BattlePhase;
 import rogueknight.battle.BattleResult;
 import rogueknight.battle.BattleSnapshot;
-import rogueknight.battle.BattleState;
 import rogueknight.battle.Direction;
 import rogueknight.battle.EquipmentType;
 import rogueknight.battle.Inventory;
@@ -26,11 +25,6 @@ public final class BattleFactory {
     public BattleController createMap01Controller(EquipmentType first, EquipmentType second, EnemyPolicy enemyPolicy)
             throws IOException {
         return BattleController.fromSnapshot(createMap01Setup(first, second), enemyPolicy);
-    }
-
-    /** Package-scoped fixture hook retained for data-package tests; production callers receive a controller. */
-    BattleState createMap01State(EquipmentType first, EquipmentType second) throws IOException {
-        return BattleState.fromSnapshot(createMap01Setup(first, second));
     }
 
     private BattleSnapshot createMap01Setup(EquipmentType first, EquipmentType second) throws IOException {

@@ -1,4 +1,6 @@
-package rogueknight.action;
+package rogueknight.battle;
+
+import rogueknight.action.*;
 
 import java.util.List;
 import java.util.Set;

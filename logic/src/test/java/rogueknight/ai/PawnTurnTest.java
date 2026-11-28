@@ -1,4 +1,6 @@
-package rogueknight.ai;
+package rogueknight.battle;
+
+import rogueknight.ai.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,9 +12,7 @@ import org.junit.jupiter.api.Test;
 import rogueknight.action.ActionKind;
 import rogueknight.action.ActionRequest;
 import rogueknight.action.ActionResult;
-import rogueknight.action.BattleController;
 import rogueknight.action.BattleEvent;
-import rogueknight.action.EnemyTurnRunner;
 import rogueknight.battle.BattlePhase;
 import rogueknight.battle.BattleResult;
 import rogueknight.battle.BattleSnapshot;
@@ -27,7 +27,7 @@ import rogueknight.board.Position;
 /*
  * PawnTurnTest  |  T-03.03 trong luồng T-03.01  |  R-P02..R-P08, FX-10..FX-12, IT-05, I09, DEC-01, DEC-05
  *
- * Pawn chạy qua đúng luồng của mọi Enemy: BattleController -> EnemyTurnRunner -> PawnPolicy ->
+ * Pawn chạy qua đúng luồng của mọi Enemy: rogueknight.action.BattleController -> EnemyTurnRunner -> PawnPolicy ->
  * EnemyRules.validate -> ActionResolver (hướng, phong cấp) -> check terminal. Không stub.
  * Thay cho PawnEnemyPhaseTest và hai test executeAttack cũ; giữ nguyên ý nghĩa từng tình huống.
  * Fixture: King h8 có nextActivationTurn = 99 để không bao giờ đến hạn, chỉ giữ trận ONGOING.
@@ -50,11 +50,11 @@ class PawnTurnTest {
         return new PieceState(id, PieceType.PAWN, 1, 2, nextTurn, spawnOrder, facing);
     }
 
-    private static BattleController controller(BattleState state) {
-        return new BattleController(state, new EnemyTurnRunner(new EnemyAI()));
+    private static rogueknight.action.BattleController controller(BattleState state) {
+        return new rogueknight.action.BattleController(state, new EnemyTurnRunner(new EnemyAI()));
     }
 
-    private static ActionResult waitOneTurn(BattleController controller) {
+    private static ActionResult waitOneTurn(rogueknight.action.BattleController controller) {
         ActionResult result = controller.submit(ActionRequest.waitAction("knight"));
         assertTrue(result.accepted());
         return result;
@@ -131,7 +131,7 @@ class PawnTurnTest {
         BattleState state = battle(Set.of(), at("b2"), 5);
         state.addPiece(pawn("pawn-1", Direction.SOUTH, 6, 1), at("a2"));
         for (int turn = 1; turn < 5; turn++) state.advanceTurn(); // fixture starts at Turn 5
-        BattleController controller = controller(state);
+        rogueknight.action.BattleController controller = controller(state);
 
         ActionResult turn6 = waitOneTurn(controller);
 
