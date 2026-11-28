@@ -5,7 +5,7 @@ import rogueknight.action.ActionRequest;
 import rogueknight.action.EnemyDecision;
 import rogueknight.action.EnemyPolicy;
 import rogueknight.battle.EnemyRules;
-import rogueknight.action.PawnPathfinder;
+import rogueknight.ai.PawnPathfinder;
 import rogueknight.battle.PieceState;
 import rogueknight.battle.PieceType;
 import rogueknight.battle.StateView;

@@ -1,4 +1,4 @@
-package rogueknight.action;
+package rogueknight.ai;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

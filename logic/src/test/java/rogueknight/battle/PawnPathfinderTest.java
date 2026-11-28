@@ -1,6 +1,6 @@
 package rogueknight.battle;
 
-import rogueknight.action.*;
+import rogueknight.ai.PawnPathfinder;
 
 
 import java.util.Optional;
