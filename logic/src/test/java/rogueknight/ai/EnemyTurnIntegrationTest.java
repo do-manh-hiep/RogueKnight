@@ -36,8 +36,8 @@ class EnemyTurnIntegrationTest {
         return Position.fromNotation(notation);
     }
 
-    private static rogueknight.action.BattleController realController(BattleState state) {
-        return new rogueknight.action.BattleController(state, new EnemyTurnRunner(new EnemyAI()));
+    private static BattleController realController(BattleState state) {
+        return new BattleController(state, new EnemyTurnRunner(new EnemyAI()));
     }
 
     @Test
@@ -50,7 +50,7 @@ class EnemyTurnIntegrationTest {
         state.addPiece(new PieceState("bishop-1", PieceType.BISHOP, 2, 3, 3, 2), at("f6"));
         state.addPiece(new PieceState("king-1", PieceType.KING, 5, 5, 5, 3), at("h8"));
         state.advanceTurn(); // fixture starts at Turn 2
-        rogueknight.action.BattleController controller = realController(state);
+        BattleController controller = realController(state);
 
         ActionResult result = controller.submit(ActionRequest.waitAction("knight"));
 

@@ -50,11 +50,11 @@ class PawnTurnTest {
         return new PieceState(id, PieceType.PAWN, 1, 2, nextTurn, spawnOrder, facing);
     }
 
-    private static rogueknight.action.BattleController controller(BattleState state) {
-        return new rogueknight.action.BattleController(state, new EnemyTurnRunner(new EnemyAI()));
+    private static BattleController controller(BattleState state) {
+        return new BattleController(state, new EnemyTurnRunner(new EnemyAI()));
     }
 
-    private static ActionResult waitOneTurn(rogueknight.action.BattleController controller) {
+    private static ActionResult waitOneTurn(BattleController controller) {
         ActionResult result = controller.submit(ActionRequest.waitAction("knight"));
         assertTrue(result.accepted());
         return result;
@@ -131,7 +131,7 @@ class PawnTurnTest {
         BattleState state = battle(Set.of(), at("b2"), 5);
         state.addPiece(pawn("pawn-1", Direction.SOUTH, 6, 1), at("a2"));
         for (int turn = 1; turn < 5; turn++) state.advanceTurn(); // fixture starts at Turn 5
-        rogueknight.action.BattleController controller = controller(state);
+        BattleController controller = controller(state);
 
         ActionResult turn6 = waitOneTurn(controller);
 
