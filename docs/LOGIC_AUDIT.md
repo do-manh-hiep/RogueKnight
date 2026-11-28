@@ -198,3 +198,14 @@ At base head `6256062899ddb931a4abd2b114a17e341957f68a`, the following redundant
 - `MapLoader` validates piece types and `BalanceLoader` validates required balance entries/stat ranges before `BattleFactory` consumes either DTO. No validation rule was removed.
 
 **Verification:** source and test changes are committed in this pass. The user should rerun `.\\gradlew.bat :logic:test`, `.\\gradlew.bat test`, `.\\gradlew.bat clean build`, and `git diff --check` against the resulting branch head. No new Gradle result is asserted here.
+
+## 8. Simplification pass — reuse canonical coordinate/direction utilities
+
+At head `4ac9544`, `PawnDirectionResolver` duplicated two existing domain utilities:
+
+- Its private `isInside(column, row)` repeated the bounds check already owned by `Position.isInBounds`.
+- Its private `directionOf(dc, dr)` repeated the exact delta lookup already provided by `Direction.fromDelta`.
+
+The resolver now calls those canonical methods and removes both private helpers. BFS traversal, goal selection, shortest-path comparison, tie-breaking order (straight SOUTH first, then column/row scan order), and fallback to SOUTH are unchanged. This is a mechanical deduplication; no gameplay rule or data contract changes.
+
+**Verification boundary:** this source/doc change is committed to the PR branch. Run the local Gradle checks listed in the handoff message against the new head before treating this pass as verified.

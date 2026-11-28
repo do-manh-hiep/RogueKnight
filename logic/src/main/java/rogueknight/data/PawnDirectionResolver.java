@@ -73,7 +73,7 @@ public final class PawnDirectionResolver {
                     int column = current.column() + dc;
                     int row = current.row() + dr;
 
-                    if (!isInside(column, row)) {
+                    if (!Position.isInBounds(column, row)) {
                         continue;
                     }
 
@@ -122,7 +122,7 @@ public final class PawnDirectionResolver {
                 Position next = new Position(column, row);
 
                 if (isShortestStep(next, startDistance, distances)) {
-                    return directionOf(dc, dr);
+                    return Direction.fromDelta(dc, dr);
                 }
             }
         }
@@ -138,23 +138,5 @@ public final class PawnDirectionResolver {
         Integer distance = distances.get(position);
 
         return distance != null && distance == startDistance - 1;
-    }
-
-    private boolean isInside(int column, int row) {
-        return column >= 0 && column < Position.BOARD_SIZE
-            && row >= 0 && row < Position.BOARD_SIZE;
-    }
-
-    private Direction directionOf(int dc, int dr) {
-        for (Direction direction : Direction.values()) {
-            if (direction.deltaColumn() == dc
-                && direction.deltaRow() == dr) {
-                return direction;
-            }
-        }
-
-        throw new IllegalArgumentException(
-            "Invalid direction: " + dc + "," + dr
-        );
     }
 }
