@@ -8,7 +8,6 @@ import rogueknight.action.BattleEvent;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.EquipmentState;
 import rogueknight.battle.EquipmentType;
-import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
@@ -95,7 +94,7 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         if (target == null) return MoveResult.rejected("OUT_OF_BOUNDS", before);
 
         // Default Move/Attack mode interprets an occupied enemy square as a Sword Attack.
-        ActionKind kind = mode == ActionMode.MOVE && before.enemyPieces().containsKey(target)
+        ActionKind kind = mode == ActionMode.MOVE && before.hasEnemyAt(target)
             ? ActionKind.SWORD
             : toKind(mode);
         ActionResult result = controller.submit(
@@ -147,18 +146,15 @@ public final class BattleControllerAdapter implements BattleControllerPort {
     private BattleViewSnapshot toViewSnapshot(BattleSnapshot snapshot) {
         Optional<BattleSnapshot.PieceView> knight = snapshot.pieceById("knight");
         BoardPosition knightPosition;
-        int knightHp;
         Set<BoardPosition> moves;
 
         if (knight.isPresent()) {
             BattleSnapshot.PieceView piece = knight.get();
             knightPosition = toBoardPosition(piece.position());
             lastKnownKnightPosition = knightPosition;
-            knightHp = piece.hp();
             moves = legalMoves(piece.id());
         } else if (lastKnownKnightPosition != null) {
             knightPosition = lastKnownKnightPosition;
-            knightHp = 0;
             moves = Set.of();
         } else {
             throw new IllegalStateException("UI di chuyển hiện tại cần quân có ID knight");
@@ -167,33 +163,19 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         Set<BoardPosition> rocks = new HashSet<>();
         for (Position rock : snapshot.rocks()) rocks.add(toBoardPosition(rock));
 
-        Map<BoardPosition, String> enemies = new HashMap<>();
         Map<String, PresentationPiece> piecesById = new HashMap<>();
         for (BattleSnapshot.PieceView piece : snapshot.pieces()) {
             BoardPosition position = toBoardPosition(piece.position());
             piecesById.put(piece.id(), new PresentationPiece(
                 piece.id(), piece.type(), piece.hp(), position
             ));
-            if (piece.type() != PieceType.KNIGHT) {
-                enemies.put(position, piece.type().name());
-            }
         }
-
-        String statusMessage =
-            "Turn " + snapshot.globalTurn()
-            + " | Knight: " + (knightHp > 0 ? knightPosition.notation() : "DEAD")
-            + " | HP: " + knightHp
-            + " | " + snapshot.phase()
-            + " | " + snapshot.result();
 
         return new BattleViewSnapshot(
             snapshot.globalTurn(),
             knightPosition,
-            knightHp > 0,
             rocks,
-            enemies,
             moves,
-            statusMessage,
             piecesById
         );
     }
