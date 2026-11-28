@@ -99,12 +99,12 @@ class BattleControllerTest {
 
         initial.movePiece(KNIGHT, at("e6"));
         initial.replacePiece(initial.pieceState(KNIGHT).orElseThrow().withHp(1));
-        initial.consumeEquipment(EquipmentType.CANNON_MOVEMENT);
+        initial.consumeEquipment(EquipmentType.DIAGONAL_SKEWER);
 
         BattleSnapshot owned = controller.snapshot();
         assertEquals(at("d4"), owned.pieceById(KNIGHT).orElseThrow().position());
         assertEquals(3, owned.pieceById(KNIGHT).orElseThrow().hp());
-        assertEquals(0, owned.inventory().chargesOf(EquipmentType.CANNON_MOVEMENT));
+        assertEquals(1, owned.inventory().chargesOf(EquipmentType.DIAGONAL_SKEWER));
     }
 
     @Test
