@@ -185,7 +185,9 @@ class BattleControllerTest {
             trace.add(view.globalTurn() + ":" + view.positionOf(KNIGHT).orElseThrow());
             return EnemyDecision.skip("TEST");
         };
-        BattleController controller = new BattleController(fixture(), stub);
+        BattleState state = fixture();
+        state.replacePiece(state.pieceState("R1").orElseThrow().withNextActivationTurn(2));
+        BattleController controller = new BattleController(state, stub);
 
         controller.submit(ActionRequest.move(KNIGHT, at("d6")));
         assertTrue(trace.isEmpty(), "invalid request must not start the enemy phase");
@@ -196,15 +198,23 @@ class BattleControllerTest {
 
     @Test
     void enemyPhaseEventsFollowPlayerEvents() {
-        EnemyPhase stub = (view, enemyId) -> EnemyDecision.skip("READ_ONLY_TEST");
-        BattleController controller = new BattleController(fixture(), stub);
+        List<String> trace = new ArrayList<>();
+        EnemyPhase stub = (view, enemyId) -> {
+            trace.add(enemyId + "@" + view.globalTurn());
+            return EnemyDecision.skip("READ_ONLY_TEST");
+        };
+        BattleState state = fixture();
+        state.replacePiece(state.pieceState("R1").orElseThrow().withNextActivationTurn(2));
+        BattleController controller = new BattleController(state, stub);
 
         ActionResult result = controller.submit(ActionRequest.move(KNIGHT, at("e6")));
 
         assertEquals(List.of(
                 new BattleEvent.ActionPerformed(ActionKind.MOVE, KNIGHT),
                 new BattleEvent.PieceMoved(KNIGHT, at("d4"), at("e6")),
-                new BattleEvent.TurnAdvanced(1, 2)), result.events());
+                new BattleEvent.TurnAdvanced(1, 2),
+                new BattleEvent.ActorActivated("R1", at("a8"), 2)), result.events());
+        assertEquals(List.of("R1@2"), trace);
         assertEquals(at("a8"), result.after().pieceById("R1").orElseThrow().position());
     }
 }
