@@ -25,15 +25,15 @@ class BattlePlaybackTest {
         ));
 
         assertEquals(0, playback.update(0.19f));
-        assertEquals(BoardPosition.fromNotation("e4"),
+        assertEquals(Position.fromNotation("e4"),
             playback.model().piece("rook-1").orElseThrow().position());
 
         assertEquals(1, playback.update(0.01f));
-        assertEquals(BoardPosition.fromNotation("e5"),
+        assertEquals(Position.fromNotation("e5"),
             playback.model().piece("rook-1").orElseThrow().position());
 
         assertEquals(1, playback.update(0.2f));
-        assertEquals(BoardPosition.fromNotation("e6"),
+        assertEquals(Position.fromNotation("e6"),
             playback.model().piece("rook-1").orElseThrow().position());
         assertFalse(playback.isPlaying());
     }
@@ -50,12 +50,12 @@ class BattlePlaybackTest {
         ));
 
         assertEquals(2, playback.update(0.2f));
-        assertEquals(BoardPosition.fromNotation("e4"),
+        assertEquals(Position.fromNotation("e4"),
             playback.model().piece("rook-1").orElseThrow().position());
         assertEquals(2, playback.pendingEventCount());
 
         assertEquals(2, playback.update(0.2f));
-        assertEquals(BoardPosition.fromNotation("e5"),
+        assertEquals(Position.fromNotation("e5"),
             playback.model().piece("rook-1").orElseThrow().position());
     }
 
@@ -115,7 +115,7 @@ class BattlePlaybackTest {
         ));
 
         assertEquals(2, playback.update(0f));
-        assertEquals(BoardPosition.fromNotation("e6"),
+        assertEquals(Position.fromNotation("e6"),
             playback.model().piece("rook-1").orElseThrow().position());
         assertFalse(playback.isPlaying());
     }
@@ -132,10 +132,10 @@ class BattlePlaybackTest {
 
         assertEquals(0, playback.update(0.079f));
         assertEquals(1, playback.update(0.001f));
-        assertEquals(BoardPosition.fromNotation("e5"),
+        assertEquals(Position.fromNotation("e5"),
             playback.model().piece("rook-1").orElseThrow().position());
         assertEquals(1, playback.update(0.08f));
-        assertEquals(BoardPosition.fromNotation("e6"),
+        assertEquals(Position.fromNotation("e6"),
             playback.model().piece("rook-1").orElseThrow().position());
     }
 
@@ -152,7 +152,7 @@ class BattlePlaybackTest {
 
         assertFalse(playback.isPlaying());
         assertEquals(0, playback.pendingEventCount());
-        assertEquals(BoardPosition.fromNotation("e4"),
+        assertEquals(Position.fromNotation("e4"),
             playback.model().piece("rook-1").orElseThrow().position());
     }
 
@@ -179,15 +179,15 @@ class BattlePlaybackTest {
         )));
         assertEquals(1, playback.pendingEventCount());
         assertEquals(1, playback.update(0.1f));
-        assertEquals(BoardPosition.fromNotation("e5"),
+        assertEquals(Position.fromNotation("e5"),
             playback.model().piece("rook-1").orElseThrow().position());
     }
 
     private static BattleViewSnapshot snapshot() {
-        BoardPosition knightPos = BoardPosition.fromNotation("d4");
+        Position knightPos = Position.fromNotation("d4");
         PresentationPiece knight = new PresentationPiece("knight", PieceType.KNIGHT, 5, knightPos);
         PresentationPiece rook = new PresentationPiece(
-            "rook-1", PieceType.ROOK, 3, BoardPosition.fromNotation("e4"));
+            "rook-1", PieceType.ROOK, 3, Position.fromNotation("e4"));
         return new BattleViewSnapshot(
             1, knightPos, Set.of(), Set.of(),
             Map.of("knight", knight, "rook-1", rook)
