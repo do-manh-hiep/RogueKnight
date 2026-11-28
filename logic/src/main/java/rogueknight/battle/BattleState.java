@@ -11,7 +11,7 @@ import rogueknight.battle.BattleSnapshot.PieceView;
 import rogueknight.board.Position;
 
 /** Mutable aggregate for one battle; owns Board, PieceState map and Inventory. */
-public public final class BattleState implements StateView {
+public final class BattleState implements StateView {
     private static final int INITIAL_TURN = 1;
     private final Board board;
     private final Map<String, PieceState> pieces = new LinkedHashMap<>();
