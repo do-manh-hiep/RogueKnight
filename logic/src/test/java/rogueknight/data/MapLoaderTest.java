@@ -30,7 +30,6 @@ class MapLoaderTest {
     @Test
     void invalidMapIsReportedAsSetupIOException() {
         byte[] json = "{\"width\":8,\"height\":8,\"rocks\":[],\"pieces\":[]}".getBytes(StandardCharsets.UTF_8);
-            .getBytes(StandardCharsets.UTF_8);
         IOException error = assertThrows(IOException.class, () ->
             new MapLoader().loadMap(new ByteArrayInputStream(json), "/data/map01.json"));
         assertTrue(error.getCause() instanceof IllegalArgumentException);
