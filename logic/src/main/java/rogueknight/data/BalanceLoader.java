@@ -1,6 +1,7 @@
 package rogueknight.data;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import rogueknight.data.dto.BalanceData;
 
 import java.io.IOException;
@@ -21,8 +22,18 @@ public class BalanceLoader {
         }
 
         try (Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)){
-            BalanceData balance = gson.fromJson(reader, BalanceData.class);
-            validator.validate(balance);
+            BalanceData balance;
+            try {
+                balance = gson.fromJson(reader, BalanceData.class);
+            } catch (JsonParseException exception) {
+                throw new IOException("JSON /data/balance.json không hợp lệ", exception);
+            }
+            try {
+                validator.validate(balance);
+            } catch (IllegalArgumentException exception) {
+                throw new IOException("Dữ liệu /data/balance.json không hợp lệ: "
+                    + exception.getMessage(), exception);
+            }
             return balance;
         }
     }

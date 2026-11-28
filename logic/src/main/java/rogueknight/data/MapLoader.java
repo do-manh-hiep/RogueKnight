@@ -1,6 +1,7 @@
 package rogueknight.data;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import rogueknight.data.dto.MapData;
 
 import java.io.IOException;
@@ -33,8 +34,18 @@ public class MapLoader {
                 input,
                 StandardCharsets.UTF_8
         )) {
-            MapData map = gson.fromJson(reader, MapData.class);
-            validator.validate(map);
+            MapData map;
+            try {
+                map = gson.fromJson(reader, MapData.class);
+            } catch (JsonParseException exception) {
+                throw new IOException("JSON /data/map01.json không hợp lệ", exception);
+            }
+            try {
+                validator.validate(map);
+            } catch (IllegalArgumentException exception) {
+                throw new IOException("Dữ liệu /data/map01.json không hợp lệ: "
+                    + exception.getMessage(), exception);
+            }
             return map;
         }
     }
