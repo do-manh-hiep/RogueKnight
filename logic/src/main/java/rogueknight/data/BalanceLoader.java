@@ -21,17 +21,21 @@ public class BalanceLoader {
             throw new IOException("Không tìm thấy resource: /data/balance.json");
         }
 
+        return load(input, "/data/balance.json");
+    }
+
+    BalanceData load(InputStream input, String resourceName) throws IOException {
         try (Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)){
             BalanceData balance;
             try {
                 balance = gson.fromJson(reader, BalanceData.class);
             } catch (JsonParseException exception) {
-                throw new IOException("JSON /data/balance.json không hợp lệ", exception);
+                throw new IOException("JSON " + resourceName + " không hợp lệ", exception);
             }
             try {
                 validator.validate(balance);
             } catch (IllegalArgumentException exception) {
-                throw new IOException("Dữ liệu /data/balance.json không hợp lệ: "
+                throw new IOException("Dữ liệu " + resourceName + " không hợp lệ: "
                     + exception.getMessage(), exception);
             }
             return balance;

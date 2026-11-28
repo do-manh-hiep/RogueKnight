@@ -30,6 +30,10 @@ public class MapLoader {
             );
         }
 
+        return load(input, "/data/map01.json");
+    }
+
+    MapData loadMap(InputStream input, String resourceName) throws IOException {
         try (Reader reader = new InputStreamReader(
                 input,
                 StandardCharsets.UTF_8
@@ -38,12 +42,12 @@ public class MapLoader {
             try {
                 map = gson.fromJson(reader, MapData.class);
             } catch (JsonParseException exception) {
-                throw new IOException("JSON /data/map01.json không hợp lệ", exception);
+                throw new IOException("JSON " + resourceName + " không hợp lệ", exception);
             }
             try {
                 validator.validate(map);
             } catch (IllegalArgumentException exception) {
-                throw new IOException("Dữ liệu /data/map01.json không hợp lệ: "
+                throw new IOException("Dữ liệu " + resourceName + " không hợp lệ: "
                     + exception.getMessage(), exception);
             }
             return map;
