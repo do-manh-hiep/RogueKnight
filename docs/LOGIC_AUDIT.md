@@ -273,3 +273,15 @@ At head `89145cf`:
 No action validation, event order, snapshot content, or board coordinate behavior is intentionally changed.
 
 **Verification boundary:** committed to the PR branch; run local Gradle checks against the new head.
+
+## 15. Simplification batch — one canonical board coordinate type
+
+At head `4d6c1b1`, the UI module's `BoardPosition` duplicated the immutable 8×8 `logic.board.Position` value type. That duplication required adapter and event-to-presentation coordinate copies, separate bounds logic, and a second notation API.
+
+- Replaced `BoardPosition` throughout core input, snapshots, renderer, projection, presentation pieces, and core tests with `rogueknight.board.Position`.
+- Removed `core.view.BoardPosition` and its duplicate `BoardPositionTest`; `logic.board.PositionTest` remains the canonical coordinate test suite.
+- `BoardProjection` checks `Position.isInBounds` before constructing the validated position.
+- Removed the now-identity coordinate conversion helpers in the adapter and presentation model.
+- Core retains the UI-facing adapter and presentation model; logic remains pure Java and has no dependency on core/libGDX.
+
+This is a substantive type/layer deletion, not a rename-only change. No gameplay rules or board coordinate conventions are changed.

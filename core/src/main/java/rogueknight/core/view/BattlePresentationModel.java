@@ -65,11 +65,11 @@ public final class BattlePresentationModel {
         }
         if (event instanceof BattleEvent.PieceMoved moved) {
             PresentationPiece piece = requirePiece(moved.pieceId());
-            Position from = toPosition(moved.from());
+            Position from = moved.from();
             if (!piece.position().equals(from)) {
                 throw new IllegalStateException("PieceMoved source mismatch for " + moved.pieceId());
             }
-            piecesById.put(piece.id(), piece.at(toPosition(moved.to())));
+            piecesById.put(piece.id(), piece.at(moved.to()));
             return;
         }
         if (event instanceof BattleEvent.PieceDamaged damaged) {
@@ -88,7 +88,7 @@ public final class BattlePresentationModel {
         }
         if (event instanceof BattleEvent.PieceRemoved removed) {
             PresentationPiece piece = requirePiece(removed.pieceId());
-            if (!piece.position().equals(toPosition(removed.at()))) {
+            if (!piece.position().equals(removed.at())) {
                 throw new IllegalStateException("PieceRemoved position mismatch for " + removed.pieceId());
             }
             piecesById.remove(piece.id());
@@ -97,7 +97,7 @@ public final class BattlePresentationModel {
         if (event instanceof BattleEvent.PiecePromoted promoted) {
             PresentationPiece piece = requirePiece(promoted.pieceId());
             if (piece.type() != promoted.fromType()
-                    || !piece.position().equals(toPosition(promoted.at()))) {
+                    || !piece.position().equals(promoted.at())) {
                 throw new IllegalStateException("PiecePromoted state mismatch for " + promoted.pieceId());
             }
             piecesById.put(piece.id(), piece.withType(promoted.toType()));
@@ -131,7 +131,4 @@ public final class BattlePresentationModel {
         }
     }
 
-    private static Position toPosition(rogueknight.board.Position position) {
-        return new Position(position.column(), position.row());
-    }
 }

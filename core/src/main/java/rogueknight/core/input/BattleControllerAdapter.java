@@ -172,7 +172,4 @@ public final class BattleControllerAdapter implements BattleControllerPort {
         );
     }
 
-    private static Position toPosition(Position position) {
-        return new Position(position.column(), position.row());
-    }
 }

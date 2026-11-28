@@ -55,7 +55,7 @@ flowchart TB
 | view/BattleViewSnapshot, PresentationPiece | Snapshot hiển thị và dữ liệu quân có stable ID |
 | view/BattlePresentationModel | Projection mutable dành riêng cho playback; không phải nguồn gameplay truth |
 | view/BattlePlayback | FIFO event queue và tiêu thụ event theo delta-time |
-| view/BoardProjection, BoardPosition, BoardRenderer | Chuyển world/board coordinates và render bàn cờ/presentation |
+| view/BoardProjection, board/Position, BoardRenderer | Chuyển world/board coordinates và render bàn cờ/presentation |
 
 ## 3. Ownership và state authority
 
