@@ -26,7 +26,7 @@ class BalanceLoaderTest {
 
     @Test
     void invalidBalanceIsReportedAsSetupIOException() {
-        byte[] json = "{\\"pieces\\":{}}".getBytes(StandardCharsets.UTF_8);
+        byte[] json = "{\"pieces\":{}}".getBytes(StandardCharsets.UTF_8);
         IOException error = assertThrows(IOException.class, () ->
             new BalanceLoader().load(new ByteArrayInputStream(json), "/data/balance.json"));
         assertTrue(error.getCause() instanceof IllegalArgumentException);
