@@ -48,7 +48,7 @@ class PawnAttackRuleTest {
         state.addPiece(new PieceState("knight", PieceType.KNIGHT, 5, 0, 0, 0), new Position(3, 3));
         state.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Direction.SOUTH), new Position(3, 4));
 
-        assertTrue(PawnAttackRule.canAttackKnight(state, "pawn-1"));
+        assertTrue(EnemyRules.canAttackKnight(state, "pawn-1"));
     }
 
     @Test
@@ -58,7 +58,7 @@ class PawnAttackRuleTest {
         state.addPiece(new PieceState("knight", PieceType.KNIGHT, 5, 0, 0, 0), new Position(3, 1));
         state.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Direction.SOUTH), new Position(3, 4));
 
-        assertFalse(PawnAttackRule.canAttackKnight(state, "pawn-1"));
+        assertFalse(EnemyRules.canAttackKnight(state, "pawn-1"));
     }
 
     @Test
@@ -68,7 +68,7 @@ class PawnAttackRuleTest {
         state.addPiece(new PieceState("K1", PieceType.KNIGHT, 5, 0, 0, 0), new Position(2, 3));
         state.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Direction.SOUTH), new Position(3, 4));
 
-        assertTrue(PawnAttackRule.canAttackKnight(state, "pawn-1"));
+        assertTrue(EnemyRules.canAttackKnight(state, "pawn-1"));
     }
 
     // The Pawn attack itself (damage, Knight death, DEFEAT) now goes through EnemyRules + ActionResolver +
