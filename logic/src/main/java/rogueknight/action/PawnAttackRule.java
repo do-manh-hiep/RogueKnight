@@ -3,12 +3,7 @@ package rogueknight.action;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import rogueknight.battle.Direction;
-import rogueknight.battle.EnemyRules;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
-import rogueknight.battle.StateView;
 import rogueknight.board.Position;
 
 /**
@@ -44,18 +39,4 @@ public final class PawnAttackRule {
         return List.copyOf(targets);
     }
 
-    /**
-     * Checks if the Knight is within the attack range of the specified Pawn, using its stored direction.
-     * The Knight is found by type, not by a fixed ID.
-     */
-    public static boolean canAttackKnight(StateView view, String pawnId) {
-        Objects.requireNonNull(view, "view must not be null");
-        Objects.requireNonNull(pawnId, "pawnId must not be null");
-
-        Optional<PieceState> pawn = view.pieceState(pawnId);
-        if (pawn.isEmpty() || pawn.get().type() != PieceType.PAWN) {
-            return false;
-        }
-        return EnemyRules.canAttackKnight(view, pawnId);
-    }
 }
