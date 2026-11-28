@@ -230,3 +230,13 @@ At head `e9f2a6e`, `BattleState.isEmpty(Position)` only forwarded to `Board.isEm
 Removed the redundant `BattleState` override. Calls through `StateView` now use the interface default, which delegates to the same `BattleState.isRock` and `BattleState.pieceAt` methods. `Board.isEmpty` remains because it is a direct Board operation and is covered by Board tests. No behavior or null handling changes.
 
 **Verification boundary:** committed to the PR branch; run the local Gradle checks against the new head.
+
+## 11. Simplification pass — keep parsed map piece type canonical
+
+At head `4907c6d`, `MapValidator` parsed each piece's type string with `PieceType.valueOf` only to validate it, then continued comparing the original string against `"KNIGHT"` and `"KING"`.
+
+The validator now retains the parsed `PieceType` and uses enum comparisons for Knight identity checks and required Knight/King detection. The original string remains only for the contextual invalid-type error message. This removes parallel string-based type checks while preserving the exact accepted enum names and validation order.
+
+No DTO, JSON, or gameplay behavior changes. Existing tests cover invalid type names, Knight ID/type mismatch, and missing required piece types.
+
+**Verification boundary:** committed to the PR branch; run the local Gradle checks against the new head.
