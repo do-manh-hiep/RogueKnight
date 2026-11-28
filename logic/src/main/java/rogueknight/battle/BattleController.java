@@ -26,7 +26,9 @@ public final class BattleController {
     BattleController(BattleState state) { this(state, EnemyPolicy.NONE); }
 
     BattleController(BattleState state, EnemyPolicy enemyPolicy) {
-        this.state = Objects.requireNonNull(state, "state");
+        BattleState suppliedState = Objects.requireNonNull(state, "state");
+        // Copy through the immutable boundary so callers cannot retain a mutable alias.
+        this.state = BattleState.fromSnapshot(suppliedState.snapshot());
         this.enemyTurnRunner = new EnemyTurnRunner(Objects.requireNonNull(enemyPolicy, "enemyPolicy"));
     }
 
