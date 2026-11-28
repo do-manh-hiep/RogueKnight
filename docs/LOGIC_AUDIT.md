@@ -169,3 +169,18 @@ Deferred candidates:
 - `BattleViewSnapshot`: no fields removed in this pass. The suspected redundant fields need a complete consumer audit and coordinated adapter/input/test migration before changing its contract.
 
 **Verification:** this pass was applied through GitHub branch commits. Gradle tests, clean build, `git diff --check`, and desktop smoke tests have not been run against `5e4bc78` by the assistant. Previous user-reported results apply to the earlier baseline only and must not be carried forward as verification of this head.
+
+
+## 6. Simplification pass — canonical presentation snapshot
+
+At the simplification head following `1bfb3a7`:
+
+- Reduced `BattleViewSnapshot` to five fields: `globalTurn`, `knightPosition`, `rocks`, `legalMoves`, and `piecesById`.
+- Removed `knightAlive`: alive/dead is derived from the canonical presentation-piece collection. When the Knight is defeated and removed, its last known square remains available separately for the fallen-piece marker.
+- Removed `enemyPieces`: enemy occupancy is derived from `piecesById` through `hasEnemyAt`; both the input adapter and click-feedback path use that query.
+- Removed `statusMessage` and `withMessage`: status text was presentation formatting duplicated from global turn, Knight state and battle result. The renderer already reads turn/result and piece HP from `BattlePresentationModel`; input feedback remains in `BoardInputHandler`.
+- Updated the production adapter, input handler, fixture controller and Knight-death tests to use the reduced contract.
+
+This keeps one canonical piece collection at the UI boundary and avoids storing a second enemy-position index or preformatted HUD string in every snapshot. `knightPosition` remains because the UI must retain the Knight's last square after its removal.
+
+**Verification status:** source changes were committed to the PR branch. They have not yet been run through Gradle on the user's machine. Re-run `.`gradlew.bat :logic:test`, `.`gradlew.bat test`, `.`gradlew.bat clean build`, and `git diff --check` against the updated branch head before treating the pass as verified.
