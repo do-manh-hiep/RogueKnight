@@ -11,10 +11,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import rogueknight.battle.Direction;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
-import rogueknight.battle.StateView;
 import rogueknight.board.Position;
 
 /*

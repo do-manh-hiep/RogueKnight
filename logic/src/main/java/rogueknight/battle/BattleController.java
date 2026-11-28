@@ -5,7 +5,6 @@ import rogueknight.action.ActionKind;
 import rogueknight.action.ActionRequest;
 import rogueknight.action.ActionResult;
 import rogueknight.action.BattleEvent;
-import rogueknight.action.EnemyDecision;
 import rogueknight.action.EnemyPolicy;
 import rogueknight.action.ResultEvaluator;
 

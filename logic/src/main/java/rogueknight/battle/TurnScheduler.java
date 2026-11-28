@@ -3,10 +3,6 @@ package rogueknight.battle;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import rogueknight.battle.BattleState;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
-import rogueknight.battle.StateView;
 
 /*
  * TurnScheduler.java  |  T-03.01  |  TD: 2.1 (R-T04, R-T07), 4.8 (C-05), 5.3, DEC-05, DEC-07

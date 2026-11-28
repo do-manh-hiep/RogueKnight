@@ -9,10 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import rogueknight.battle.BattleState;
-import rogueknight.battle.EquipmentType;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
 /** Read-only validation and legal-target generation for the player's Knight. */

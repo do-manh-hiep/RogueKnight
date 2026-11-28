@@ -3,9 +3,6 @@ package rogueknight.battle;
 import rogueknight.action.BattleEvent;
 
 import java.util.Objects;
-import rogueknight.battle.BattleState;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
 /**

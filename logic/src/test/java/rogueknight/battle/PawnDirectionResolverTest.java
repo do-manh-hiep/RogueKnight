@@ -2,13 +2,6 @@ package rogueknight.battle;
 
 import org.junit.jupiter.api.Test;
 import rogueknight.data.PawnDirectionResolver;
-import rogueknight.battle.BattleSnapshot;
-import rogueknight.battle.BattleState;
-import rogueknight.battle.Direction;
-import rogueknight.battle.EquipmentType;
-import rogueknight.battle.Inventory;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
 import java.util.HashSet;

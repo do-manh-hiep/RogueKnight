@@ -3,7 +3,6 @@ package rogueknight.battle;
 import rogueknight.action.ActionKind;
 
 import java.util.List;
-import rogueknight.battle.EquipmentType;
 import rogueknight.board.Position;
 
 /** Validated internal plan; only rules create plans and the resolver consumes them. */

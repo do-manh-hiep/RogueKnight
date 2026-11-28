@@ -7,11 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import rogueknight.battle.BattleState;
-import rogueknight.battle.EquipmentType;
-import rogueknight.battle.Inventory;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
 /*

@@ -12,13 +12,6 @@ import rogueknight.action.ActionError;
 import rogueknight.action.ActionRequest;
 import rogueknight.action.ActionResult;
 import rogueknight.action.ActionKind;
-import rogueknight.battle.BattleSnapshot;
-import rogueknight.battle.BattleState;
-import rogueknight.battle.Direction;
-import rogueknight.battle.EquipmentType;
-import rogueknight.battle.Inventory;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
 /*

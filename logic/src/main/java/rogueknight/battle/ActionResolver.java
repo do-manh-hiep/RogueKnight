@@ -1,14 +1,9 @@
 package rogueknight.battle;
 
-import rogueknight.action.ActionKind;
 import rogueknight.action.BattleEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import rogueknight.battle.BattleState;
-import rogueknight.battle.Direction;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
 /**

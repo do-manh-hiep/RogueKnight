@@ -1,6 +1,5 @@
 package rogueknight.battle;
 
-import rogueknight.ai.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,15 +12,6 @@ import rogueknight.action.ActionKind;
 import rogueknight.action.ActionRequest;
 import rogueknight.action.ActionResult;
 import rogueknight.action.BattleEvent;
-import rogueknight.battle.BattlePhase;
-import rogueknight.battle.BattleResult;
-import rogueknight.battle.BattleSnapshot;
-import rogueknight.battle.BattleState;
-import rogueknight.battle.Direction;
-import rogueknight.battle.EquipmentType;
-import rogueknight.battle.Inventory;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 import rogueknight.data.BattleFactory;
 

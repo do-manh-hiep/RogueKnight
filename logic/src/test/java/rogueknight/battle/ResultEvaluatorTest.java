@@ -1,18 +1,10 @@
 package rogueknight.battle;
 
-import rogueknight.action.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import rogueknight.battle.BattleResult;
-import rogueknight.battle.BattleSnapshot;
-import rogueknight.battle.BattleState;
-import rogueknight.battle.EquipmentType;
-import rogueknight.battle.Inventory;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
 /*

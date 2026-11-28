@@ -4,12 +4,6 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import rogueknight.action.BattleEvent;
-import rogueknight.battle.BattleState;
-import rogueknight.battle.Direction;
-import rogueknight.battle.EquipmentType;
-import rogueknight.battle.Inventory;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
 import rogueknight.board.Position;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
