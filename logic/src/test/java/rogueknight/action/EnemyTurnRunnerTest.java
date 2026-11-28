@@ -271,6 +271,20 @@ class EnemyTurnRunnerTest {
     }
 
 
+
+    @Test
+    void nullAiDecisionFailsLoudlyInsteadOfBeingTreatedAsSkip() {
+        BattleState state = battle(5);
+        state.addPiece(rook("R", 2, 1), at("d5"));
+        BattleController controller = new BattleController(state,
+                new EnemyTurnRunner((view, enemyId) -> null));
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> controller.submit(ActionRequest.waitAction(KNIGHT)));
+        assertTrue(error.getMessage().contains("DEC-12"));
+        assertTrue(error.getMessage().contains("null or unsupported decision"));
+    }
+
     @Test
     void promotionKeepsItsScheduleAndThePromotedQueenDoesNotAttackYet() {
         // Pawn c2 steps to c1 and promotes inside the Move (ActionResolver). The new Queen on c1 is diagonal-adjacent

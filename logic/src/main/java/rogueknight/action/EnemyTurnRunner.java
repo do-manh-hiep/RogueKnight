@@ -59,7 +59,11 @@ public final class EnemyTurnRunner implements EnemyPhase {
     /** Runs one activation. Returns true when the battle ended during it. */
     private boolean activate(BattleState state, String enemyId, PieceType typeAtStart, List<BattleEvent> events) {
         EnemyDecision decision = policy.choose(state, enemyId);
-        if (!(decision instanceof EnemyDecision.Act act)) return false; // Skip: no legal action this activation
+        if (decision instanceof EnemyDecision.Skip) return false; // Explicit Skip is a valid no-action decision.
+        if (!(decision instanceof EnemyDecision.Act act)) {
+            throw new IllegalStateException("DEC-12: enemy policy returned a null or unsupported decision for "
+                    + enemyId + " at turn " + state.globalTurn());
+        }
 
         ActionRequest first = act.request();
         if (resolveEnemyAction(state, first, events)) return true;
