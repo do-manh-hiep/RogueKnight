@@ -31,11 +31,11 @@ class MapValidatorTest {
                 () -> validator.validate(new MapData(8, 8, null, List.of())))
                 .getMessage().contains("rocks, pieces"));
         assertTrue(assertThrows(IllegalArgumentException.class,
-                () -> validator.validate(new MapData(8, 8, List.of((PositionData) null), List.of())))
+                () -> validator.validate(new MapData(8, 8, java.util.Collections.singletonList(null), List.of())))
                 .getMessage().contains("rocks[0] is null"));
         assertTrue(assertThrows(IllegalArgumentException.class,
                 () -> validator.validate(new MapData(8, 8, List.of(),
-                        List.of((PieceData) null))))
+                        java.util.Collections.singletonList(null))))
                 .getMessage().contains("pieces[0] is null"));
     }
 
