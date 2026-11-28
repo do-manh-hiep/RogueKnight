@@ -6,7 +6,6 @@ import rogueknight.action.ActionRequest;
 import rogueknight.action.ActionResult;
 import rogueknight.action.BattleEvent;
 import rogueknight.action.EnemyPolicy;
-import rogueknight.action.ResultEvaluator;
 
 import java.util.ArrayList;
 import java.util.List;
