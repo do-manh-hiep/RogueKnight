@@ -8,7 +8,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import rogueknight.battle.BattleSnapshot.PieceView;
-import rogueknight.board.Board;
 import rogueknight.board.Position;
 
 /** Mutable aggregate for one battle; owns Board, PieceState map and Inventory. */
