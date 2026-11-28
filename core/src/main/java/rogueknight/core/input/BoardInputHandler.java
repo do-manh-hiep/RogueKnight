@@ -11,15 +11,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Handles user clicks in world coordinates, translates them into board actions,
- * submits requests to the controller port, and maintains UI feedback state.
- * Fully decoupled from graphics/rendering to enable headless JUnit tests.
- */
+/** Handles board input and delegates every gameplay decision to the controller port. */
 public final class BoardInputHandler {
     private final BoardProjection projection;
     private final BattleControllerPort controller;
-
     private BattleViewSnapshot currentSnapshot;
     private String feedbackMessage;
     private final List<BattleEvent> pendingEvents = new ArrayList<>();
@@ -28,68 +23,52 @@ public final class BoardInputHandler {
     public BoardInputHandler(BoardProjection projection, BattleControllerPort controller) {
         this.projection = Objects.requireNonNull(projection, "projection must not be null");
         this.controller = Objects.requireNonNull(controller, "controller must not be null");
-        this.currentSnapshot = controller.snapshot();
-        this.feedbackMessage = "[1] Move / Attack | [0] Wait";
+        currentSnapshot = controller.snapshot();
+        feedbackMessage = "[1] Move / Attack | [0] Wait";
     }
 
-    /**
-     * Processes a mouse click at the given world coordinates (x, y).
-     *
-     * @param worldX world X coordinate
-     * @param worldY world Y coordinate
-     * @return true if the click was inside the board; false if out of bounds
-     */
     public boolean handleWorldClick(float worldX, float worldY) {
-        Optional<BoardPosition> clickedPosOpt = projection.worldToBoard(worldX, worldY);
-
-        if (clickedPosOpt.isEmpty()) {
-            this.feedbackMessage = "Click ngoài bàn cờ";
+        Optional<BoardPosition> clicked = projection.worldToBoard(worldX, worldY);
+        if (clicked.isEmpty()) {
+            feedbackMessage = "Click ngoài bàn cờ";
             return false;
         }
 
-        BoardPosition target = clickedPosOpt.get();
-
-        // Clicking the Knight only refreshes the selection feedback; its position is in the snapshot.
+        BoardPosition target = clicked.get();
         if (target.equals(currentSnapshot.knightPosition())) {
-            this.feedbackMessage = "Đã chọn Knight tại " + target.notation();
+            feedbackMessage = "Đã chọn Knight tại " + target.notation();
             return true;
         }
 
-        boolean attackTarget = mode == ActionMode.MOVE && currentSnapshot.enemyPieces().containsKey(target);
+        boolean attackTarget = mode == ActionMode.MOVE && currentSnapshot.hasEnemyAt(target);
         MoveResult result = controller.submitAction("knight", mode, target);
-
         if (result.accepted()) {
-            this.currentSnapshot = result.after();
+            currentSnapshot = result.after();
             pendingEvents.addAll(result.events());
             String label = mode == ActionMode.MOVE
                 ? (attackTarget ? "Sword Attack" : "Di chuyển Knight")
                 : "Dùng " + mode.label();
-            this.feedbackMessage = label + ": " + result.before().knightPosition().notation()
+            feedbackMessage = label + ": " + result.before().knightPosition().notation()
                 + " -> " + target.notation() + " (Turn " + currentSnapshot.globalTurn() + ")";
-            this.mode = ActionMode.MOVE;
+            mode = ActionMode.MOVE;
         } else {
-            // Rejected: DO NOT update to a potentially fabricated state.
-            this.currentSnapshot = result.before();
-            this.feedbackMessage = "Nước đi không hợp lệ tới " + target.notation()
+            currentSnapshot = result.before();
+            feedbackMessage = "Nước đi không hợp lệ tới " + target.notation()
                 + " [" + result.errorReason() + "]";
         }
-
         return true;
     }
 
-    /**
-     * Selects a numbered action. Wait executes immediately; selecting an active
-     * equipment action again falls back to the always-available Move/Attack mode.
-     */
+    /** Wait executes immediately; selecting an active equipment action again returns to Move. */
     public void selectMode(ActionMode newMode) {
         if (newMode == null) {
-            this.mode = ActionMode.MOVE;
-            this.feedbackMessage = "Chế độ: " + this.mode.label();
+            mode = ActionMode.MOVE;
+            feedbackMessage = "Chế độ: " + mode.label();
             return;
         }
         List<ActionMode> availableModes = getAvailableModes();
         if (!availableModes.contains(newMode)) {
-            this.feedbackMessage = "Action không khả dụng: " + newMode.label();
+            feedbackMessage = "Action không khả dụng: " + newMode.label();
             return;
         }
         if (newMode == ActionMode.WAIT) {
@@ -105,14 +84,11 @@ public final class BoardInputHandler {
             mode = ActionMode.MOVE;
             return;
         }
-        this.mode = (newMode == this.mode) ? ActionMode.MOVE : newMode;
-        this.feedbackMessage = "Chế độ: " + this.mode.label();
+        mode = newMode == mode ? ActionMode.MOVE : newMode;
+        feedbackMessage = "Chế độ: " + mode.label();
     }
 
-    /**
-     * Selects an action by its current displayed/keyboard index. The list is
-     * rebuilt from available actions, so exhausted equipment never leaves a gap.
-     */
+    /** Selects an action by its current displayed/keyboard index. */
     public void selectAction(int index) {
         List<ActionMode> availableModes = getAvailableModes();
         if (index < 0 || index >= availableModes.size()) {
@@ -122,12 +98,10 @@ public final class BoardInputHandler {
         selectMode(availableModes.get(index));
     }
 
-    /** Modes usable now; used-up equipment is absent. */
     public List<ActionMode> getAvailableModes() {
         return controller.availableModes();
     }
 
-    /** Returns the current displayed index for an action, or -1 if unavailable. */
     public int getActionIndex(ActionMode action) {
         return getAvailableModes().indexOf(action);
     }
@@ -136,7 +110,6 @@ public final class BoardInputHandler {
         return mode;
     }
 
-    /** Tiles to highlight for the active mode; MOVE uses the snapshot, others query the controller. */
     public Set<BoardPosition> getHighlightTargets() {
         if (mode == ActionMode.WAIT) return Set.of();
         return controller.legalTargets("knight", mode);
@@ -146,11 +119,7 @@ public final class BoardInputHandler {
         return currentSnapshot;
     }
 
-
-    /**
-     * Returns and clears ordered domain events accumulated since the previous drain.
-     * The presentation layer can enqueue these events for sequential animation.
-     */
+    /** Returns and clears ordered domain events accumulated since the previous drain. */
     public List<BattleEvent> drainEvents() {
         List<BattleEvent> events = List.copyOf(pendingEvents);
         pendingEvents.clear();
