@@ -1,8 +1,8 @@
 package rogueknight.core.input;
 
+import rogueknight.board.Position;
 import rogueknight.action.BattleEvent;
 import rogueknight.core.view.BattleViewSnapshot;
-import rogueknight.core.view.BoardPosition;
 import rogueknight.core.view.BoardProjection;
 
 import java.util.ArrayList;
@@ -28,15 +28,15 @@ public final class BoardInputHandler {
     }
 
     public boolean handleWorldClick(float worldX, float worldY) {
-        Optional<BoardPosition> clicked = projection.worldToBoard(worldX, worldY);
+        Optional<Position> clicked = projection.worldToBoard(worldX, worldY);
         if (clicked.isEmpty()) {
             feedbackMessage = "Click ngoài bàn cờ";
             return false;
         }
 
-        BoardPosition target = clicked.get();
+        Position target = clicked.get();
         if (target.equals(currentSnapshot.knightPosition())) {
-            feedbackMessage = "Đã chọn Knight tại " + target.notation();
+            feedbackMessage = "Đã chọn Knight tại " + target.toNotation();
             return true;
         }
 
@@ -48,12 +48,12 @@ public final class BoardInputHandler {
             String label = mode == ActionMode.MOVE
                 ? (attackTarget ? "Sword Attack" : "Di chuyển Knight")
                 : "Dùng " + mode.label();
-            feedbackMessage = label + ": " + result.before().knightPosition().notation()
-                + " -> " + target.notation() + " (Turn " + currentSnapshot.globalTurn() + ")";
+            feedbackMessage = label + ": " + result.before().knightPosition().toNotation()
+                + " -> " + target.toNotation() + " (Turn " + currentSnapshot.globalTurn() + ")";
             mode = ActionMode.MOVE;
         } else {
             currentSnapshot = result.before();
-            feedbackMessage = "Nước đi không hợp lệ tới " + target.notation()
+            feedbackMessage = "Nước đi không hợp lệ tới " + target.toNotation()
                 + " [" + result.errorReason() + "]";
         }
         return true;
@@ -110,7 +110,7 @@ public final class BoardInputHandler {
         return mode;
     }
 
-    public Set<BoardPosition> getHighlightTargets() {
+    public Set<Position> getHighlightTargets() {
         if (mode == ActionMode.WAIT) return Set.of();
         return controller.legalTargets("knight", mode);
     }
