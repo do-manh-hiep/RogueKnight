@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test;
 import rogueknight.battle.BattleController; import rogueknight.ai.EnemyAI;
 import rogueknight.battle.BattleSnapshot; import rogueknight.battle.BattlePhase; import rogueknight.battle.BattleResult;
 import rogueknight.battle.EquipmentType; import rogueknight.battle.Inventory; import rogueknight.battle.PieceType;
-import rogueknight.board.Position; import rogueknight.core.view.BoardPosition;
-class BattleControllerAdapterEnemyTurnTest {
+import rogueknight.board.Position; class BattleControllerAdapterEnemyTurnTest {
  @Test void knightKilledByEnemyTurnShowsDefeatWithoutCrashing(){
   BattleSnapshot setup=new BattleSnapshot(1,BattlePhase.PLAYER_SELECT,BattleResult.ONGOING,Set.of(),List.of(
    new BattleSnapshot.PieceView("knight",PieceType.KNIGHT,1,0,0,0,Position.fromNotation("d4")),
@@ -17,8 +16,8 @@ class BattleControllerAdapterEnemyTurnTest {
    new BattleSnapshot.PieceView("king-1",PieceType.KING,5,5,5,2,Position.fromNotation("h8"))
   ),Inventory.initial(EquipmentType.CANNON_MOVEMENT,EquipmentType.CANNON_ATTACK));
   BattleControllerAdapter adapter=new BattleControllerAdapter(BattleController.fromSnapshot(setup,new EnemyAI()));
-  UiActionResult result=adapter.submitAction("knight",ActionMode.MOVE,BoardPosition.fromNotation("d3"));
-  assertTrue(result.accepted()); assertEquals(BoardPosition.fromNotation("d3"),result.after().knightPosition());
+  UiActionResult result=adapter.submitAction("knight",ActionMode.MOVE,Position.fromNotation("d3"));
+  assertTrue(result.accepted()); assertEquals(Position.fromNotation("d3"),result.after().knightPosition());
   assertFalse(result.after().piecesById().containsKey("knight"));
   assertTrue(result.events().stream().anyMatch(event -> event instanceof rogueknight.action.BattleEvent.BattleEnded ended && ended.result() == BattleResult.DEFEAT));
   assertTrue(result.after().legalMoves().isEmpty()); assertDoesNotThrow(adapter::snapshot);

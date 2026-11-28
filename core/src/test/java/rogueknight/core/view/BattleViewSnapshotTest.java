@@ -1,5 +1,6 @@
 package rogueknight.core.view;
 
+import rogueknight.board.Position;
 import org.junit.jupiter.api.Test;
 import rogueknight.battle.PieceType;
 
@@ -16,8 +17,8 @@ class BattleViewSnapshotTest {
 
     @Test
     void derivesKnightPresenceAndEnemyOccupancyFromCanonicalPieceMap() {
-        BoardPosition knightPosition = BoardPosition.fromNotation("d4");
-        BoardPosition enemyPosition = BoardPosition.fromNotation("h8");
+        Position knightPosition = Position.fromNotation("d4");
+        Position enemyPosition = Position.fromNotation("h8");
         PresentationPiece knight = new PresentationPiece(
             "knight", PieceType.KNIGHT, 5, knightPosition);
         PresentationPiece enemy = new PresentationPiece(
@@ -42,13 +43,13 @@ class BattleViewSnapshotTest {
 
     @Test
     void constructorDefensivelyCopiesAndExposesImmutableCollections() {
-        BoardPosition position = BoardPosition.fromNotation("d4");
-        BoardPosition rock = BoardPosition.fromNotation("a1");
-        BoardPosition legalMove = BoardPosition.fromNotation("e6");
+        Position position = Position.fromNotation("d4");
+        Position rock = Position.fromNotation("a1");
+        Position legalMove = Position.fromNotation("e6");
         PresentationPiece knight = new PresentationPiece(
             "knight", PieceType.KNIGHT, 5, position);
-        Set<BoardPosition> rocks = new HashSet<>(Set.of(rock));
-        Set<BoardPosition> legalMoves = new HashSet<>(Set.of(legalMove));
+        Set<Position> rocks = new HashSet<>(Set.of(rock));
+        Set<Position> legalMoves = new HashSet<>(Set.of(legalMove));
         Map<String, PresentationPiece> pieces = new HashMap<>(Map.of("knight", knight));
 
         BattleViewSnapshot snapshot = new BattleViewSnapshot(

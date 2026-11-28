@@ -14,7 +14,6 @@ import rogueknight.board.Position;
 import java.util.List;
 import java.util.Set;
 import rogueknight.core.view.BattleViewSnapshot;
-import rogueknight.core.view.BoardPosition;
 import rogueknight.data.BattleFactory;
 
 import java.io.IOException;
@@ -34,7 +33,7 @@ class BattleControllerAdapterEquipmentTest {
         BattleController controller = controller(new BattleSnapshot.PieceView("knight", PieceType.KNIGHT, 1, 0, 0, 0, Position.fromNotation("c1")),new BattleSnapshot.PieceView("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Position.fromNotation("c7"), Direction.SOUTH),new BattleSnapshot.PieceView("king-1", PieceType.KING, 5, 5, 5, 2, Position.fromNotation("h8")),new BattleSnapshot.PieceView("rook-1", PieceType.ROOK, 2, 3, 2, 3, Position.fromNotation("d6")));
         BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
         adapter.snapshot();
-        UiActionResult action = adapter.submitAction("knight", ActionMode.MOVE, BoardPosition.fromNotation("d3"));
+        UiActionResult action = adapter.submitAction("knight", ActionMode.MOVE, Position.fromNotation("d3"));
         assertTrue(action.accepted());
 
         BattleViewSnapshot snapshot = adapter.snapshot();
@@ -54,10 +53,10 @@ class BattleControllerAdapterEquipmentTest {
 
         assertEquals(
             java.util.Set.of(
-                BoardPosition.fromNotation("d4"),
-                BoardPosition.fromNotation("d5"),
-                BoardPosition.fromNotation("d6"),
-                BoardPosition.fromNotation("d7")
+                Position.fromNotation("d4"),
+                Position.fromNotation("d5"),
+                Position.fromNotation("d6"),
+                Position.fromNotation("d7")
             ),
             adapter.legalTargets("knight", ActionMode.CANNON_MOVEMENT)
         );
@@ -68,10 +67,10 @@ class BattleControllerAdapterEquipmentTest {
         BattleControllerAdapter adapter = createAdapter();
 
         UiActionResult result = adapter.submitAction(
-            "knight", ActionMode.CANNON_MOVEMENT, BoardPosition.fromNotation("d7"));
+            "knight", ActionMode.CANNON_MOVEMENT, Position.fromNotation("d7"));
 
         assertTrue(result.accepted());
-        assertEquals(BoardPosition.fromNotation("d7"), result.after().knightPosition());
+        assertEquals(Position.fromNotation("d7"), result.after().knightPosition());
         assertTrue(adapter.legalTargets("knight", ActionMode.CANNON_MOVEMENT).isEmpty());
     }
 
@@ -81,7 +80,7 @@ class BattleControllerAdapterEquipmentTest {
         BattleViewSnapshot before = adapter.snapshot();
 
         UiActionResult result = adapter.submitAction(
-            "knight", ActionMode.CANNON_MOVEMENT, BoardPosition.fromNotation("d8"));
+            "knight", ActionMode.CANNON_MOVEMENT, Position.fromNotation("d8"));
 
         assertFalse(result.accepted());
         assertEquals(before, adapter.snapshot());
@@ -92,7 +91,7 @@ class BattleControllerAdapterEquipmentTest {
         BattleControllerAdapter adapter = createAdapter();
 
         UiActionResult result = adapter.submitAction(
-            "knight", ActionMode.CANNON_ATTACK, BoardPosition.fromNotation("d7"));
+            "knight", ActionMode.CANNON_ATTACK, Position.fromNotation("d7"));
 
         assertFalse(result.accepted());
         assertEquals("EQUIPMENT_NOT_OWNED", result.errorReason());
@@ -110,7 +109,7 @@ class BattleControllerAdapterEquipmentTest {
 
         handler.handleWorldClick(projection.getCellCenterX(3), projection.getCellCenterY(3)); // d4
         assertEquals(ActionMode.MOVE, handler.getMode());
-        assertEquals(BoardPosition.fromNotation("d4"), handler.getCurrentSnapshot().knightPosition());
+        assertEquals(Position.fromNotation("d4"), handler.getCurrentSnapshot().knightPosition());
     }
 
     @Test
@@ -122,7 +121,7 @@ class BattleControllerAdapterEquipmentTest {
             adapter.availableModes()
         );
 
-        adapter.submitAction("knight", ActionMode.CANNON_MOVEMENT, BoardPosition.fromNotation("d4"));
+        adapter.submitAction("knight", ActionMode.CANNON_MOVEMENT, Position.fromNotation("d4"));
 
         assertEquals(
             java.util.List.of(ActionMode.WAIT, ActionMode.MOVE, ActionMode.DIAGONAL_SKEWER),
@@ -151,7 +150,7 @@ class BattleControllerAdapterEquipmentTest {
         var projection = new rogueknight.core.view.BoardProjection(0f, 0f, 48f);
         BoardInputHandler handler = new BoardInputHandler(projection, adapter);
 
-        assertTrue(handler.getHighlightTargets().contains(BoardPosition.fromNotation("e5")));
+        assertTrue(handler.getHighlightTargets().contains(Position.fromNotation("e5")));
         handler.handleWorldClick(projection.getCellCenterX(4), projection.getCellCenterY(4));
 
         assertEquals(1, controller.snapshot().pieceById("rook").orElseThrow().hp());

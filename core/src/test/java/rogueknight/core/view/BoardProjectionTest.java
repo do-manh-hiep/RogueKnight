@@ -1,5 +1,6 @@
 package rogueknight.core.view;
 
+import rogueknight.board.Position;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -22,10 +23,10 @@ class BoardProjectionTest {
         assertEquals(152f, a1CenterX);
         assertEquals(72f, a1CenterY);
 
-        Optional<BoardPosition> a1 = projection.worldToBoard(a1CenterX, a1CenterY);
+        Optional<Position> a1 = projection.worldToBoard(a1CenterX, a1CenterY);
         assertTrue(a1.isPresent());
-        assertEquals(new BoardPosition(0, 0), a1.get());
-        assertEquals("a1", a1.get().notation());
+        assertEquals(new Position(0, 0), a1.get());
+        assertEquals("a1", a1.get().toNotation());
 
         // h8 center: x = 128 + 7.5 * 48 = 488, y = 48 + 7.5 * 48 = 408
         float h8CenterX = projection.getCellCenterX(7);
@@ -33,33 +34,33 @@ class BoardProjectionTest {
         assertEquals(488f, h8CenterX);
         assertEquals(408f, h8CenterY);
 
-        Optional<BoardPosition> h8 = projection.worldToBoard(h8CenterX, h8CenterY);
+        Optional<Position> h8 = projection.worldToBoard(h8CenterX, h8CenterY);
         assertTrue(h8.isPresent());
-        assertEquals(new BoardPosition(7, 7), h8.get());
-        assertEquals("h8", h8.get().notation());
+        assertEquals(new Position(7, 7), h8.get());
+        assertEquals("h8", h8.get().toNotation());
 
         // d4 center: col 3, row 3
         float d4CenterX = projection.getCellCenterX(3);
         float d4CenterY = projection.getCellCenterY(3);
-        Optional<BoardPosition> d4 = projection.worldToBoard(d4CenterX, d4CenterY);
+        Optional<Position> d4 = projection.worldToBoard(d4CenterX, d4CenterY);
         assertTrue(d4.isPresent());
-        assertEquals(new BoardPosition(3, 3), d4.get());
-        assertEquals("d4", d4.get().notation());
+        assertEquals(new Position(3, 3), d4.get());
+        assertEquals("d4", d4.get().toNotation());
     }
 
     @Test
     void mapsSquareCornersAccurately() {
         // Bottom-left of a1 (just inside)
-        Optional<BoardPosition> bl = projection.worldToBoard(128.01f, 48.01f);
+        Optional<Position> bl = projection.worldToBoard(128.01f, 48.01f);
         assertTrue(bl.isPresent());
-        assertEquals(new BoardPosition(0, 0), bl.get());
+        assertEquals(new Position(0, 0), bl.get());
 
         // Top-right of h8 (just inside)
         float maxX = originX + 8 * tileSize - 0.01f;
         float maxY = originY + 8 * tileSize - 0.01f;
-        Optional<BoardPosition> tr = projection.worldToBoard(maxX, maxY);
+        Optional<Position> tr = projection.worldToBoard(maxX, maxY);
         assertTrue(tr.isPresent());
-        assertEquals(new BoardPosition(7, 7), tr.get());
+        assertEquals(new Position(7, 7), tr.get());
     }
 
     @Test

@@ -19,7 +19,7 @@ class BattlePresentationModelTest {
         BattlePresentationModel model = BattlePresentationModel.from(snapshot());
 
         assertEquals(1, model.globalTurn());
-        assertEquals(BoardPosition.fromNotation("d4"),
+        assertEquals(Position.fromNotation("d4"),
             model.piece("knight").orElseThrow().position());
         assertEquals(PieceType.ROOK, model.piece("rook-17").orElseThrow().type());
         assertEquals(2, model.piecesById().size());
@@ -33,9 +33,9 @@ class BattlePresentationModelTest {
         model.apply(new BattleEvent.PieceMoved(
             "rook-17", Position.fromNotation("e4"), Position.fromNotation("e5")));
 
-        assertEquals(BoardPosition.fromNotation("e5"),
+        assertEquals(Position.fromNotation("e5"),
             model.piece("rook-17").orElseThrow().position());
-        assertEquals(BoardPosition.fromNotation("d4"),
+        assertEquals(Position.fromNotation("d4"),
             model.piece("knight").orElseThrow().position());
     }
 
@@ -87,10 +87,10 @@ class BattlePresentationModelTest {
     }
 
     private static BattleViewSnapshot snapshot() {
-        BoardPosition knightPosition = BoardPosition.fromNotation("d4");
+        Position knightPosition = Position.fromNotation("d4");
         PresentationPiece knight = new PresentationPiece("knight", PieceType.KNIGHT, 5, knightPosition);
         PresentationPiece rook = new PresentationPiece(
-            "rook-17", PieceType.ROOK, 3, BoardPosition.fromNotation("e4"));
+            "rook-17", PieceType.ROOK, 3, Position.fromNotation("e4"));
 
         return new BattleViewSnapshot(
             1, knightPosition, Set.of(), Set.of(),
