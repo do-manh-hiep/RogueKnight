@@ -83,6 +83,43 @@ class BattlePlaybackTest {
     }
 
     @Test
+    void fasterAndSlowerCycleThroughNormalFastAndInstant() {
+        BattlePlayback playback = new BattlePlayback(
+            BattlePresentationModel.from(snapshot()), 0.18f);
+
+        assertEquals(BattlePlayback.Speed.NORMAL, playback.speed());
+        playback.faster();
+        assertEquals(BattlePlayback.Speed.FAST, playback.speed());
+        playback.faster();
+        assertEquals(BattlePlayback.Speed.INSTANT, playback.speed());
+        playback.faster();
+        assertEquals(BattlePlayback.Speed.INSTANT, playback.speed());
+
+        playback.slower();
+        assertEquals(BattlePlayback.Speed.FAST, playback.speed());
+        playback.slower();
+        assertEquals(BattlePlayback.Speed.NORMAL, playback.speed());
+        playback.slower();
+        assertEquals(BattlePlayback.Speed.NORMAL, playback.speed());
+    }
+
+    @Test
+    void instantModeAppliesWholeQueueInOrderWithoutWaitingForIntervals() {
+        BattlePlayback playback = new BattlePlayback(
+            BattlePresentationModel.from(snapshot()), 0.18f);
+        playback.setSpeed(BattlePlayback.Speed.INSTANT);
+        playback.enqueue(List.of(
+            new BattleEvent.PieceMoved("rook-1", Position.fromNotation("e4"), Position.fromNotation("e5")),
+            new BattleEvent.PieceMoved("rook-1", Position.fromNotation("e5"), Position.fromNotation("e6"))
+        ));
+
+        assertEquals(2, playback.update(0f));
+        assertEquals(BoardPosition.fromNotation("e6"),
+            playback.model().piece("rook-1").orElseThrow().position());
+        assertFalse(playback.isPlaying());
+    }
+
+    @Test
     void rejectsInvalidDeltaAndInvalidInterval() {
         assertThrows(IllegalArgumentException.class,
             () -> new BattlePlayback(BattlePresentationModel.from(snapshot()), 0f));
