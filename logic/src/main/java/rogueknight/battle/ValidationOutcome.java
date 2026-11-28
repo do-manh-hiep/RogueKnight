@@ -1,4 +1,6 @@
-package rogueknight.action;
+package rogueknight.battle;
+
+import rogueknight.action.ActionError;
 
 import java.util.Objects;
 

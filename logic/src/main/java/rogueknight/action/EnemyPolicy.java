@@ -14,5 +14,7 @@ import rogueknight.battle.StateView;
 @FunctionalInterface
 public interface EnemyPolicy {
 
+    EnemyPolicy NONE = (view, enemyId) -> EnemyDecision.skip("DISABLED");
+
     EnemyDecision choose(StateView view, String enemyId);
 }

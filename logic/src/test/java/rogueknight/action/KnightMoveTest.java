@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import rogueknight.battle.BattlePhase;
+import rogueknight.battle.KnightRules;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.BattleState;
 import rogueknight.battle.EquipmentType;

@@ -1,4 +1,4 @@
-package rogueknight.action;
+package rogueknight.battle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import rogueknight.action.ActionError;
+import rogueknight.action.ActionRequest;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.BattleState;
 import rogueknight.battle.Direction;

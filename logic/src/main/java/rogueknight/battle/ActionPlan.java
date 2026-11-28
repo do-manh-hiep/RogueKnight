@@ -1,4 +1,6 @@
-package rogueknight.action;
+package rogueknight.battle;
+
+import rogueknight.action.ActionKind;
 
 import java.util.List;
 import rogueknight.battle.EquipmentType;

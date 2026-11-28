@@ -1,4 +1,6 @@
-package rogueknight.action;
+package rogueknight.battle;
+
+import rogueknight.action.BattleEvent;
 
 import java.util.Objects;
 import rogueknight.battle.BattleState;

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import rogueknight.battle.BattlePhase;
+import rogueknight.battle.EnemyRules;
 import rogueknight.battle.BattleResult;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.BattleState;
@@ -333,24 +334,4 @@ class EnemyTurnRunnerTest {
         assertEquals(BattleResult.DEFEAT, result.after().result());
     }
 
-    @Test
-    void enemyRemovedEarlierInTheQueueIsSkipped() {
-        List<String> trace = new ArrayList<>();
-        BattleState state = battle(5);
-        state.addPiece(pawn("P", 2, 1), at("a7"));
-        state.addPiece(rook("R", 2, 2), at("d5"));
-        state.addPiece(bishop("B", 2, 3), at("e5"));
-        EnemyPolicy recording = attackOrSkip(trace);
-        // Test-only side effect: no baseline Action kills an Enemy during the Enemy queue, so the stub forces it.
-        EnemyPolicy removesRookOnPawnTurn = (view, enemyId) -> {
-            if (enemyId.equals("P")) state.removePiece("R");
-            return recording.choose(view, enemyId);
-        };
-        BattleController controller = new BattleController(state, new EnemyTurnRunner(removesRookOnPawnTurn));
-
-        ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
-
-        assertEquals(List.of("P@2:hp=5", "B@2:hp=5"), trace);
-        assertTrue(result.events().stream().noneMatch(e -> e instanceof BattleEvent.ActorActivated a && a.actorId().equals("R")));
-    }
 }

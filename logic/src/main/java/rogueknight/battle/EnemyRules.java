@@ -1,4 +1,8 @@
-package rogueknight.action;
+package rogueknight.battle;
+
+import rogueknight.action.ActionError;
+import rogueknight.action.ActionKind;
+import rogueknight.action.ActionRequest;
 
 import java.util.ArrayList;
 import java.util.Comparator;

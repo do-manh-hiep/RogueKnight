@@ -1,4 +1,7 @@
-package rogueknight.action;
+package rogueknight.battle;
+
+import rogueknight.action.ActionKind;
+import rogueknight.action.BattleEvent;
 
 import java.util.ArrayList;
 import java.util.List;

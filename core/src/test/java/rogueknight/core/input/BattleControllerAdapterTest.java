@@ -2,6 +2,7 @@ package rogueknight.core.input;
 
 import org.junit.jupiter.api.Test;
 import rogueknight.action.BattleController;
+import rogueknight.action.EnemyTurnRunner;
 import rogueknight.battle.BattleState;
 import rogueknight.battle.Inventory;
 import rogueknight.battle.PieceState;
@@ -30,13 +31,15 @@ class BattleControllerAdapterEquipmentTest {
         battle.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1,
             rogueknight.battle.Direction.SOUTH), Position.fromNotation("c7"));
         battle.addPiece(new PieceState("king-1", PieceType.KING, 5, 5, 5, 2), Position.fromNotation("h8"));
-        BattleController controller = new BattleController(battle, rogueknight.action.EnemyPhase.NONE);
-        BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
 
-        // Prime the adapter's last-known Knight position before the terminal state removes it.
+        battle.addPiece(new PieceState("rook-1", PieceType.ROOK, 2, 3, 2, 3),
+            Position.fromNotation("d6"));
+        BattleController controller = new BattleController(battle,
+            new EnemyTurnRunner(new rogueknight.ai.EnemyAI()));
+        BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
         adapter.snapshot();
-        battle.removePiece("knight");
-        battle.finish(rogueknight.battle.BattleResult.DEFEAT);
+        MoveResult action = adapter.submitMove("knight", BoardPosition.fromNotation("d3"));
+        assertTrue(action.accepted());
 
         BattleViewSnapshot snapshot = adapter.snapshot();
         assertTrue(snapshot.statusMessage().contains("DEAD"));

@@ -9,7 +9,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import rogueknight.action.EnemyTurnRunner;
 import rogueknight.ai.EnemyAI;
 import rogueknight.battle.EquipmentType;
 import rogueknight.core.input.BoardInputHandler;
@@ -55,7 +54,7 @@ public class Main extends ApplicationAdapter {
                 new BattleFactory().createMap01Controller(
                     EquipmentType.CANNON_MOVEMENT,
                     EquipmentType.DIAGONAL_SKEWER,
-                    new EnemyTurnRunner(new EnemyAI())
+                    new EnemyAI()
                 )
             );
         } catch (IOException | IllegalArgumentException exception) {

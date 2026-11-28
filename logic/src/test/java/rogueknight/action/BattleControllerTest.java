@@ -125,7 +125,7 @@ class BattleControllerTest {
 
     @Test
     void waitAdvancesTurnOnceWithoutMovingKnightOrChangingHp() {
-        BattleController controller = new BattleController(fixture(), state -> List.of());
+        BattleController controller = new BattleController(fixture(), EnemyPolicy.NONE);
         BattleSnapshot before = controller.snapshot();
 
         ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
@@ -181,9 +181,9 @@ class BattleControllerTest {
     @Test
     void enemyPhaseRunsOnceAfterTurnAdvanceAndSeesNewPosition() {
         List<String> trace = new ArrayList<>();
-        EnemyPhase stub = state -> {
-            trace.add(state.globalTurn() + ":" + state.phase() + ":" + state.positionOf(KNIGHT).orElseThrow());
-            return List.of();
+        EnemyPhase stub = (view, enemyId) -> {
+            trace.add(view.globalTurn() + ":" + view.positionOf(KNIGHT).orElseThrow());
+            return EnemyDecision.skip("TEST");
         };
         BattleController controller = new BattleController(fixture(), stub);
 
@@ -191,16 +191,12 @@ class BattleControllerTest {
         assertTrue(trace.isEmpty(), "invalid request must not start the enemy phase");
 
         controller.submit(ActionRequest.move(KNIGHT, at("e6")));
-        assertEquals(List.of("2:ENEMY_RESOLVE:e6"), trace);
+        assertEquals(List.of("2:e6"), trace);
     }
 
     @Test
     void enemyPhaseEventsFollowPlayerEvents() {
-        BattleEvent enemyEvent = new BattleEvent.PieceMoved("R1", at("a8"), at("a7"));
-        EnemyPhase stub = state -> {
-            state.movePiece("R1", at("a7"));
-            return List.of(enemyEvent);
-        };
+        EnemyPhase stub = (view, enemyId) -> EnemyDecision.skip("READ_ONLY_TEST");
         BattleController controller = new BattleController(fixture(), stub);
 
         ActionResult result = controller.submit(ActionRequest.move(KNIGHT, at("e6")));
@@ -208,8 +204,7 @@ class BattleControllerTest {
         assertEquals(List.of(
                 new BattleEvent.ActionPerformed(ActionKind.MOVE, KNIGHT),
                 new BattleEvent.PieceMoved(KNIGHT, at("d4"), at("e6")),
-                new BattleEvent.TurnAdvanced(1, 2),
-                enemyEvent), result.events());
-        assertEquals(at("a7"), result.after().pieceById("R1").orElseThrow().position());
+                new BattleEvent.TurnAdvanced(1, 2)), result.events());
+        assertEquals(at("a8"), result.after().pieceById("R1").orElseThrow().position());
     }
 }

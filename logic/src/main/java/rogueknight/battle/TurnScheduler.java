@@ -1,4 +1,4 @@
-package rogueknight.action;
+package rogueknight.battle;
 
 import java.util.Comparator;
 import java.util.List;
