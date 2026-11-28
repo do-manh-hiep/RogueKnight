@@ -11,13 +11,13 @@ Use a package boundary and a public facade; do not introduce JPMS solely for thi
 
 1. Keep the mutable aggregate implementation in one Java package, `rogueknight.battle`.
    - `BattleState` becomes package-private; its constructor and mutation methods are package-private.
-   - `Board` becomes package-private and is placed in the same package; its constructor and mutation methods are package-private.
-   - Mutation collaborators that require direct state access (`ActionResolver`, `TurnScheduler`, `PawnPromotionApplier`, enemy-turn execution, terminal evaluation, and internal validation/plan types) are placed in this package and are not public API.
-2. `BattleController` is the public facade. Its public construction path accepts only immutable battle setup data and a read-only `EnemyPolicy`; it never accepts or returns `BattleState`.
-3. `BattleFactory` remains the data/bootstrap entry point. It loads and validates data, builds immutable setup input, and returns a `BattleController`.
-4. `EnemyPolicy` continues to receive `StateView` and return `EnemyDecision`. The public `EnemyPhase.run(BattleState)` callback is removed from the public extension surface; the concrete enemy runner and phase seam remain internal.
+   - `Board` moves from `rogueknight.board` into `rogueknight.battle`, becomes package-private, and exposes no public mutation methods. `Position` remains a public immutable value in `rogueknight.board`.
+   - Mutation collaborators that require direct state access (`ActionResolver`, `TurnScheduler`, `PawnPromotionApplier`, enemy-turn execution, terminal evaluation, and internal validation/plan types) move into `rogueknight.battle` and are package-private. Read-only rule queries may remain in `rogueknight.action` only if they accept `StateView` rather than `BattleState`.
+2. `BattleController` moves into `rogueknight.battle` and is the public facade. Its public construction path accepts only immutable battle setup data and a read-only `EnemyPolicy`; it never accepts or returns `BattleState`. Its internal constructor may accept the package-private aggregate for package-local tests.
+3. `BattleFactory` remains the data/bootstrap entry point. It loads and validates data, builds immutable setup input, and returns a `BattleController`; it does not expose a mutable state-building method.
+4. `EnemyPolicy` continues to receive `StateView` and return `EnemyDecision`. The public `EnemyPhase.run(BattleState)` callback is removed. `BattleController` owns the internal enemy-turn runner and receives only an `EnemyPolicy` (which sees `StateView` and returns an immutable `EnemyDecision`).
 5. `BattleSnapshot`, `StateView`, `ActionRequest`, `ActionResult`, `BattleEvent`, legal options, and error codes remain read-only/public contracts. `ActionPlan` and validation outcomes remain internal to the validate→resolve call.
-6. Tests that verify aggregate invariants may live in the aggregate package. Tests in `core` must use the public factory/controller API and must not construct, retain, or mutate `BattleState`.
+6. Tests that verify aggregate invariants may live in `rogueknight.battle`. Logic integration tests outside that package use a package-local test fixture or public factory/controller API. Tests in `core` must use the public factory/controller API and must not construct, retain, or mutate `BattleState`.
 
 ## Why this direction
 
@@ -29,17 +29,17 @@ Use a package boundary and a public facade; do not introduce JPMS solely for thi
 
 ## Migration order
 
-1. Move `BattleState`, `Board`, and mutation collaborators into the aggregate package boundary; reduce visibility.
-2. Change `BattleController` construction to accept immutable setup/policy inputs only; make its mutable-state constructor internal.
-3. Change `BattleFactory` and `core` integration so desktop code no longer creates `EnemyTurnRunner` or sees `BattleState`.
+1. Move `BattleState`, `Board`, `BattleController`, and mutation collaborators into `rogueknight.battle`; reduce visibility. Keep public immutable request/result/event types in their contract packages.
+2. Change `BattleController` construction to accept immutable setup/policy inputs only; keep the mutable-state constructor package-private.
+3. Change `BattleFactory` and `core` integration so desktop code receives a controller and no longer creates `EnemyTurnRunner` or sees `BattleState`.
 4. Migrate direct-mutation tests into package-local logic fixtures; migrate core tests to public contracts.
 5. Add boundary tests for inaccessible mutators, controller-only action submission, read-only AI input, and detached snapshots.
 
 ## Acceptance checks
 
-- [ ] `core` has no import, constructor call, field, parameter, or return type involving `BattleState` or mutable `Board`.
+- [ ] `core` and `rogueknight.data` have no import, constructor call, field, parameter, or return type involving `BattleState` or mutable `Board`.
 - [ ] No public method in the gameplay API exposes `BattleState`, mutable `Board`, `ActionPlan`, or a mutation callback.
-- [ ] Only the controller's internal flow can advance phase/turn/result or invoke the resolver.
+- [ ] Only the controller's internal flow can advance phase/turn/result or invoke the resolver; the public controller API accepts requests and returns immutable results/snapshots.
 - [ ] AI/policies receive `StateView` only and cannot mutate the aggregate.
 - [ ] Invalid requests still leave state and mutation events unchanged.
 - [ ] Existing gameplay and event semantics are unchanged.
