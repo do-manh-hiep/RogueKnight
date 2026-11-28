@@ -31,7 +31,6 @@ final class BattleState implements StateView {
     @Override public Optional<PieceState> pieceState(String id) { return Optional.ofNullable(pieces.get(id)); }
     @Override public Optional<Position> positionOf(String id) { return board.positionOf(id); }
     @Override public Optional<String> pieceAt(Position position) { return board.pieceAt(position); }
-    @Override public boolean isEmpty(Position position) { return board.isEmpty(position); }
     @Override public boolean isRock(Position position) { return board.isRock(position); }
     /** Read-only copy in insertion order; dead pieces are already removed from the aggregate. */
     @Override public List<PieceState> livePieces() { return List.copyOf(pieces.values()); }

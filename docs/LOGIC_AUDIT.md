@@ -222,3 +222,11 @@ The validator now checks type names with `PieceType.valueOf`, uses `Position.BOA
 This removes parallel representations without moving validation out of the loader boundary or changing the JSON DTO shape.
 
 **Verification boundary:** committed to the PR branch; local Gradle verification is required against the new head.
+
+## 10. Simplification pass — inherit StateView.isEmpty
+
+At head `e9f2a6e`, `BattleState.isEmpty(Position)` only forwarded to `Board.isEmpty(Position)`, while `StateView` already provides the exact same operation as a default method: no rock and no piece at the position.
+
+Removed the redundant `BattleState` override. Calls through `StateView` now use the interface default, which delegates to the same `BattleState.isRock` and `BattleState.pieceAt` methods. `Board.isEmpty` remains because it is a direct Board operation and is covered by Board tests. No behavior or null handling changes.
+
+**Verification boundary:** committed to the PR branch; run the local Gradle checks against the new head.
