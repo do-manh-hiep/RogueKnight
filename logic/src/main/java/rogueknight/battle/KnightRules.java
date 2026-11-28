@@ -140,26 +140,14 @@ public final class KnightRules {
             if (victim.type() == PieceType.KNIGHT) return ValidationOutcome.invalid(ActionError.NOT_ENEMY_TARGET);
             if (victim.hp() > 2) return ValidationOutcome.invalid(ActionError.CAPTURE_TARGET_TOO_STRONG);
             return ValidationOutcome.valid(new ActionPlan(
-                ActionKind.CANNON_MOVEMENT,
-                request.actorId(),
-                from,
-                target,
-                victim.id(),
-                EquipmentType.CANNON_MOVEMENT,
-                target,
-                List.of(victim.id())
+                ActionKind.CANNON_MOVEMENT, request.actorId(), from, target,
+                EquipmentType.CANNON_MOVEMENT, List.of(victim.id())
             ));
         }
 
         return ValidationOutcome.valid(new ActionPlan(
-            ActionKind.CANNON_MOVEMENT,
-            request.actorId(),
-            from,
-            target,
-            null,
-            EquipmentType.CANNON_MOVEMENT,
-            target,
-            List.of()
+            ActionKind.CANNON_MOVEMENT, request.actorId(), from, target,
+            EquipmentType.CANNON_MOVEMENT, List.of()
         ));
     }
 
@@ -181,14 +169,8 @@ public final class KnightRules {
         if (victim.type() == PieceType.KNIGHT) return ValidationOutcome.invalid(ActionError.NOT_ENEMY_TARGET);
 
         return ValidationOutcome.valid(new ActionPlan(
-            ActionKind.CANNON_ATTACK,
-            request.actorId(),
-            from,
-            target,
-            victim.id(),
-            EquipmentType.CANNON_ATTACK,
-            from,
-            List.of(victim.id())
+            ActionKind.CANNON_ATTACK, request.actorId(), from, target,
+            EquipmentType.CANNON_ATTACK, List.of(victim.id())
         ));
     }
 
@@ -236,14 +218,8 @@ public final class KnightRules {
         }
 
         return ValidationOutcome.valid(new ActionPlan(
-            ActionKind.DIAGONAL_SKEWER,
-            request.actorId(),
-            from,
-            target,
-            hitIds.isEmpty() ? null : hitIds.get(0),
-            EquipmentType.DIAGONAL_SKEWER,
-            from,
-            hitIds
+            ActionKind.DIAGONAL_SKEWER, request.actorId(), from, target,
+            EquipmentType.DIAGONAL_SKEWER, hitIds
         ));
     }
 

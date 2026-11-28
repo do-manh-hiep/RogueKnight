@@ -24,27 +24,27 @@ final class ActionResolver {
                 applyPawnStepEffects(state, events, plan);
             }
             case SWORD -> {
-                applyDamage(state, events, plan.targetId(), 1);
+                applyDamage(state, events, plan.affectedTargetIds().get(0), 1);
             }
             case CAPTURE -> {
                 // Validation guarantees CaptureDamage (2) removes this target.
-                applyDamage(state, events, plan.targetId(), 2);
+                applyDamage(state, events, plan.affectedTargetIds().get(0), 2);
                 state.movePiece(plan.actorId(), plan.target());
                 events.add(new BattleEvent.PieceMoved(plan.actorId(), plan.from(), plan.target()));
             }
             case WAIT -> { /* Lifecycle is advanced by BattleController, not by the resolver. */ }
             case CANNON_MOVEMENT -> {
                 state.consumeEquipment(plan.equipmentType());
-                if (plan.targetId() != null) {
+                if (!plan.affectedTargetIds().isEmpty()) {
                     // Validation guarantees Cannon Movement capture deals lethal damage (2).
-                    applyDamage(state, events, plan.targetId(), 2);
+                    applyDamage(state, events, plan.affectedTargetIds().get(0), 2);
                 }
-                state.movePiece(plan.actorId(), plan.landingPosition());
-                events.add(new BattleEvent.PieceMoved(plan.actorId(), plan.from(), plan.landingPosition()));
+                state.movePiece(plan.actorId(), plan.target());
+                events.add(new BattleEvent.PieceMoved(plan.actorId(), plan.from(), plan.target()));
             }
             case CANNON_ATTACK -> {
                 state.consumeEquipment(plan.equipmentType());
-                applyDamage(state, events, plan.targetId(), 1);
+                applyDamage(state, events, plan.affectedTargetIds().get(0), 1);
             }
             case DIAGONAL_SKEWER -> {
                 state.consumeEquipment(plan.equipmentType());
@@ -53,7 +53,7 @@ final class ActionResolver {
                 }
             }
             // Enemy basic attack; the actor stays in place. A Knight at 0 HP leaves the Board like any piece.
-            case ATTACK -> applyDamage(state, events, plan.targetId(), EnemyRules.ENEMY_DAMAGE);
+            case ATTACK -> applyDamage(state, events, plan.affectedTargetIds().get(0), EnemyRules.ENEMY_DAMAGE);
         }
         return List.copyOf(events);
     }

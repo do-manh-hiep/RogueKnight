@@ -293,3 +293,7 @@ This is a substantive type/layer deletion, not a rename-only change. No gameplay
 - Removed `Board.positionsCopy`, which had no production caller and existed only to test a redundant copy accessor. Kept `pieceIds`, used by BattleState's aggregate consistency check.
 - Removed the backward-compatible `BattleController.legalMoves` forwarding method. Callers use `legalTargets(actorId, ActionKind.MOVE)`; the UI port retains its presentation-level move-highlight method.
 - These changes remove redundant API surface without combining the scheduler, activation runner, policy, rules, or resolver responsibilities.
+
+## 17. Collapse duplicate target data in ActionPlan
+
+`ActionPlan` previously stored overlapping target data in `targetId`, `landingPosition`, and `affectedTargetIds`. It now stores the action target coordinate and the ordered affected-ID list plus optional equipment type. Single-target actions populate a one-element affected-ID list; multi-target Skewer retains its ordered list; Cannon Movement uses the action target as its landing square. This removes duplicated state while preserving target ordering and action resolution semantics.
