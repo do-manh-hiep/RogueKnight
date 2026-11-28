@@ -33,7 +33,7 @@ flowchart TB
 
 | Package / class | Vai trò |
 | --- | --- |
-| board/Board, board/Position | Board sở hữu occupancy và map pieceId → Position; Rock bất biến; không sở hữu HP/type/turn |
+| battle/Board, board/Position | Board sở hữu occupancy và map pieceId → Position; Rock bất biến; không sở hữu HP/type/turn |
 | battle/BattleState | Aggregate mutable của một trận; sở hữu Board, PieceState, Inventory, globalTurn, phase, result |
 | battle/PieceState, PieceType, Inventory, EquipmentState | Runtime state của quân và trang bị |
 | battle/BattleSnapshot, StateView | Snapshot/read-only view cho caller; StateView phục vụ rules/AI |
@@ -42,7 +42,7 @@ flowchart TB
 | battle/ActionResolver, ActionPlan | Áp dụng plan đã validate lên state và phát ordered events; resolver không tự validate/tăng turn/chạy queue |
 | battle/EnemyTurnRunner, TurnScheduler | Chụp queue Enemy đến hạn, điều phối activation và lịch kế tiếp |
 | action/BattleEvent, ActionRequest, ActionResult, EnemyDecision, EnemyPolicy | Contract request/result/event/decision giữa domain components |
-| ai/EnemyAI, PawnPolicy, GenericEnemyPolicy | Chọn policy theo loại Enemy; chỉ quyết định, không sở hữu state |
+| battle/PawnAttackRule; ai/EnemyAI, PawnPolicy, GenericEnemyPolicy, PawnPathfinder | Chọn policy theo loại Enemy; chỉ quyết định, không sở hữu state |
 
 ### core
 
@@ -51,10 +51,10 @@ flowchart TB
 | Main | Khởi tạo trận desktop, poll input, điều phối playback và render frame |
 | input/BoardInputHandler | Chuyển click/key selection thành action call; giữ feedback/snapshot UI và pending events |
 | input/BattleControllerAdapter | Chuyển đổi giữa API domain và UI-facing API; ánh xạ tọa độ, snapshot và event |
-| input/MoveResult, BattleControllerPort, ActionMode | Contract input-facing |
+| input/UiActionResult, BattleControllerPort, ActionMode | Contract input-facing |
 | view/BattleViewSnapshot, PresentationPiece | Snapshot hiển thị và dữ liệu quân có stable ID |
 | view/BattlePresentationModel | Projection mutable dành riêng cho playback; không phải nguồn gameplay truth |
-| view/BattleEventQueue, BattlePlayback | FIFO event queue và tiêu thụ event theo delta-time |
+| view/BattlePlayback | FIFO event queue và tiêu thụ event theo delta-time |
 | view/BoardProjection, BoardPosition, BoardRenderer | Chuyển world/board coordinates và render bàn cờ/presentation |
 
 ## 3. Ownership và state authority
@@ -114,7 +114,7 @@ sequenceDiagram
             C->>C: restore PLAYER_SELECT unless terminal
         end
         C-->>Adapter: accepted(before, after, ordered events)
-        Adapter-->>UI: MoveResult
+        Adapter-->>UI: UiActionResult
         UI->>UI: store after snapshot + pending events
         UI->>Playback: drain/enqueue events
         Playback->>Playback: apply events sequentially to presentation model
@@ -180,7 +180,7 @@ Rules observed in implementation:
 ## 6. Event playback hiện tại
 
 - BattleEvent là event stream có thứ tự: Action/effect, TurnAdvanced, ActorActivated, Enemy effects, BattleEnded.
-- BoardInputHandler lưu event từ accepted MoveResult; drainEvents() trả danh sách immutable rồi clear buffer.
+- BoardInputHandler lưu event từ accepted UiActionResult; drainEvents() trả danh sách immutable rồi clear buffer.
 - BattlePlayback tiêu thụ FIFO theo khoảng thời gian/event; BattlePresentationModel áp dụng event để cập nhật quân theo stable ID.
 - Main tạm khóa thao tác gameplay mới khi queue playback còn event.
 - BoardRenderer render quân từ presentation projection, không suy ra identity từ tên hoặc vị trí.
@@ -189,7 +189,7 @@ Rules observed in implementation:
 ## 7. Baseline kiểm thử và giới hạn khảo sát
 
 - Người dùng xác nhận trên local: baseline build --rerun-tasks exit code 0 tại commit c79978c.
-- Người dùng xác nhận: BattlePresentationModelTest + BattleEventQueueTest và full build exit code 0 tại 6cd1a1d.
+- Người dùng xác nhận: BattlePresentationModelTest + BattlePlaybackTest và full build exit code 0 tại 6cd1a1d.
 - Người dùng xác nhận: BattlePlaybackTest + hai suite trên và full build exit code 0 tại 4a9a923.
 - Commit dọn unused import sau đó chưa được xác nhận build lại tại thời điểm ghi tài liệu.
 - Tài liệu này trace source và contract; không thay thế manual desktop playtest hoặc requirement audit BR1–BR4.

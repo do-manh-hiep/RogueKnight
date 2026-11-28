@@ -251,3 +251,14 @@ At head `6bb9b1b`, two independent simplification opportunities were confirmed:
 No rule, public API, phase/turn lifecycle, or snapshot immutability contract changes. Existing controller and equipment integration tests cover defensive ownership, capture, and Cannon Movement.
 
 **Verification boundary:** committed to the PR branch; local Gradle verification is required against this batch head.
+
+## 13. Architecture simplification batch — controller and package ownership
+
+At head `33afa65`:
+- Core input contract now exposes one targeted submission method (`submitAction`) and one targetless method (`submitWait`). Removed `submitMove` forwarding methods and permissive default implementations that previously hid incomplete test adapters.
+- Renamed core `MoveResult` to `UiActionResult`; it covers every UI action, not just movement.
+- Renamed the limited test double `FixtureBattleController` to `StubBattleController` and removed its self-test. The stub remains only to isolate input-handler behavior; actual gameplay legality is tested in logic.
+- Moved Pawn attack geometry to `battle.PawnAttackRule` and Pawn BFS path selection to `ai.PawnPathfinder`.
+- Retained distinct controller, adapter, policy, decision, plan, validation outcome, scheduler and runner responsibilities. No subsystem merge met the evidence threshold.
+
+**Verification boundary:** the branch contains the full source/test migration; local Gradle verification is required against the latest batch head.
