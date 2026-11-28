@@ -71,9 +71,6 @@ final class ActionResolver {
         PieceState actor = state.pieceState(plan.actorId()).orElseThrow();
         if (actor.type() != PieceType.PAWN) return;
 
-        Direction step = Direction.fromDelta(
-                plan.target().column() - plan.from().column(),
-                plan.target().row() - plan.from().row());
         if (plan.target().row() == 0) {
             PieceState queen = new PieceState(
                     actor.id(),
@@ -88,6 +85,9 @@ final class ActionResolver {
             events.add(new BattleEvent.PiecePromoted(
                     actor.id(), PieceType.PAWN, PieceType.QUEEN, plan.target()));
         } else {
+            Direction step = Direction.fromDelta(
+                    plan.target().column() - plan.from().column(),
+                    plan.target().row() - plan.from().row());
             state.replacePiece(actor.withDirection(step));
         }
     }

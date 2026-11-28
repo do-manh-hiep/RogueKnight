@@ -4,6 +4,7 @@ import rogueknight.ai.*;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -139,7 +140,7 @@ class PawnTurnTest {
         assertEquals(4, queen.cycle());
         assertEquals(11, queen.nextActivationTurn());
         assertEquals(1, queen.spawnOrder());
-        assertEquals(null, queen.currentDirection());
+        assertNull(queen.currentDirection());
         assertEquals(5, turn6.after().pieceById("knight").orElseThrow().hp());
 
         List<Integer> activations = new ArrayList<>(activationTurns(turn6, "pawn-1"));
