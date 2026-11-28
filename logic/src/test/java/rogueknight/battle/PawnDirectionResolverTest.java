@@ -59,7 +59,7 @@ class PawnDirectionResolverTest {
         // Hai đường chéo ngắn bằng nhau: chọn bên trái.
         assertEquals(
             Direction.SOUTH_WEST,
-            resolver.initialDirection(battle.snapshot(), "pawn-1")
+            PawnPathfinder.initialDirection(battle.snapshot(), "pawn-1")
         );
     }
 
@@ -80,7 +80,7 @@ class PawnDirectionResolverTest {
 
         assertEquals(
             Direction.SOUTH_WEST,
-            resolver.initialDirection(battle.snapshot(), "pawn-1")
+            PawnPathfinder.initialDirection(battle.snapshot(), "pawn-1")
         );
     }
 
@@ -98,7 +98,7 @@ class PawnDirectionResolverTest {
         // Đây chỉ là tính hướng, không Move vào ô Knight.
         assertEquals(
             Direction.SOUTH,
-            resolver.initialDirection(before, "pawn-1")
+            PawnPathfinder.initialDirection(before, "pawn-1")
         );
 
         assertEquals(before, battle.snapshot());
@@ -123,7 +123,7 @@ class PawnDirectionResolverTest {
 
         assertEquals(
             Direction.SOUTH,
-            resolver.initialDirection(before, "pawn-1")
+            PawnPathfinder.initialDirection(before, "pawn-1")
         );
 
         assertEquals(before, battle.snapshot());
@@ -144,7 +144,7 @@ class PawnDirectionResolverTest {
         // dù hai ô cạnh góc là đá.
         assertEquals(
             Direction.SOUTH_WEST,
-            resolver.initialDirection(battle.snapshot(), "pawn-1")
+            PawnPathfinder.initialDirection(battle.snapshot(), "pawn-1")
         );
     }
 
@@ -167,7 +167,7 @@ class PawnDirectionResolverTest {
         // SOUTH không được ưu tiên nếu làm đường dài hơn.
         assertEquals(
             Direction.SOUTH_WEST,
-            resolver.initialDirection(battle.snapshot(), "pawn-1")
+            PawnPathfinder.initialDirection(battle.snapshot(), "pawn-1")
         );
     }
 
@@ -181,12 +181,12 @@ class PawnDirectionResolverTest {
 
         assertThrows(
             IllegalArgumentException.class,
-            () -> resolver.initialDirection(battle.snapshot(), "missing")
+            () -> PawnPathfinder.initialDirection(battle.snapshot(), "missing")
         );
 
         assertThrows(
             IllegalArgumentException.class,
-            () -> resolver.initialDirection(battle.snapshot(), "knight")
+            () -> PawnPathfinder.initialDirection(battle.snapshot(), "knight")
         );
     }
 
