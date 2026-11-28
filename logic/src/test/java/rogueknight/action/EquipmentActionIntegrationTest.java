@@ -124,7 +124,8 @@ class EquipmentActionIntegrationTest {
         assertEquals(List.of(
             new BattleEvent.ActionPerformed(ActionKind.CANNON_ATTACK, "knight"),
             new BattleEvent.PieceDamaged("rook_1", 1, 2),
-            new BattleEvent.TurnAdvanced(1, 2)
+            new BattleEvent.TurnAdvanced(1, 2),
+            new BattleEvent.ActorActivated("rook_1", p("d6"), 2)
         ), res.events());
     }
 
