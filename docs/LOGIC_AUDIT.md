@@ -183,4 +183,4 @@ At the simplification head following `1bfb3a7`:
 
 This keeps one canonical piece collection at the UI boundary and avoids storing a second enemy-position index or preformatted HUD string in every snapshot. `knightPosition` remains because the UI must retain the Knight's last square after its removal.
 
-**Verification status:** source changes were committed to the PR branch. They have not yet been run through Gradle on the user's machine. Re-run ` .\\gradlew.bat :logic:test`, ` .\\gradlew.bat test`, ` .\\gradlew.bat clean build`, and `git diff --check` against the updated branch head before treating the pass as verified.
+**Verification status:** source changes were committed to the PR branch. They have not yet been run through Gradle on the user's machine. Re-run `.\gradlew.bat :logic:test`, `.\gradlew.bat test`, `.\gradlew.bat clean build`, and `git diff --check` against the updated branch head before treating the pass as verified.
