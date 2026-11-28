@@ -120,6 +120,25 @@ class BattlePlaybackTest {
     }
 
     @Test
+    void fastModeUsesEightyMillisecondEventInterval() {
+        BattlePlayback playback = new BattlePlayback(
+            BattlePresentationModel.from(snapshot()), 0.18f);
+        playback.faster();
+        playback.enqueue(List.of(
+            new BattleEvent.PieceMoved("rook-1", Position.fromNotation("e4"), Position.fromNotation("e5")),
+            new BattleEvent.PieceMoved("rook-1", Position.fromNotation("e5"), Position.fromNotation("e6"))
+        ));
+
+        assertEquals(0, playback.update(0.079f));
+        assertEquals(1, playback.update(0.001f));
+        assertEquals(BoardPosition.fromNotation("e5"),
+            playback.model().piece("rook-1").orElseThrow().position());
+        assertEquals(1, playback.update(0.08f));
+        assertEquals(BoardPosition.fromNotation("e6"),
+            playback.model().piece("rook-1").orElseThrow().position());
+    }
+
+    @Test
     void rejectsInvalidDeltaAndInvalidInterval() {
         assertThrows(IllegalArgumentException.class,
             () -> new BattlePlayback(BattlePresentationModel.from(snapshot()), 0f));
