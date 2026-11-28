@@ -90,7 +90,10 @@ public class Main extends ApplicationAdapter {
     }
 
     private void processPlaybackSpeedInput() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.PLUS)
+        // On a standard keyboard, the unshifted '=' key reports EQUALS;
+        // PLUS is commonly a shifted character rather than the physical key code.
+        if (Gdx.input.isKeyJustPressed(Input.Keys.EQUALS)
+            || Gdx.input.isKeyJustPressed(Input.Keys.PLUS)
             || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_ADD)) {
             playback.faster();
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.MINUS)
