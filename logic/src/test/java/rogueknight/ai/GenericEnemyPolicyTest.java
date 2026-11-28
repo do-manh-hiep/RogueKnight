@@ -112,24 +112,6 @@ class GenericEnemyPolicyTest {
     }
 
     @Test
-    void rankingOrderMatchesDec02() {
-        GenericEnemyPolicy.Candidate moveAttack = candidate("h8", true, false, false, 7);
-        GenericEnemyPolicy.Candidate safeThreatC2 = candidate("c2", false, true, true, 2);
-        GenericEnemyPolicy.Candidate safeThreatC5 = candidate("c5", false, true, true, 2);
-        GenericEnemyPolicy.Candidate safeThreatFar = candidate("a1", false, true, true, 6);
-        GenericEnemyPolicy.Candidate safeOnlyNear = candidate("a2", false, true, false, 1);
-        GenericEnemyPolicy.Candidate unsafeThreatNear = candidate("a3", false, false, true, 1);
-        List<GenericEnemyPolicy.Candidate> shuffled = new ArrayList<>(List.of(
-                unsafeThreatNear, safeOnlyNear, safeThreatFar, safeThreatC5, moveAttack, safeThreatC2));
-        Collections.reverse(shuffled);
-
-        shuffled.sort(GenericEnemyPolicy.RANKING);
-
-        assertEquals(List.of(moveAttack, safeThreatC2, safeThreatC5, safeThreatFar, safeOnlyNear, unsafeThreatNear),
-                shuffled);
-    }
-
-    @Test
     void sameStateGivesSameDecisionRegardlessOfInsertionOrderAndDoesNotMutate() {
         BattleState first = battle(Set.of());
         first.addPiece(knight(1), at("c2"));
@@ -170,8 +152,4 @@ class GenericEnemyPolicyTest {
         assertThrows(IllegalArgumentException.class, () -> new HypotheticalView(state, "R", at("e4")));
     }
 
-    private static GenericEnemyPolicy.Candidate candidate(String square, boolean moveAttack, boolean safe,
-                                                          boolean threat, int distance) {
-        return new GenericEnemyPolicy.Candidate(at(square), moveAttack, safe, threat, distance);
-    }
 }

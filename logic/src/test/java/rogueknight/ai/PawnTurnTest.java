@@ -51,7 +51,7 @@ class PawnTurnTest {
     }
 
     private static BattleController controller(BattleState state) {
-        return new BattleController(state, new EnemyTurnRunner(new EnemyAI()));
+        return new BattleController(state, new EnemyAI());
     }
 
     private static ActionResult waitOneTurn(BattleController controller) {

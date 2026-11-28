@@ -2,13 +2,17 @@ package rogueknight.core.input;
 
 import org.junit.jupiter.api.Test;
 import rogueknight.action.BattleController;
-import rogueknight.action.EnemyTurnRunner;
-import rogueknight.battle.BattleState;
+import rogueknight.ai.EnemyAI;
+import rogueknight.battle.BattleSnapshot;
+import rogueknight.battle.BattlePhase;
+import rogueknight.battle.BattleResult;
 import rogueknight.battle.Inventory;
-import rogueknight.battle.PieceState;
-import rogueknight.battle.PieceType;
-import rogueknight.board.Position;
 import rogueknight.battle.EquipmentType;
+import rogueknight.battle.PieceType;
+import rogueknight.battle.Direction;
+import rogueknight.board.Position;
+import java.util.List;
+import java.util.Set;
 import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
 import rogueknight.data.BattleFactory;
@@ -22,20 +26,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** T-04.01 / T-04.02 UI slice: equipment modes go through the same port and rules as Move. */
 class BattleControllerAdapterEquipmentTest {
+ private static BattleController controller(BattleSnapshot.PieceView... pieces){return BattleController.fromSnapshot(new BattleSnapshot(1,BattlePhase.PLAYER_SELECT,BattleResult.ONGOING,Set.of(),List.of(pieces),Inventory.initial(EquipmentType.CANNON_MOVEMENT,EquipmentType.DIAGONAL_SKEWER)),new EnemyAI());}
+
 
     @Test
     void handlesKnightDeathGracefullyWithoutCrashing() throws IOException {
-        BattleState battle = new BattleState(java.util.Set.of(), Inventory.initial(
-            EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER));
-        battle.addPiece(new PieceState("knight", PieceType.KNIGHT, 1, 0, 0, 0), Position.fromNotation("d1"));
-        battle.addPiece(new PieceState("pawn-1", PieceType.PAWN, 1, 2, 2, 1,
-            rogueknight.battle.Direction.SOUTH), Position.fromNotation("c7"));
-        battle.addPiece(new PieceState("king-1", PieceType.KING, 5, 5, 5, 2), Position.fromNotation("h8"));
-
-        battle.addPiece(new PieceState("rook-1", PieceType.ROOK, 2, 3, 2, 3),
-            Position.fromNotation("d6"));
-        BattleController controller = new BattleController(battle,
-            new EnemyTurnRunner(new rogueknight.ai.EnemyAI()));
+        BattleController controller = controller(new BattleSnapshot.PieceView("knight", PieceType.KNIGHT, 1, 0, 0, 0, Position.fromNotation("d1")),new BattleSnapshot.PieceView("pawn-1", PieceType.PAWN, 1, 2, 2, 1, Position.fromNotation("c7"), Direction.SOUTH),new BattleSnapshot.PieceView("king-1", PieceType.KING, 5, 5, 5, 2, Position.fromNotation("h8")),new BattleSnapshot.PieceView("rook-1", PieceType.ROOK, 2, 3, 2, 3, Position.fromNotation("d6")));
         BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
         adapter.snapshot();
         MoveResult action = adapter.submitMove("knight", BoardPosition.fromNotation("d3"));
@@ -151,12 +147,7 @@ class BattleControllerAdapterEquipmentTest {
 
     @Test
     void defaultMoveAttackClickOnAdjacentEnemySubmitsSword() {
-        BattleState state = new BattleState(java.util.Set.of(),
-            Inventory.initial(EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER));
-        state.addPiece(new PieceState("knight", PieceType.KNIGHT, 3, 0, 0, 0), Position.fromNotation("d4"));
-        state.addPiece(new PieceState("rook", PieceType.ROOK, 2, 3, 3, 1), Position.fromNotation("e5"));
-        state.addPiece(new PieceState("king", PieceType.KING, 5, 5, 5, 2), Position.fromNotation("h8"));
-        BattleController controller = new BattleController(state);
+        BattleController controller = controller(new BattleSnapshot.PieceView("knight", PieceType.KNIGHT, 3, 0, 0, 0, Position.fromNotation("d4")),new BattleSnapshot.PieceView("rook", PieceType.ROOK, 2, 3, 3, 1, Position.fromNotation("e5")),new BattleSnapshot.PieceView("king", PieceType.KING, 5, 5, 5, 2, Position.fromNotation("h8")));
         BattleControllerAdapter adapter = new BattleControllerAdapter(controller);
         var projection = new rogueknight.core.view.BoardProjection(0f, 0f, 48f);
         BoardInputHandler handler = new BoardInputHandler(projection, adapter);
@@ -194,14 +185,7 @@ class BattleControllerAdapterEquipmentTest {
 
     @Test
     void waitResultExposesOrderedEnemyEventsToPresentationLayer() {
-        BattleState state = new BattleState(java.util.Set.of(), Inventory.initial(
-            EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER));
-        state.addPiece(new PieceState("knight", PieceType.KNIGHT, 5, 0, 0, 0), Position.fromNotation("d4"));
-        state.addPiece(new PieceState("king", PieceType.KING, 5, 5, 5, 2), Position.fromNotation("h8"));
-        state.addPiece(new PieceState("rook", PieceType.ROOK, 3, 3, 2, 1), Position.fromNotation("e4"));
-        BattleControllerAdapter adapter = new BattleControllerAdapter(new BattleController(
-            state, new rogueknight.action.EnemyTurnRunner(new rogueknight.ai.EnemyAI())
-        ));
+        BattleControllerAdapter adapter = new BattleControllerAdapter(controller(new BattleSnapshot.PieceView("knight", PieceType.KNIGHT, 5, 0, 0, 0, Position.fromNotation("d4")),new BattleSnapshot.PieceView("king", PieceType.KING, 5, 5, 5, 2, Position.fromNotation("h8")),new BattleSnapshot.PieceView("rook", PieceType.ROOK, 3, 3, 2, 1, Position.fromNotation("e4"))));
 
         MoveResult result = adapter.submitWait("knight");
 

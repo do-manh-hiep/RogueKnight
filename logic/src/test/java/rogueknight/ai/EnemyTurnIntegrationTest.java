@@ -37,7 +37,7 @@ class EnemyTurnIntegrationTest {
     }
 
     private static BattleController realController(BattleState state) {
-        return new BattleController(state, new EnemyTurnRunner(new EnemyAI()));
+        return new BattleController(state, new EnemyAI());
     }
 
     @Test
@@ -79,7 +79,7 @@ class EnemyTurnIntegrationTest {
         state.addPiece(new PieceState("knight", PieceType.KNIGHT, 5, 0, 0, 0), at("d3"));
         state.addPiece(new PieceState("rook-1", PieceType.ROOK, 2, 3, 2, 1), at("d4"));
         state.addPiece(new PieceState("king-1", PieceType.KING, 5, 5, 5, 2), at("h8"));
-        rogueknight.action.BattleController controller = realController(state);
+        BattleController controller = realController(state);
 
         ActionResult result = controller.submit(ActionRequest.waitAction("knight"));
 
@@ -99,7 +99,7 @@ class EnemyTurnIntegrationTest {
         // b6, c6, d6 are all 5 steps from row 1; straight SOUTH wins) and does not attack after moving.
         rogueknight.action.BattleController controller = new BattleFactory().createMap01Controller(
                 EquipmentType.CANNON_MOVEMENT, EquipmentType.CANNON_ATTACK,
-                new EnemyTurnRunner(new EnemyAI()));
+                new EnemyAI());
 
         ActionResult result = controller.submit(ActionRequest.cannonAttack("knight", at("d7")));
 
@@ -144,7 +144,7 @@ class EnemyTurnIntegrationTest {
     private static List<BattleEvent> playTwoWaitsOnMap01() throws IOException {
         rogueknight.action.BattleController controller = new BattleFactory().createMap01Controller(
                 EquipmentType.CANNON_MOVEMENT, EquipmentType.DIAGONAL_SKEWER,
-                new EnemyTurnRunner(new EnemyAI()));
+                new EnemyAI());
 
         ActionResult turn2 = controller.submit(ActionRequest.waitAction("knight"));
         assertEquals(List.of(

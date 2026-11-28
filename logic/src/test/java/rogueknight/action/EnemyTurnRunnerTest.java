@@ -90,7 +90,7 @@ class EnemyTurnRunnerTest {
         state.addPiece(new PieceState(KNIGHT, PieceType.KNIGHT, 5, 0, 0, 0), at("d4"));
         state.addPiece(new PieceState("KG", PieceType.KING, 1, 5, 2, 1), at("e5"));
         state.addPiece(rook("R", 2, 2), at("d5"));
-        BattleController controller = new BattleController(state, new EnemyTurnRunner(attackOrSkip(trace)));
+        BattleController controller = new BattleController(state, attackOrSkip(trace));
 
         ActionResult result = controller.submit(ActionRequest.sword(KNIGHT, at("e5")));
 
@@ -114,7 +114,7 @@ class EnemyTurnRunnerTest {
     void playerKillingLastNonKingEnemyWins() {
         BattleState state = battle(5);
         state.addPiece(new PieceState("R", PieceType.ROOK, 1, 3, 2, 1), at("e5"));
-        BattleController controller = new BattleController(state, new EnemyTurnRunner(attackOrSkip(new ArrayList<>())));
+        BattleController controller = new BattleController(state, attackOrSkip(new ArrayList<>()));
 
         ActionResult result = controller.submit(ActionRequest.sword(KNIGHT, at("e5")));
 
@@ -131,7 +131,7 @@ class EnemyTurnRunnerTest {
         state.addPiece(bishop("B", 2, 2), at("e5"));
         state.addPiece(rook("R", 2, 3), at("d5"));
         state.addPiece(pawn("P", 2, 4), at("a7"));
-        BattleController controller = new BattleController(state, new EnemyTurnRunner(attackOrSkip(trace)));
+        BattleController controller = new BattleController(state, attackOrSkip(trace));
 
         ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
 
@@ -163,7 +163,7 @@ class EnemyTurnRunnerTest {
         BattleState state = battle(1);
         state.addPiece(rook("R", 2, 1), at("d5"));
         state.addPiece(bishop("B", 2, 2), at("e5"));
-        BattleController controller = new BattleController(state, new EnemyTurnRunner(attackOrSkip(trace)));
+        BattleController controller = new BattleController(state, attackOrSkip(trace));
 
         ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
 
@@ -187,7 +187,7 @@ class EnemyTurnRunnerTest {
         List<String> trace = new ArrayList<>();
         BattleState state = battle(5);
         state.addPiece(rook("R", 2, 1), at("a8"));
-        BattleController controller = new BattleController(state, new EnemyTurnRunner(attackOrSkip(trace)));
+        BattleController controller = new BattleController(state, attackOrSkip(trace));
         BattleSnapshot before = controller.snapshot();
 
         ActionResult turn2 = controller.submit(ActionRequest.waitAction(KNIGHT));
@@ -211,7 +211,7 @@ class EnemyTurnRunnerTest {
         List<String> trace = new ArrayList<>();
         BattleState state = battle(5);
         state.addPiece(rook("R", 2, 1), at("d5"));
-        BattleController controller = new BattleController(state, new EnemyTurnRunner(attackOrSkip(trace)));
+        BattleController controller = new BattleController(state, attackOrSkip(trace));
         BattleSnapshot before = controller.snapshot();
 
         ActionResult result = controller.submit(ActionRequest.move(KNIGHT, at("d6")));
@@ -228,7 +228,7 @@ class EnemyTurnRunnerTest {
         BattleState state = battle(5);
         state.addPiece(rook("R", 2, 1), at("a5"));
         BattleController controller = new BattleController(state,
-                new EnemyTurnRunner(fixed(ActionRequest.move("R", at("d5")), trace)));
+                fixed(ActionRequest.move("R", at("d5")), trace));
 
         ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
 
@@ -250,7 +250,7 @@ class EnemyTurnRunnerTest {
         BattleState state = battle(5);
         state.addPiece(rook("R", 2, 1), at("a5"));
         BattleController controller = new BattleController(state,
-                new EnemyTurnRunner(fixed(ActionRequest.move("R", at("b5")), new ArrayList<>())));
+                fixed(ActionRequest.move("R", at("b5")), new ArrayList<>()));
 
         ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
 
@@ -266,7 +266,7 @@ class EnemyTurnRunnerTest {
         state.addPiece(rook("R", 2, 1), at("b8"));
         // b6 is a Rock: the Rook can never land there (DEC-12: an AI bug, not a silent skip).
         BattleController controller = new BattleController(state,
-                new EnemyTurnRunner(fixed(ActionRequest.move("R", at("b6")), new ArrayList<>())));
+                fixed(ActionRequest.move("R", at("b6")), new ArrayList<>()));
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> controller.submit(ActionRequest.waitAction(KNIGHT)));
@@ -280,7 +280,7 @@ class EnemyTurnRunnerTest {
         BattleState state = battle(5);
         state.addPiece(rook("R", 2, 1), at("d5"));
         BattleController controller = new BattleController(state,
-                new EnemyTurnRunner((view, enemyId) -> null));
+                (view, enemyId) -> null);
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> controller.submit(ActionRequest.waitAction(KNIGHT)));
@@ -299,7 +299,7 @@ class EnemyTurnRunnerTest {
         state.addPiece(rook("R", 9, 1), at("a8"));
         state.addPiece(pawn("P", 2, 2), at("c2"));
         BattleController controller = new BattleController(state,
-                new EnemyTurnRunner(fixed(ActionRequest.move("P", at("c1")), new ArrayList<>())));
+                fixed(ActionRequest.move("P", at("c1")), new ArrayList<>()));
 
         ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
 
@@ -322,7 +322,7 @@ class EnemyTurnRunnerTest {
         BattleState state = battle(1);
         state.addPiece(pawn("P", 2, 1), at("d5")); // faces SOUTH: d4, c4, e4
         state.addPiece(rook("R", 2, 2), at("a8"));
-        BattleController controller = new BattleController(state, new EnemyTurnRunner(attackOrSkip(trace)));
+        BattleController controller = new BattleController(state, attackOrSkip(trace));
 
         ActionResult result = controller.submit(ActionRequest.waitAction(KNIGHT));
 

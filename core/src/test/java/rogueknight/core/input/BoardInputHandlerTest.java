@@ -1,6 +1,15 @@
 package rogueknight.core.input;
 
 import org.junit.jupiter.api.Test;
+import rogueknight.action.BattleController;
+import rogueknight.ai.EnemyAI;
+import rogueknight.battle.BattleSnapshot;
+import rogueknight.battle.BattlePhase;
+import rogueknight.battle.BattleResult;
+import rogueknight.battle.EquipmentType;
+import rogueknight.battle.Inventory;
+import rogueknight.battle.PieceType;
+import rogueknight.board.Position;
 import rogueknight.core.view.BattleViewSnapshot;
 import rogueknight.core.view.BoardPosition;
 import rogueknight.core.view.BoardProjection;
@@ -13,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BoardInputHandlerTest {
+ private static BattleController createController(){return BattleController.fromSnapshot(new BattleSnapshot(1,BattlePhase.PLAYER_SELECT,BattleResult.ONGOING,Set.of(),List.of(new BattleSnapshot.PieceView("knight",PieceType.KNIGHT,5,0,0,0,Position.fromNotation("d4")),new BattleSnapshot.PieceView("king",PieceType.KING,5,5,5,2,Position.fromNotation("h8")),new BattleSnapshot.PieceView("rook",PieceType.ROOK,3,3,2,1,Position.fromNotation("e4"))),Inventory.initial(EquipmentType.CANNON_MOVEMENT,EquipmentType.DIAGONAL_SKEWER)),new EnemyAI());}
     private final BoardProjection projection = new BoardProjection(128f, 48f, 48f);
 
     @Test
@@ -191,25 +201,7 @@ class BoardInputHandlerTest {
 
     @Test
     void waitEventsCanBeDrainedOnceInDomainOrder() {
-        var battle = new rogueknight.battle.BattleState(
-            java.util.Set.of(),
-            rogueknight.battle.Inventory.initial(
-                rogueknight.battle.EquipmentType.CANNON_MOVEMENT,
-                rogueknight.battle.EquipmentType.DIAGONAL_SKEWER
-            )
-        );
-        battle.addPiece(new rogueknight.battle.PieceState(
-            "knight", rogueknight.battle.PieceType.KNIGHT, 5, 0, 0, 0
-        ), rogueknight.board.Position.fromNotation("d4"));
-        battle.addPiece(new rogueknight.battle.PieceState(
-            "king", rogueknight.battle.PieceType.KING, 5, 5, 5, 2
-        ), rogueknight.board.Position.fromNotation("h8"));
-        battle.addPiece(new rogueknight.battle.PieceState(
-            "rook", rogueknight.battle.PieceType.ROOK, 3, 3, 2, 1
-        ), rogueknight.board.Position.fromNotation("e4"));
-        var adapter = new BattleControllerAdapter(new rogueknight.action.BattleController(
-            battle, new rogueknight.action.EnemyTurnRunner(new rogueknight.ai.EnemyAI())
-        ));
+        var adapter = new BattleControllerAdapter(createController());
         var handler = new BoardInputHandler(projection, adapter);
 
         handler.selectMode(ActionMode.WAIT);

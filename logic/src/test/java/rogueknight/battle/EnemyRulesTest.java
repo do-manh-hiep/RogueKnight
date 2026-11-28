@@ -10,6 +10,8 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import rogueknight.action.ActionError;
 import rogueknight.action.ActionRequest;
+import rogueknight.action.ActionResult;
+import rogueknight.action.ActionKind;
 import rogueknight.battle.BattleSnapshot;
 import rogueknight.battle.BattleState;
 import rogueknight.battle.Direction;
