@@ -1,7 +1,8 @@
-package rogueknight.board;
+package rogueknight.battle;
 
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import rogueknight.board.Position;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BoardTest {
