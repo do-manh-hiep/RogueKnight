@@ -53,7 +53,7 @@ public final class KnightRules {
     }
 
     /** Legal target squares for MOVE, SWORD, CAPTURE, or equipped items. WAIT has no target square. */
-    public static Set<Position> legalTargets(BattleState state, String actorId, ActionKind kind) {
+    static Set<Position> legalTargets(BattleState state, String actorId, ActionKind kind) {
         if (state == null || kind == null || kind == ActionKind.WAIT) return Set.of();
         Optional<Position> from = knightPosition(state, actorId);
         if (from.isEmpty()) return Set.of();
