@@ -11,33 +11,20 @@ import java.util.Set;
 public record BattleViewSnapshot(
     int globalTurn,
     BoardPosition knightPosition,
-    boolean knightAlive,
     Set<BoardPosition> rocks,
-    Map<BoardPosition, String> enemyPieces,
     Set<BoardPosition> legalMoves,
-    String statusMessage,
     Map<String, PresentationPiece> piecesById
 ) {
     public BattleViewSnapshot {
         Objects.requireNonNull(knightPosition, "knightPosition must not be null");
         rocks = Set.copyOf(rocks != null ? rocks : Set.of());
-        enemyPieces = Map.copyOf(enemyPieces != null ? enemyPieces : Map.of());
         legalMoves = Set.copyOf(legalMoves != null ? legalMoves : Set.of());
-        statusMessage = statusMessage != null ? statusMessage : "";
         piecesById = Map.copyOf(piecesById != null ? piecesById : Map.of());
     }
 
-    /** Creates a copy with updated display text while preserving battle state and piece identities. */
-    public BattleViewSnapshot withMessage(String newMessage) {
-        return new BattleViewSnapshot(
-            globalTurn,
-            knightPosition,
-            knightAlive,
-            rocks,
-            enemyPieces,
-            legalMoves,
-            newMessage,
-            piecesById
-        );
+    /** Returns whether an enemy occupies the given tile, using the canonical piece map. */
+    public boolean hasEnemyAt(BoardPosition position) {
+        return position != null && piecesById.values().stream()
+            .anyMatch(piece -> !"knight".equals(piece.id()) && piece.position().equals(position));
     }
 }
