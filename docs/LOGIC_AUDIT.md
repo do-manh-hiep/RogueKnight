@@ -2,7 +2,7 @@
 
 - **Repository:** do-manh-hiep/RogueKnight
 - **Branch:** refactor/architecture-cleanup-7119
-- **Audited head:** 50877ca1bdc3413c75abe9a8476e8d256cfcada7
+- **Audited head:** 5e4bc78b1a10336e7ef4b5657f04a776e1efc618
 - **TD baseline:** RogueKnight TD v0.1 (unchanged)
 - **Scope:** logic source/tests and direct core/Main integration relevant to battle lifecycle and DEC-12.
 - **Method:** static source review at the audited head, mapped to TD requirement register and available test suites. Test execution status is reported separately.
@@ -40,12 +40,12 @@ Status meanings:
 | R-Q05–Q08: Cannon Movement screen/landing/capture/blocker rules | `KnightRules`, `ActionResolver` | `EquipmentActionIntegrationTest`; TC-Q05–Q08, FX-04 | **Pass — source/test present.** Includes empty landing choices before terminal Enemy and capture as an additional option. |
 | R-Q09: Cannon Attack exactly one screen and first terminal Enemy | `KnightRules`, `ActionResolver` | `EquipmentActionIntegrationTest`; TC-Q09 | **Pass — source/test present.** |
 | R-Q10–Q11: Diagonal Skewer two cells, Enemy continuation, Rock/edge behavior | `KnightRules`, `ActionResolver` | `EquipmentActionIntegrationTest`; TC-Q10–Q11 | **Pass — source/test present.** No-hit direction follows DEC-03. |
-| R-R01–R03: Victory/Defeat and immediate stop | `ResultEvaluator`, `BattleController.endIfTerminal`, `EnemyTurnRunner` | `ResultEvaluatorTest`, `BattleControllerTest`, `EnemyTurnRunnerTest`; TC-R01–R03 | **Pass — gameplay terminal path.** Runtime failure remains a separate DEC-12 state and must not be represented as Victory/Defeat. |
+| R-R01–R03: Victory/Defeat and immediate stop | `battle.ResultEvaluator`, `BattleController.endIfTerminal`, `EnemyTurnRunner` | `ResultEvaluatorTest`, `BattleControllerTest`, `EnemyTurnRunnerTest`; TC-R01–R03 | **Pass — gameplay terminal path.** Runtime failure remains a separate DEC-12 state and must not be represented as Victory/Defeat. |
 | R-R04–R06: Stuck warning, Continue, Accept Defeat | selection/stuck lifecycle and controller contracts | lifecycle/controller tests; TC-R04–R06, IT-06 | **Partial / UI integration not verified.** Logic contract/test inventory exists; full desktop flow is not established here. |
 | R-U01–U03: screen flow, hover details, attack range/cues | core screen/view layer | TC-U01–U03 | **Not verified in logic audit.** Requires UI/desktop walkthrough. |
 | R-U04–U06: UI reads legal options and consumes snapshots/events | `BattleControllerAdapter`, `BoardInputHandler`, `BattlePresentationModel`, `BattlePlayback`, `BoardRenderer` | adapter/input/presentation/playback tests; TC-U04–U06 | **Partial.** Adapter/event playback exists; full hover/animation/screen acceptance remains outside this source review. |
 | R-TECH01–02: pure-Java logic and shared legality between UI/AI | Gradle module boundary, `StateView`, `KnightRules`, `EnemyRules`, AI policies | logic and adapter/rule tests; TC-X01–X02 | **Pass by structure / test evidence present.** User's full Gradle build at 50877ca passed locally. |
-| R-TECH03: single owner for state mutation and turn clock | package-private `BattleState`/`Board`, internal battle controller/resolver, public `action.BattleController` facade | `BattleStateTest`, `BattleControllerTest`; TC-X03 | **Addressed at public API boundary.** Mutable aggregate and Board are package-private; public facade accepts immutable snapshot + read-only EnemyPolicy and does not expose BattleState. A dedicated external-package compile/API test would strengthen regression protection. |
+| R-TECH03: single owner for state mutation and turn clock | package-private `BattleState`/`Board`, internal battle controller/resolver, public `battle.BattleController` entry point | `BattleStateTest`, `BattleControllerTest`; TC-X03 | **Addressed at public API boundary.** Mutable aggregate and Board are package-private; public `battle.BattleController` is created from immutable `BattleSnapshot` + read-only `EnemyPolicy` and does not expose `BattleState`. A dedicated external-package compile/API test would strengthen regression protection. |
 | R-TECH04: playback cannot change gameplay and blocks duplicate input | `BattlePlayback`, `BattlePresentationModel`, `Main`, input handler | playback/input tests; TC-X04 / FX-17 | **Pass — source/test present; desktop timing not verified here.** |
 | R-TECH05: invalid config rejected before Battle with actionable setup error | `BalanceLoader`, `MapLoader`, validators, `BattleFactory`, `Main.create` | loader/validator/factory tests; TC-X05, FX-15 | **Partial.** Loaders wrap parse/validation errors with resource context and Main catches IOException/IllegalArgumentException, but startup still escalates to IllegalStateException rather than a user-facing setup-error/recovery path. |
 | R-TECH06–07: handoff process and extension-point extensibility | project process docs; `PieceCatalog`/geometry/policy strategies | REV-X06–X07 | **Not fully verified by runtime audit.** Process evidence and whole-system extensibility review are separate tasks. |
@@ -151,3 +151,21 @@ GitHub `mergeable=true` means no merge conflict was detected; it is not review a
 - `logic/src/main/java/rogueknight/data/MapLoader.java`
 - `core/src/main/java/rogueknight/Main.java`
 - Corresponding test suites listed in section 2.
+
+
+## 5. Simplification pass — audited after 7906fa1
+
+The following changes are present at audited head `5e4bc78` (source simplification commits after `7906fa1`):
+
+- Removed the unused `action.BattleController` forwarding facade. Production bootstrap and core adapter use `battle.BattleController`; tests in the current branch use the battle package entry point.
+- Removed `PawnAttackRule.canAttackKnight`, which only validated the Pawn and forwarded to `EnemyRules.canAttackKnight`. Pawn attack geometry remains in `PawnAttackRule.attackTargets`; the corresponding test assertions now target `EnemyRules`.
+- Moved `ResultEvaluator` into `battle` and made the class/method package-private. It is part of battle terminal evaluation and is called by the battle controller.
+- Removed unused `BoardPosition.chebyshevDistance` and `BoardPosition.manhattanDistance`; no production consumer was found in the core source.
+- Updated the `FixtureBattleController` test-fixture comment to describe its current role.
+
+Deferred candidates:
+- `PieceCatalog` / `PieceSpec`: retained in this pass because they have dedicated tests and are the validated conversion point from balance DTOs to factory-ready stats. Reconsider only with a replacement that preserves validation and null semantics.
+- `BattleEventQueue`: retained because it has independent tests and makes FIFO batch semantics explicit.
+- `BattleViewSnapshot`: no fields removed in this pass. The suspected redundant fields need a complete consumer audit and coordinated adapter/input/test migration before changing its contract.
+
+**Verification:** this pass was applied through GitHub branch commits. Gradle tests, clean build, `git diff --check`, and desktop smoke tests have not been run against `5e4bc78` by the assistant. Previous user-reported results apply to the earlier baseline only and must not be carried forward as verification of this head.
