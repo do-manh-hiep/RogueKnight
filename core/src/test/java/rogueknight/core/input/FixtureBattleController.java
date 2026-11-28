@@ -63,11 +63,8 @@ public final class FixtureBattleController implements BattleControllerPort {
         return new BattleViewSnapshot(
             globalTurn,
             knightPosition,
-            true,
             rocks,
-            enemyPieces,
             legalMoves("knight"),
-            "Turn " + globalTurn + " | Knight tại " + knightPosition.notation(),
             piecesById
         );
     }
