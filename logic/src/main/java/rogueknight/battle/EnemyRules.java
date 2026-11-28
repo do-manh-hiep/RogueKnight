@@ -101,7 +101,7 @@ public final class EnemyRules {
         List<Position> cells = new ArrayList<>();
         if (geometry.get().attackFollowsFacing()) {
             Direction facing = view.pieceState(enemyId).orElseThrow().currentDirection();
-            cells.addAll(PawnAttackRule.attackTargets(from.get(), facing));
+            cells.addAll(pawnAttackTargets(from.get(), facing));
         } else {
             for (Direction direction : geometry.get().attack()) {
                 step(from.get(), direction).ifPresent(cells::add);
@@ -109,6 +109,16 @@ public final class EnemyRules {
         }
         cells.sort(BOARD_ORDER);
         return List.copyOf(cells);
+    }
+
+    /** Pawn attack cone: its facing direction and the two adjacent 45-degree directions. */
+    private static List<Position> pawnAttackTargets(Position origin, Direction facing) {
+        List<Position> targets = new ArrayList<>(3);
+        for (Direction direction : List.of(
+                facing, facing.rotate45CounterClockwise(), facing.rotate45Clockwise())) {
+            step(origin, direction).ifPresent(targets::add);
+        }
+        return targets;
     }
 
     /** Position of the live Knight, if it is still on the Board. */

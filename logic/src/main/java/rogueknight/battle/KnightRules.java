@@ -31,9 +31,7 @@ public final class KnightRules {
     public static boolean isMoveGeometry(Position from, Position to) {
         int dx = Math.abs(to.column() - from.column());
         int dy = Math.abs(to.row() - from.row());
-        boolean lShape = (dx == 1 && dy == 2) || (dx == 2 && dy == 1);
-        boolean adjacent = Math.max(dx, dy) == 1;
-        return lShape || adjacent;
+        return isCaptureGeometry(from, to) || isSwordGeometry(from, to);
     }
 
     public static boolean isCaptureGeometry(Position from, Position to) {
@@ -98,80 +96,69 @@ public final class KnightRules {
     }
 
     private static ValidationOutcome validateSword(BattleState state, ActionRequest request, Position from) {
-        if (!request.targetInBounds()) return ValidationOutcome.invalid(ActionError.OUT_OF_BOUNDS);
-        Position target = request.target();
-        if (!isSwordGeometry(from, target)) return ValidationOutcome.invalid(ActionError.INVALID_GEOMETRY);
-        if (state.isRock(target)) return ValidationOutcome.invalid(ActionError.OCCUPIED_BY_ROCK);
-        Optional<String> targetId = state.pieceAt(target);
-        if (targetId.isEmpty()) return ValidationOutcome.invalid(ActionError.NO_TARGET_PIECE);
-        PieceState victim = state.pieceState(targetId.get()).orElseThrow();
-        if (victim.type() == PieceType.KNIGHT) return ValidationOutcome.invalid(ActionError.NOT_ENEMY_TARGET);
-        return ValidationOutcome.valid(new ActionPlan(ActionKind.SWORD, request.actorId(), from, target, victim.id()));
+        return validateAdjacentEnemyTarget(state, request, from, ActionKind.SWORD, false);
     }
 
     private static ValidationOutcome validateCapture(BattleState state, ActionRequest request, Position from) {
+        return validateAdjacentEnemyTarget(state, request, from, ActionKind.CAPTURE, true);
+    }
+
+    private static ValidationOutcome validateAdjacentEnemyTarget(
+            BattleState state, ActionRequest request, Position from, ActionKind kind, boolean capture) {
         if (!request.targetInBounds()) return ValidationOutcome.invalid(ActionError.OUT_OF_BOUNDS);
         Position target = request.target();
-        if (!isCaptureGeometry(from, target)) return ValidationOutcome.invalid(ActionError.INVALID_GEOMETRY);
+        boolean validGeometry = capture ? isCaptureGeometry(from, target) : isSwordGeometry(from, target);
+        if (!validGeometry) return ValidationOutcome.invalid(ActionError.INVALID_GEOMETRY);
         if (state.isRock(target)) return ValidationOutcome.invalid(ActionError.OCCUPIED_BY_ROCK);
+
         Optional<String> targetId = state.pieceAt(target);
         if (targetId.isEmpty()) return ValidationOutcome.invalid(ActionError.NO_TARGET_PIECE);
         PieceState victim = state.pieceState(targetId.get()).orElseThrow();
         if (victim.type() == PieceType.KNIGHT) return ValidationOutcome.invalid(ActionError.NOT_ENEMY_TARGET);
-        if (victim.hp() > CAPTURE_MAX_TARGET_HP) return ValidationOutcome.invalid(ActionError.CAPTURE_TARGET_TOO_STRONG);
-        return ValidationOutcome.valid(new ActionPlan(ActionKind.CAPTURE, request.actorId(), from, target, victim.id()));
+        if (capture && victim.hp() > CAPTURE_MAX_TARGET_HP) {
+            return ValidationOutcome.invalid(ActionError.CAPTURE_TARGET_TOO_STRONG);
+        }
+        return ValidationOutcome.valid(new ActionPlan(kind, request.actorId(), from, target, victim.id()));
     }
 
-    private static ValidationOutcome validateCannonMovement(BattleState state, ActionRequest request, Position from) {
-        Optional<ActionError> eqErr = checkEquipmentReady(state, EquipmentType.CANNON_MOVEMENT);
-        if (eqErr.isPresent()) return ValidationOutcome.invalid(eqErr.get());
+    private static ValidationOutcome validateCannonMovement(
+            BattleState state, ActionRequest request, Position from) {
+        return validateCannonRay(state, request, from, EquipmentType.CANNON_MOVEMENT, true);
+    }
+
+    private static ValidationOutcome validateCannonAttack(
+            BattleState state, ActionRequest request, Position from) {
+        return validateCannonRay(state, request, from, EquipmentType.CANNON_ATTACK, false);
+    }
+
+    private static ValidationOutcome validateCannonRay(
+            BattleState state, ActionRequest request, Position from, EquipmentType equipment, boolean allowEmpty) {
+        Optional<ActionError> equipmentError = checkEquipmentReady(state, equipment);
+        if (equipmentError.isPresent()) return ValidationOutcome.invalid(equipmentError.get());
         if (!request.targetInBounds()) return ValidationOutcome.invalid(ActionError.OUT_OF_BOUNDS);
 
         Position target = request.target();
         RayScanResult scan = scanOrthogonalRay(state, from, target);
-        if (!scan.orthogonal || scan.obstaclesBeforeTarget != 1) {
+        if (!scan.orthogonal() || scan.obstaclesBeforeTarget() != 1) {
             return ValidationOutcome.invalid(ActionError.INVALID_GEOMETRY);
         }
         if (state.isRock(target)) return ValidationOutcome.invalid(ActionError.OCCUPIED_BY_ROCK);
 
         Optional<String> targetId = state.pieceAt(target);
-        if (targetId.isPresent()) {
-            PieceState victim = state.pieceState(targetId.get()).orElseThrow();
-            if (victim.type() == PieceType.KNIGHT) return ValidationOutcome.invalid(ActionError.NOT_ENEMY_TARGET);
-            if (victim.hp() > 2) return ValidationOutcome.invalid(ActionError.CAPTURE_TARGET_TOO_STRONG);
+        if (targetId.isEmpty()) {
+            if (!allowEmpty) return ValidationOutcome.invalid(ActionError.NO_TARGET_PIECE);
             return ValidationOutcome.valid(new ActionPlan(
-                ActionKind.CANNON_MOVEMENT, request.actorId(), from, target,
-                EquipmentType.CANNON_MOVEMENT, List.of(victim.id())
-            ));
+                    ActionKind.CANNON_MOVEMENT, request.actorId(), from, target, equipment, List.of()));
         }
-
-        return ValidationOutcome.valid(new ActionPlan(
-            ActionKind.CANNON_MOVEMENT, request.actorId(), from, target,
-            EquipmentType.CANNON_MOVEMENT, List.of()
-        ));
-    }
-
-    private static ValidationOutcome validateCannonAttack(BattleState state, ActionRequest request, Position from) {
-        Optional<ActionError> eqErr = checkEquipmentReady(state, EquipmentType.CANNON_ATTACK);
-        if (eqErr.isPresent()) return ValidationOutcome.invalid(eqErr.get());
-        if (!request.targetInBounds()) return ValidationOutcome.invalid(ActionError.OUT_OF_BOUNDS);
-
-        Position target = request.target();
-        RayScanResult scan = scanOrthogonalRay(state, from, target);
-        if (!scan.orthogonal || scan.obstaclesBeforeTarget != 1) {
-            return ValidationOutcome.invalid(ActionError.INVALID_GEOMETRY);
-        }
-        if (state.isRock(target)) return ValidationOutcome.invalid(ActionError.OCCUPIED_BY_ROCK);
-        Optional<String> targetId = state.pieceAt(target);
-        if (targetId.isEmpty()) return ValidationOutcome.invalid(ActionError.NO_TARGET_PIECE);
 
         PieceState victim = state.pieceState(targetId.get()).orElseThrow();
         if (victim.type() == PieceType.KNIGHT) return ValidationOutcome.invalid(ActionError.NOT_ENEMY_TARGET);
-
+        if (allowEmpty && victim.hp() > CAPTURE_MAX_TARGET_HP) {
+            return ValidationOutcome.invalid(ActionError.CAPTURE_TARGET_TOO_STRONG);
+        }
         return ValidationOutcome.valid(new ActionPlan(
-            ActionKind.CANNON_ATTACK, request.actorId(), from, target,
-            EquipmentType.CANNON_ATTACK, List.of(victim.id())
-        ));
+                allowEmpty ? ActionKind.CANNON_MOVEMENT : ActionKind.CANNON_ATTACK,
+                request.actorId(), from, target, equipment, List.of(victim.id())));
     }
 
     private static ValidationOutcome validateDiagonalSkewer(BattleState state, ActionRequest request, Position from) {

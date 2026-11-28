@@ -15,6 +15,7 @@ import rogueknight.data.dto.MapData;
 import rogueknight.data.dto.PieceData;
 import rogueknight.data.dto.PieceStatsData;
 import rogueknight.data.dto.PositionData;
+import rogueknight.ai.PawnPathfinder;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,10 +50,9 @@ public final class BattleFactory {
 
         BattleSnapshot initial = new BattleSnapshot(1, BattlePhase.PLAYER_SELECT, BattleResult.ONGOING,
             rocks, pieces, inventory);
-        PawnDirectionResolver resolver = new PawnDirectionResolver();
         List<BattleSnapshot.PieceView> oriented = initial.pieces().stream().map(piece -> {
             if (piece.type() != PieceType.PAWN) return piece;
-            Direction direction = resolver.initialDirection(initial, piece.id());
+            Direction direction = PawnPathfinder.initialDirection(initial, piece.id());
             return new BattleSnapshot.PieceView(piece.id(), piece.type(), piece.hp(), piece.cycle(),
                 piece.nextActivationTurn(), piece.spawnOrder(), piece.position(), direction);
         }).toList();

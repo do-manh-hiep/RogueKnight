@@ -3,179 +3,142 @@ package rogueknight.ai;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
+import rogueknight.battle.BattleSnapshot;
+import rogueknight.battle.Direction;
 import rogueknight.battle.PieceState;
 import rogueknight.battle.PieceType;
 import rogueknight.battle.StateView;
 import rogueknight.board.Position;
 
-/**
- * BFS pathfinder for Pawn moving towards row 0 (rank 1).
- * Features:
- * - 8-directional adjacency graph.
- * - Rocks and other enemy pieces act as impassable obstacles.
- * - The player's Knight is ignored during global pathfinding, but the first step cannot land on the Knight's tile.
- * - Tie-breaking prefers straight-down step (SOUTH) towards row 0, then lexicographical order (column asc, row asc).
- */
+/** Shared reverse-BFS path search used for Pawn setup direction and subsequent movement. */
 public final class PawnPathfinder {
+    private static final Comparator<Position> BOARD_ORDER =
+            Comparator.comparingInt(Position::column).thenComparingInt(Position::row);
 
     private PawnPathfinder() { }
 
-    /**
-     * Calculates the next optimal single-step move for the specified Pawn to reach row 0.
-     *
-     * Read-only, so the Pawn AI can run it on any StateView.
-     *
-     * @param state  the current battle state
-     * @param pawnId ID of the Pawn
-     * @return the chosen next move, or empty if already at row 0 or no valid path exists
-     */
+    /** Finds the initial facing direction. Initial planning ignores the Knight as an obstacle. */
+    public static Direction initialDirection(BattleSnapshot snapshot, String pawnId) {
+        Objects.requireNonNull(snapshot, "snapshot");
+        BattleSnapshot.PieceView pawn = snapshot.pieceById(pawnId)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown Pawn: " + pawnId));
+        if (pawn.type() != PieceType.PAWN) {
+            throw new IllegalArgumentException("Piece must be PAWN: " + pawnId);
+        }
+        Position start = pawn.position();
+        if (start.row() == 0) return Direction.SOUTH;
+
+        Set<Position> blocked = new HashSet<>(snapshot.rocks());
+        for (BattleSnapshot.PieceView piece : snapshot.pieces()) {
+            if (!piece.id().equals(pawnId) && piece.type() != PieceType.KNIGHT) {
+                blocked.add(piece.position());
+            }
+        }
+        return shortestDirection(start, distances(blocked));
+    }
+
+    /** Finds the next legal single-step move; the first step cannot land on the Knight. */
     public static Optional<Position> findNextMove(StateView state, String pawnId) {
         Objects.requireNonNull(state, "state must not be null");
         Objects.requireNonNull(pawnId, "pawnId must not be null");
+        Optional<PieceState> pawn = state.pieceState(pawnId);
+        Optional<Position> start = state.positionOf(pawnId);
+        if (pawn.isEmpty() || pawn.get().type() != PieceType.PAWN
+                || start.isEmpty() || start.get().row() == 0) return Optional.empty();
 
-        Optional<PieceState> pawnOpt = state.pieceState(pawnId);
-        if (pawnOpt.isEmpty() || pawnOpt.get().type() != PieceType.PAWN) {
-            return Optional.empty();
-        }
+        Map<Position, Integer> distance = distances(blockedSquares(state, pawnId));
+        List<Position> candidates = neighbors(start.get()).stream()
+                .filter(state::isEmpty).filter(distance::containsKey).toList();
+        if (candidates.isEmpty()) return Optional.empty();
 
-        Position start = state.positionOf(pawnId).orElse(null);
-        if (start == null || start.row() == 0) {
-            return Optional.empty();
-        }
-
-        // Multi-source BFS starting from all reachable, unblocked squares at row = 0
-        int[][] distance = new int[Position.BOARD_SIZE][Position.BOARD_SIZE];
-        for (int c = 0; c < Position.BOARD_SIZE; c++) {
-            for (int r = 0; r < Position.BOARD_SIZE; r++) {
-                distance[c][r] = -1;
-            }
-        }
-
-        Queue<Position> queue = new ArrayDeque<>();
-
-        for (int c = 0; c < Position.BOARD_SIZE; c++) {
-            Position targetSquare = new Position(c, 0);
-            if (!isObstacleForPath(state, pawnId, targetSquare)) {
-                distance[c][0] = 0;
-                queue.add(targetSquare);
-            }
-        }
-
-        while (!queue.isEmpty()) {
-            Position curr = queue.poll();
-            int currDist = distance[curr.column()][curr.row()];
-
-            for (int dc = -1; dc <= 1; dc++) {
-                for (int dr = -1; dr <= 1; dr++) {
-                    if (dc == 0 && dr == 0) {
-                        continue;
-                    }
-                    int nc = curr.column() + dc;
-                    int nr = curr.row() + dr;
-                    if (!Position.isInBounds(nc, nr)) {
-                        continue;
-                    }
-
-                    Position neighbor = new Position(nc, nr);
-                    if (distance[nc][nr] != -1) {
-                        continue;
-                    }
-                    if (isObstacleForPath(state, pawnId, neighbor)) {
-                        continue;
-                    }
-
-                    distance[nc][nr] = currDist + 1;
-                    queue.add(neighbor);
-                }
-            }
-        }
-
-        // Inspect 8 neighboring squares from start to pick the best first step
-        List<Position> candidates = new ArrayList<>();
-        int minDistance = Integer.MAX_VALUE;
-
-        for (int dc = -1; dc <= 1; dc++) {
-            for (int dr = -1; dr <= 1; dr++) {
-                if (dc == 0 && dr == 0) {
-                    continue;
-                }
-                int nc = start.column() + dc;
-                int nr = start.row() + dr;
-                if (!Position.isInBounds(nc, nr)) {
-                    continue;
-                }
-
-                Position neighbor = new Position(nc, nr);
-
-                // First step cannot land on rock or any piece (including Knight)
-                if (state.isRock(neighbor)) {
-                    continue;
-                }
-                Optional<String> occupant = state.pieceAt(neighbor);
-                if (occupant.isPresent()) {
-                    continue;
-                }
-
-                int dist = distance[nc][nr];
-                if (dist == -1) {
-                    continue;
-                }
-
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    candidates.clear();
-                    candidates.add(neighbor);
-                } else if (dist == minDistance) {
-                    candidates.add(neighbor);
-                }
-            }
-        }
-
-        if (candidates.isEmpty()) {
-            return Optional.empty();
-        }
-
-        // Tie-breaking:
-        // 1. Prefer straight step down towards row 0 (SOUTH: dc == 0, dr == -1)
-        Position straightSouth = candidates.stream()
-                .filter(p -> p.column() == start.column() && p.row() == start.row() - 1)
-                .findFirst()
-                .orElse(null);
-
-        Position chosen;
-        if (straightSouth != null) {
-            chosen = straightSouth;
-        } else {
-            // 2. Lexicographical tie-breaking: column ascending, then row ascending
-            candidates.sort(Comparator.comparingInt(Position::column).thenComparingInt(Position::row));
-            chosen = candidates.get(0);
-        }
-
-        return Optional.of(chosen);
+        int shortest = candidates.stream().mapToInt(distance::get).min().orElseThrow();
+        return candidates.stream()
+                .filter(position -> distance.get(position) == shortest)
+                .min(Comparator.comparing((Position position) ->
+                                !(position.column() == start.get().column()
+                                        && position.row() == start.get().row() - 1))
+                        .thenComparing(BOARD_ORDER));
     }
 
-    private static boolean isObstacleForPath(StateView state, String pawnId, Position pos) {
-        if (state.isRock(pos)) {
-            return true;
+    private static Direction shortestDirection(Position start, Map<Position, Integer> distance) {
+        Integer startDistance = distance.get(start);
+        if (startDistance == null) return Direction.SOUTH;
+        Position south = new Position(start.column(), start.row() - 1);
+        if (isShortestStep(south, startDistance, distance)) return Direction.SOUTH;
+        for (Position next : neighbors(start)) {
+            if (isShortestStep(next, startDistance, distance)) {
+                return Direction.fromDelta(next.column() - start.column(), next.row() - start.row());
+            }
         }
-        Optional<String> pieceId = state.pieceAt(pos);
-        if (pieceId.isEmpty()) {
-            return false;
+        return Direction.SOUTH;
+    }
+
+    private static boolean isShortestStep(Position position, int startDistance,
+                                          Map<Position, Integer> distance) {
+        return distance.getOrDefault(position, -1) == startDistance - 1;
+    }
+
+    private static Set<Position> blockedSquares(StateView state, String pawnId) {
+        Set<Position> blocked = new HashSet<>();
+        for (int column = 0; column < Position.BOARD_SIZE; column++) {
+            for (int row = 0; row < Position.BOARD_SIZE; row++) {
+                Position position = new Position(column, row);
+                if (state.isRock(position)) {
+                    blocked.add(position);
+                    continue;
+                }
+                state.pieceAt(position).ifPresent(id -> {
+                    if (!id.equals(pawnId)
+                            && state.pieceState(id).map(piece -> piece.type() != PieceType.KNIGHT).orElse(true)) {
+                        blocked.add(position);
+                    }
+                });
+            }
         }
-        String id = pieceId.get();
-        // Knight is ignored when pathfinding globally (found by type, not by a fixed ID)
-        if (state.pieceState(id).map(piece -> piece.type() == PieceType.KNIGHT).orElse(false)) {
-            return false;
+        return blocked;
+    }
+
+    private static Map<Position, Integer> distances(Set<Position> blocked) {
+        Map<Position, Integer> distance = new HashMap<>();
+        Queue<Position> queue = new ArrayDeque<>();
+        for (int column = 0; column < Position.BOARD_SIZE; column++) {
+            Position goal = new Position(column, 0);
+            if (!blocked.contains(goal)) {
+                distance.put(goal, 0);
+                queue.add(goal);
+            }
         }
-        // Pawn's own current square is not an obstacle
-        if (pawnId.equals(id)) {
-            return false;
+        while (!queue.isEmpty()) {
+            Position current = queue.remove();
+            int nextDistance = distance.get(current) + 1;
+            for (Position next : neighbors(current)) {
+                if (!blocked.contains(next) && !distance.containsKey(next)) {
+                    distance.put(next, nextDistance);
+                    queue.add(next);
+                }
+            }
         }
-        // Other pieces are obstacles
-        return true;
+        return distance;
+    }
+
+    private static List<Position> neighbors(Position position) {
+        List<Position> neighbors = new ArrayList<>(8);
+        for (int dc = -1; dc <= 1; dc++) {
+            for (int dr = -1; dr <= 1; dr++) {
+                if ((dc != 0 || dr != 0)
+                        && Position.isInBounds(position.column() + dc, position.row() + dr)) {
+                    neighbors.add(new Position(position.column() + dc, position.row() + dr));
+                }
+            }
+        }
+        return neighbors;
     }
 }

@@ -1,7 +1,7 @@
 package rogueknight.battle;
 
 import org.junit.jupiter.api.Test;
-import rogueknight.data.PawnDirectionResolver;
+import rogueknight.ai.PawnPathfinder;
 import rogueknight.board.Position;
 
 import java.util.HashSet;
@@ -11,9 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PawnDirectionResolverTest {
-
-    private final PawnDirectionResolver resolver =
-        new PawnDirectionResolver();
 
     @Test
     void targetsPromotionRowInsteadOfKnight() {
@@ -27,7 +24,7 @@ class PawnDirectionResolverTest {
 
         assertEquals(
             Direction.SOUTH,
-            resolver.initialDirection(before, "pawn-1")
+            PawnPathfinder.initialDirection(before, "pawn-1")
         );
 
         assertEquals(before, battle.snapshot());

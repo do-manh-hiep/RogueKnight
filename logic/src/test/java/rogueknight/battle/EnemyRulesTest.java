@@ -162,6 +162,15 @@ class EnemyRulesTest {
     }
 
     @Test
+    void pawnAttackConeClampsAtBoardEdge() {
+        BattleState state = battle(Set.of());
+        state.addPiece(knight(), at("h8"));
+        state.addPiece(new PieceState("P", PieceType.PAWN, 1, 2, 2, 1, Direction.WEST), at("a5"));
+
+        assertEquals(List.of(), EnemyRules.attackCells(state, "P"));
+    }
+
+    @Test
     void validateAttackRequiresKnightInsideAttackRange() {
         BattleState state = battle(Set.of());
         state.addPiece(knight(), at("d2"));
