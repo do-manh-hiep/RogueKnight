@@ -88,6 +88,19 @@ public final class BattleState implements StateView {
             throw new IllegalStateException("Board occupants and piece states differ");
         return new BattleSnapshot(globalTurn, phase, result, board.rocks(), views, inventory);
     }
+    public static BattleState fromSnapshot(BattleSnapshot snapshot) {
+        Objects.requireNonNull(snapshot, "snapshot");
+        BattleState state = new BattleState(snapshot.rocks(), snapshot.inventory());
+        for (PieceView piece : snapshot.pieces()) {
+            state.addPiece(new PieceState(piece.id(), piece.type(), piece.hp(), piece.cycle(),
+                piece.nextActivationTurn(), piece.spawnOrder(), piece.currentDirection()), piece.position());
+        }
+        state.globalTurn = snapshot.globalTurn();
+        state.phase = snapshot.phase();
+        state.result = snapshot.result();
+        return state;
+    }
+
     private void requireKnown(String id) {
         if (!pieces.containsKey(id)) throw new IllegalArgumentException("Unknown piece id: " + id);
     }
