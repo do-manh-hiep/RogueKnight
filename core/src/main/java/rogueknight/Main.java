@@ -3,6 +3,7 @@ package rogueknight;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -66,13 +67,29 @@ public class Main extends ApplicationAdapter {
             0.18f
         );
         renderer = new BoardRenderer();
+
+        // Handle playback controls through backend key events, not character polling.
+        Gdx.input.setInputProcessor(new InputAdapter() {
+            @Override
+            public boolean keyDown(int keycode) {
+                if (keycode == Input.Keys.EQUALS
+                    || keycode == Input.Keys.PLUS
+                    || keycode == Input.Keys.NUMPAD_ADD) {
+                    playback.faster();
+                    return true;
+                }
+                if (keycode == Input.Keys.MINUS
+                    || keycode == Input.Keys.NUMPAD_SUBTRACT) {
+                    playback.slower();
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     @Override
     public void render() {
-        // Playback controls remain available while the event queue is being played.
-        processPlaybackSpeedInput();
-
         // Do not accept another player action while the previous event stream is playing.
         if (!playback.isPlaying()) {
             processKeyboardInput();
@@ -87,19 +104,6 @@ public class Main extends ApplicationAdapter {
         viewport.apply();
         camera.update();
         renderer.render(camera, inputHandler, playback);
-    }
-
-    private void processPlaybackSpeedInput() {
-        // On a standard keyboard, the unshifted '=' key reports EQUALS;
-        // PLUS is commonly a shifted character rather than the physical key code.
-        if (Gdx.input.isKeyJustPressed(Input.Keys.EQUALS)
-            || Gdx.input.isKeyJustPressed(Input.Keys.PLUS)
-            || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_ADD)) {
-            playback.faster();
-        } else if (Gdx.input.isKeyJustPressed(Input.Keys.MINUS)
-            || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_SUBTRACT)) {
-            playback.slower();
-        }
     }
 
     private void processKeyboardInput() {
